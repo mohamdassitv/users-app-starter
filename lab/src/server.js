@@ -2,6 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -73,6 +75,59 @@ function ensureScenario(st){
 }
 
 app.use(bodyParser.json({limit:'2mb'}));
+app.use(require('cookie-parser')?.()); // attempt cookie-parser if installed
+
+// Simple in-memory session + nonce store (non-persistent, adequate for exam environment)
+const sessions = new Map(); // sessionId -> { nonces: Set }
+function getOrCreateSession(req,res){
+  let sid = (req.headers.cookie||'').split(/;\s*/).find(c=>c.startsWith('ui_session='));
+  if(sid) sid = sid.split('=')[1];
+  if(!sid){ sid = crypto.randomBytes(12).toString('hex'); res.setHeader('Set-Cookie', `ui_session=${sid}; HttpOnly; SameSite=Strict; Path=/`); }
+  if(!sessions.has(sid)) sessions.set(sid,{ nonces:new Set() });
+  return { sid, data: sessions.get(sid) };
+}
+
+// Configurable same-origin guard (Host + Referer must be in allowlist)
+const ALLOWED_UI_HOSTS = (process.env.UI_ALLOWED_HOSTS || 'localhost:8081,127.0.0.1:8081,host.docker.internal:8081')
+  .split(',').map(h=>h.trim().toLowerCase()).filter(Boolean);
+function sameOriginGuard(req,res,next){
+  const host = (req.headers['host']||'').toLowerCase();
+  const referer = req.headers['referer'];
+  if(host && !ALLOWED_UI_HOSTS.includes(host)) {
+    return res.status(403).json({error:'forbidden host', allowed: ALLOWED_UI_HOSTS});
+  }
+  if(referer){
+    try {
+      const u = new URL(referer);
+      if(!ALLOWED_UI_HOSTS.includes(u.host.toLowerCase())) {
+        return res.status(403).json({error:'forbidden referer', allowed: ALLOWED_UI_HOSTS});
+      }
+    } catch(e){ /* ignore parse errors */ }
+  }
+  next();
+}
+
+// Rate limiter for manual UI deletes (1 req/sec burst, 10 per 60s)
+const deleteLimiter = rateLimit({
+  windowMs: 60*1000,
+  max: 10,
+  standardHeaders: false,
+  legacyHeaders: false,
+  keyGenerator: (req)=>{
+    // prefer session id else IP
+    let sid = (req.headers.cookie||'').split(/;\s*/).find(c=>c.startsWith('ui_session='));
+    if(sid) return sid.split('=')[1];
+    return req.ip;
+  },
+  handler: (req,res)=> res.status(429).json({error:'rate limit exceeded'})
+});
+
+// Helper to mint a single-use nonce and attach to session
+function mintNonce(sess){
+  const n = crypto.randomBytes(8).toString('hex');
+  sess.data.nonces.add(n);
+  return n;
+}
 app.use(express.static(path.join(__dirname,'public')));
 
 // ---- Gateway simulation ----
@@ -167,7 +222,10 @@ app.get('/api/users', (req,res)=>{
   const offset = Math.max(parseInt(req.query.offset||'0',10),0);
   const limit = Math.min(Math.max(parseInt(req.query.limit||'100',10),1),5000);
   const slice = all.slice(offset, offset+limit);
-  res.json({ total: all.length, offset, limit, users: slice });
+  // attach per-row csrf nonce
+  const sess = getOrCreateSession(req,res);
+  const usersWithNonce = slice.map(u=> ({...u, uiCsrf: mintNonce(sess)}));
+  res.json({ total: all.length, offset, limit, users: usersWithNonce });
 });
 // POST /api/users/reset -> regenerate baseline 5000 users (IDs reset sequentially)
 app.post('/api/users/reset', (req,res)=>{
@@ -190,8 +248,21 @@ app.post('/api/users', (req,res)=>{
   res.status(201).json(user);
 });
 // DELETE /api/users/:id
-app.delete('/api/users/:id', (req,res)=>{
-  return res.status(405).json({ error: 'UI is read-only. Use admin API on port 8082.' });
+app.delete('/api/users/:id', sameOriginGuard, deleteLimiter, (req,res)=>{
+  const csrf = req.headers['x-csrf-ui'];
+  const sess = getOrCreateSession(req,res);
+  if(!csrf || !sess.data.nonces.has(csrf)) return res.status(403).json({error:'invalid or missing csrf'});
+  // consume nonce and rotate new one (rotation delivered on next GET page fetch)
+  sess.data.nonces.delete(csrf);
+  // proceed with delete
+  const id = parseInt(req.params.id,10);
+  const st = readState();
+  const list = ensureUsers(st);
+  const idx = list.findIndex(u=>u.id===id);
+  if(idx===-1) return res.status(404).json({error:'not found'});
+  list.splice(idx,1);
+  writeState(st);
+  res.status(204).end();
 });
 
 // Root serves simplified index (static file already in public)

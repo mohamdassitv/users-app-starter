@@ -32,7 +32,7 @@ An enterprise customer bulk‑provisioned ~5,000 duplicate placeholder users dur
 
 Endpoints:
 * `GET /api/users?offset=&limit=` – paginated list
-* `DELETE /api/users/:id` – remove a user
+* `DELETE /api/users/:id` – manual single delete (UI only; rate-limited & CSRF protected)
 * `POST /api/users {firstName,lastName}` – add a user (ID auto-increments)
 
 ### What You Produce (Task 2)
@@ -59,7 +59,9 @@ All other tasks were intentionally removed to narrow focus and reduce noise. The
 
 ## Admin API for Bulk / Destructive Operations
 
-User deletions and dataset resets are now restricted to a separate hardened service that is intentionally unusable from a normal browser (CORS blocked). The UI on port 8081 is read‑only for deletions and will respond 405 for `DELETE /api/users/:id` with a guidance message.
+UI is for manual single deletes only. Each delete requires a one-time nonce (single‑use per row), enforces Host/Referer checks, and is rate limited (max 10/minute, 1/sec). For automation or bulk remediation use the Admin API below.
+
+User dataset resets and high‑volume or scripted deletions are restricted to a separate hardened service that is intentionally unusable from a normal browser (CORS blocked).
 
 Service: `http://localhost:8082`
 
@@ -115,6 +117,19 @@ if __name__ == "__main__":
 - Separation of duties: destructive actions run on isolated port + token.
 - Defense-in-depth: Browser-originated deletes blocked (reduces accidental or scripted abuse from exam UI context).
 - Deterministic rebuild: `/admin/reset` ensures a known 5,000-user baseline.
+- Manual UI deletes safeguarded by: per-row single-use CSRF nonce, strict same-origin checks, and rate limiting.
+
+### Allowing Alternate Local Hosts
+If you access the UI via another host (e.g., `127.0.0.1:8081` or `host.docker.internal:8081`), the delete route may return `403 forbidden host` or `403 forbidden referer`.
+
+Set an allowlist (comma-separated) at runtime:
+
+```powershell
+$Env:UI_ALLOWED_HOSTS = "localhost:8081,127.0.0.1:8081,host.docker.internal:8081"
+docker compose up --build
+```
+
+Inside Docker this becomes the `ALLOWED_UI_HOSTS` environment variable read by the app. The default already includes those three common values.
 
 ### Changing the Token
 1. Edit `admin/token.txt` or supply an environment variable at runtime:
