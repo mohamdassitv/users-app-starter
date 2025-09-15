@@ -1,0 +1,32 @@
+# Node dependencies
+node_modules/
+
+# Logs
+*.log
+lab/logs/
+
+# Runtime state (persisted app data) - keep state json under version? decide to include; we include but ignore backups
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker artifacts
+*.pid
+docker-compose.override.yml
+
+# Env / secrets
+.env
+.env.local
+
+# Build caches
+npm-cache/
+
+# VS Code
+.vscode/
+
+# Coverage / test output
+coverage/
+
+# Misc
+*.tgz

@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 2 – IAM</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 2 – IAM: Unlock Logs</h2>
+<p>Grant the role <code>LogReader</code> to user <code>student</code> using the admin API key: <code>admin123</code>.</p>
+<ol>
+  <li>POST <code>/iam/grant</code> with header <code>x-api-key: admin123</code> and body <code>{ "user": "student", "role": "LogReader" }</code></li>
+  <li>GET <code>/cloud/logs</code> should return plaintext logs.</li>
+  <li>Count the number of <code>ERROR</code> lines (you'll need it for Task 4).</li>
+</ol>
+<pre class="small">curl example:
+curl -X POST http://localhost:8081/iam/grant \
+  -H "x-api-key: admin123" -H "Content-Type: application/json" \
+  -d '{"user":"student", "role":"LogReader"}'
+</pre>
+</div>
+<div class="card">
+  <button onclick="check()">Check Role</button>
+  <div id="out"></div>
+</div>
+<script>
+async function check(){
+  const iam = await (await fetch('/iam/status')).json();
+  const ok = (iam.student && iam.student.roles || []).includes('LogReader');
+  document.getElementById('out').textContent = ok ? '✅ Role present' : '❌ Not yet';
+}
+</script>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 7 – NAT</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 7 – NAT & Routing (Concept)</h2>
+<p>Given a simple scenario: "Branch users on <code>172.16.10.0/24</code> browse the internet and appear as a single public IP."</p>
+<p>Which IP is most likely the branch egress NAT?</p>
+<select id="opt">
+  <option value="">Select one</option>
+  <option>198.51.100.10</option>
+  <option>203.0.113.25</option>
+  <option>203.0.113.60</option>
+  <option>10.10.20.55</option>
+</select>
+<button onclick="grade()">Check</button>
+<div id="out"></div>
+<p class="small">Explanation after you get it right: branch is 172.16.10.0/24; the egress NAT is 203.0.113.25.</p>
+</div>
+<script>
+function grade(){
+  const ok = document.getElementById('opt').value === '203.0.113.25';
+  document.getElementById('out').textContent = ok ? '✅ Correct' : '❌ Try again';
+}
+</script>
+</body></html>

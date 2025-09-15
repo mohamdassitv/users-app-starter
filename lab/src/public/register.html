@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Register Phone</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/styles.css"></head><body>
+<header class="site-header"><div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'"><img src="/logo.svg" alt="logo" class="logo-img"><span class="brand-hacker">CHECK POINT</span></div></header>
+<main class="page fade-in">
+  <div class="card" style="max-width:480px">
+    <h2>One-Time Phone Registration</h2>
+    <p class="muted">Enter a phone number (include country code, e.g. +15551234567). This cannot be changed after you submit and is required to start the 6‑hour exam timer.</p>
+    <form id="phoneForm">
+      <label style="display:block;margin-bottom:12px">Phone Number<br><input id="phone" type="text" placeholder="+15551234567" required></label>
+      <button type="submit" class="btn-primary">Save</button>
+      <a href="/" class="btn" style="margin-left:8px">Cancel</a>
+    </form>
+    <pre id="status" class="muted" style="margin-top:16px"></pre>
+  </div>
+</main>
+<a href="/contact.html" class="help-fab" title="Need help? Contact on-call."><img src="/help-contact.svg" width="38" height="38" alt="Help"><span class="help-label">Need help? Contact on-call.</span></a>
+<script>
+async function load(){
+  const r = await fetch('/api/exam/status');
+  const st = r.ok? await r.json():{};
+  if(st.phone){ document.getElementById('status').textContent='Phone already set to '+st.phone; document.getElementById('phone').disabled=true; }
+}
+load();
+
+document.getElementById('phoneForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const v = document.getElementById('phone').value.trim();
+  const r = await fetch('/api/exam/phone',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:v})});
+  if(r.ok){
+    const st = await r.json();
+    document.getElementById('status').textContent='Saved: '+st.phone; document.getElementById('phone').disabled=true; setTimeout(()=>window.location='/',1200);
+  } else {
+    document.getElementById('status').textContent='Error saving phone';
+  }
+});
+</script>
+</body></html>

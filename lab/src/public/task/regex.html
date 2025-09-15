@@ -1,0 +1,24 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 3 – Regex</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 3 – Regex</h2>
+<p>Write a regex that validates emails with these rules:</p>
+<ul>
+  <li>Only alphanumeric characters in both user and domain</li>
+  <li>Must include <code>@</code></li>
+  <li>TLD must be <code>.com</code> or <code>.net</code></li>
+  <li>No special characters like <code>_ . -</code> except the single dot before the TLD</li>
+</ul>
+<p>Enter your regex (no leading/trailing slashes):</p>
+<input id="pat" placeholder="^[A-Za-z0-9]+@[A-Za-z0-9]+\.(com|net)$">
+<button onclick="run()">Run</button>
+<pre id="res"></pre>
+</div>
+<script>
+async function run(){
+  const pattern = document.getElementById('pat').value.trim();
+  const res = await fetch('/check/regex',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pattern})});
+  const data = await res.json();
+  document.getElementById('res').textContent = 'Score: ' + data.score + '\n' + JSON.stringify(data.detail,null,2);
+}
+</script>
+</body></html>

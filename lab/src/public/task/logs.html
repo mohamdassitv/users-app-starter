@@ -1,0 +1,24 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 4 – Logs</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 4 – Log Analysis</h2>
+<p>Now that you have <code>LogReader</code>, fetch logs and answer:</p>
+<ol>
+  <li>How many <code>ERROR</code> lines are in <code>/cloud/logs</code>?</li>
+  <li>Name two issues you see and how you'd verify the fix.</li>
+</ol>
+<p class="small">There is no automatic checker for the prose—this is reviewed by a grader. Errors count can be verified live.</p>
+<div class="card">
+  <button onclick="count()">Count ERROR lines</button>
+  <div id="out" class="small"></div>
+</div>
+<script>
+async function count(){
+  const res = await fetch('/cloud/logs');
+  if (!res.ok){ document.getElementById('out').textContent = '403 – assign LogReader first (Task 2)'; return; }
+  const text = await res.text();
+  const n = (text.match(/\bERROR\b/g)||[]).length;
+  document.getElementById('out').textContent = 'ERROR count: ' + n;
+}
+</script>
+</div>
+</body></html>

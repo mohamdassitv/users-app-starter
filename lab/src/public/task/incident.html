@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 6 – Incident Update</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 6 – Incident Handling & Escalation</h2>
+<p>Write a short customer-facing update (3–5 sentences) that includes:</p>
+<ul>
+  <li><strong>Impact</strong> (who/what is affected)</li>
+  <li>A clear <strong>next update time</strong> (e.g., "next update in 20 minutes")</li>
+  <li><strong>Ownership</strong> ("I'm taking ownership", "I will update you", etc.)</li>
+</ul>
+<textarea id="txt" rows="6" placeholder="Type your update here..."></textarea>
+<button onclick="submit()">Submit</button>
+<pre id="out"></pre>
+</div>
+<script>
+async function submit(){
+  const text = document.getElementById('txt').value;
+  const res = await fetch('/check/incident',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+  const data = await res.json();
+  document.getElementById('out').textContent = JSON.stringify(data,null,2);
+}
+</script>
+</body></html>

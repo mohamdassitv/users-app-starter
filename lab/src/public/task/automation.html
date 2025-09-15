@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 5 – Automation</title>
+<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<div class="card"><h2>Task 5 – Automation</h2>
+<p>Write a small script (bash or Python) that:</p>
+<ul>
+  <li>Checks DNS reachability (simulated: just set <code>dns_ok=true</code>)</li>
+  <li>Calls <code>/gateway/delay/800</code> and measures time (average of 3)</li>
+  <li>Calls <code>/gateway/ok</code> and records status code</li>
+  <li>POSTs the results to <code>/submit/health</code> as JSON:</li>
+</ul>
+<pre>{ "dns_ok": true, "https_ok": true, "avg_latency_ms": 800, "vip_status": 200 }</pre>
+<p>Example skeletons are in <code>scripts/</code> (inside this repo).</p>
+</div>
+<div class="card">
+  <button onclick="check()">Check Submission</button>
+  <pre id="out"></pre>
+</div>
+<script>
+async function check(){
+  const res = await fetch('/check/health');
+  const data = await res.json();
+  document.getElementById('out').textContent = JSON.stringify(data,null,2);
+}
+</script>
+</body></html>

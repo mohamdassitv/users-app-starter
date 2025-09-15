@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Ops 101 Lab – Tasks</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='index.html'">
+      <img src="logo.svg" alt="logo" />
+      <span class="brand-hacker" title="Return to hub">CHECK POINT</span>
+    </div>
+  </header>
+  <main class="page fade-in">
+    <section class="section">
+      <div class="exam-bar">
+        <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
+        <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
+        <div class="exam-actions">
+          <button id="btnStart" type="button">Start 6h</button>
+          <button id="btnResetAll" class="pill-reset" type="button" aria-label="Reset">RESET</button>
+        </div>
+      </div>
+      <h1 style="margin:0 0 12px;font-size:34px;line-height:1.15;background:var(--bg-accent);-webkit-background-clip:text;background-clip:text;color:transparent;">Active Training Tasks</h1>
+      <p class="muted" style="max-width:760px;font-size:15px;">Each card below represents a realistic on‑shift incident or remediation exercise. Work through them to gather evidence, practice triage, and document professional handover notes.</p>
+    </section>
+    <section class="section">
+      <div class="grid">
+        <div class="card">
+          <span class="badge">Operations</span>
+          <h3>Task 1 — High-Volume User Cleanup</h3>
+          <p class="muted" style="flex:1">Emergency duplicate purge & correction console for 5,000 users during a failed HR import window.</p>
+          <div><a class="btn" href="/task/users.html">Explore →</a></div>
+        </div>
+        <div class="card">
+          <span class="badge">Gateway</span>
+          <h3>Task 2 — HTTP & Latency Basics</h3>
+          <p class="muted" style="flex:1">Investigate alert ALRT-24117: collect live status evidence (ok / forbidden / upstream failure / induced delay) with dynamic numeric labels.</p>
+          <div><a class="btn" href="/task/http.html">Explore →</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Right rail removed per simplification request -->
+  <a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
+    <img src="/help-contact.svg" alt="Help" width="38" height="38">
+    <span class="help-label">Need help? Contact on-call.</span>
+  </a>
+  <script>
+    const header=document.getElementById('siteHeader');    
+    let last=0;window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16 && !header.classList.contains('shrink')) header.classList.add('shrink'); else if(y<=16 && header.classList.contains('shrink')) header.classList.remove('shrink'); last=y;});
+
+    async function fetchStatus(){
+      const r = await fetch('/api/exam/status');
+      return r.ok ? r.json() : {};
+    }
+    function fmt(ms){
+      if(ms==null) return '--:--:--';
+      let s = Math.floor(ms/1000);
+      const h = String(Math.floor(s/3600)).padStart(2,'0'); s%=3600;
+      const m = String(Math.floor(s/60)).padStart(2,'0'); s%=60;
+      const sec = String(s).padStart(2,'0');
+      return `${h}:${m}:${sec}`;
+    }
+    function updateProgress(startTime,duration){
+      const bar=document.getElementById('examProgress');
+      if(!bar) return; if(!startTime){bar.style.width='0%'; return;}
+      const now=Date.now();
+      const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total);
+      const pct=(used/total)*100; bar.style.width=pct+"%";
+    }
+    async function refresh(){
+      const st = await fetchStatus();
+      const el = document.getElementById('examTimer');
+      if(st.running) el.textContent = 'Remaining: '+fmt(st.remainingMs);
+      else if(st.startTime) el.textContent = 'Expired';
+      else el.textContent='Ready (6h)';
+      updateProgress(st.startTime, st.duration);
+    }
+    document.getElementById('btnStart').addEventListener('click', async ()=>{
+      const st = await fetchStatus();
+      if(!st.phone){
+        alert('Register phone first. Clicking logo will take you to registration.');
+        return;
+      }
+      if(!st.startTime){
+        await fetch('/api/exam/start',{method:'POST'});
+      }
+    });
+    document.getElementById('btnResetAll').addEventListener('click', async ()=>{
+      const pw = prompt('Enter reset password');
+      if(pw!== '2025') return alert('Incorrect password');
+      const r = await fetch('/api/exam/reset-all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+      if(r.ok){ alert('Environment reset'); location.reload(); }
+      else alert('Reset failed');
+    });
+    setInterval(refresh,1000);refresh();
+    // Logo click: if no phone registered redirect to /register.html
+    document.querySelector('.brand').addEventListener('click', async (e)=>{
+      e.preventDefault();
+      const st = await fetchStatus();
+      if(!st.phone){ window.location='/register.html'; } else { window.location='/'; }
+    });
+  </script>
+</body></html>

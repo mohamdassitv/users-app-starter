@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Task 1 — High-Volume User Cleanup & On-Shift Automation</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  table{border-collapse:collapse;width:100%;font-size:0.9rem}
+  th,td{border:1px solid #e2e8f0;padding:4px 6px;text-align:left}
+  th{background:#f1f5f9}
+  tbody tr:nth-child(even){background:#f8fafc}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .muted{color:#64748b}
+  .danger{color:#dc2626}
+  .btn-sm{font-size:0.75rem;padding:2px 6px}
+  #pager{margin-top:8px;display:flex;gap:8px;align-items:center}
+  #story pre{white-space:pre-wrap;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:4px;font-size:0.75rem;max-height:260px;overflow:auto}
+</style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+      <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
+      <span class="brand-hacker">CHECK POINT</span>
+    </div>
+  </header>
+  <main class="page fade-in">
+    <div class="exam-bar">
+      <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
+      <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
+      <div class="exam-actions">
+        <button id="btnStart" type="button">Start 6h</button>
+      </div>
+    </div>
+  <div class="card" id="story">
+  <h2>Task 1 — High-Volume User Cleanup (Shift Escalation)</h2>
+    <p><strong>Scenario.</strong> 02:10 UTC — A SaaS customer (enterprise plan) opens a P1 chat: they accidentally bulk‑provisioned thousands of duplicate placeholder accounts during a failed HR import. Their compliance team insists the extras must be purged before 03:00 UTC to avoid license overage penalties. Engineering’s bulk tooling is offline (maintenance window overran) and you are the only on‑call operations engineer with console access.</p>
+    <p><strong>Your Mission.</strong> Provide a rapid, manual-but-efficient remediation path: list the 5,000 user entries, surgically delete selected rows (simulating the cleanup decisions), and optionally add corrected user records. This UI emulates a thin emergency console you might spin up to unblock a customer while awaiting a permanent batch job fix.</p>
+    <p><strong>Objectives.</strong></p>
+    <ul>
+      <li>Page through the full 5,000-user dataset (confirm totals).</li>
+      <li>Delete at least a handful of sample users (UI updates immediately).</li>
+      <li>Add one new corrected user (first + last name) and verify it appears.</li>
+      <li>Record an approach note: how you'd harden this stop‑gap (rate limiting, audit log, role gating).</li>
+    </ul>
+    <p class="muted">Surprise Twist: After each deletion the total count decreases and pagination shifts—ensure your paging logic remains consistent (no skipped or duplicated rows across page boundaries).</p>
+    <h3>Deliverable (Shift Note Extract)</h3>
+    <ul>
+      <li>Initial total vs final total after deletions.</li>
+      <li>Example deleted IDs (3–5) + rationale grouping (e.g., obvious pattern duplicates).</li>
+      <li>One added user (ID + names).</li>
+      <li>Hardening recommendations (3–6 bullets).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>User Dataset</h3>
+    <div class="controls">
+      <label>Page Size <select id="limit">
+        <option>25</option><option>50</option><option>100</option><option>200</option><option>500</option><option>5000</option>
+      </select></label>
+      <button onclick="prevPage()">Prev</button>
+      <button onclick="nextPage()">Next</button>
+      <span id="meta" class="muted"></span>
+      <button onclick="promptAdd()">Add User</button>
+      <button onclick="reloadAll()">Reload</button>
+      <button onclick="resetUsers()" style="margin-left:auto;background:var(--bg-accent);color:#fff;border:none;">Reset Users</button>
+    </div>
+    <table id="tbl"><thead><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Action</th></tr></thead><tbody></tbody></table>
+    <div id="pager" class="muted"></div>
+  </div>
+</div>
+  </main>
+  <!-- Right rail removed per simplification request -->
+<a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
+  <img src="/help-contact.svg" alt="Help" width="38" height="38">
+  <span class="help-label">Need help? Contact on-call.</span>
+</a>
+<script>
+const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16) header.classList.add('shrink'); else header.classList.remove('shrink');});
+// Exam shared helpers
+async function examStatus(){ const r = await fetch('/api/exam/status'); return r.ok? r.json():{}; }
+function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
+function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){ bar.style.width='0%'; return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
+async function tick(){ const st=await examStatus(); const el=document.getElementById('examTimer'); if(!el) return; if(st.running){ el.textContent='Remaining: '+fmt(st.remainingMs); updateProgress(st.startTime, st.duration);} else if(st.startTime){ el.textContent='Expired'; updateProgress(st.startTime, st.duration);} else { el.textContent='Ready (6h)'; updateProgress(null,null);} }
+setInterval(tick,1000); tick();
+document.getElementById('btnStart').addEventListener('click', async ()=>{ const st = await examStatus(); if(!st.phone){ alert('Register phone first via logo.'); return;} if(!st.startTime){ await fetch('/api/exam/start',{method:'POST'});} });
+document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
+let offset=0, total=0;
+function qs(id){return document.getElementById(id);} 
+async function load(){
+  const limit = parseInt(qs('limit').value,10);
+  const res = await fetch(`/api/users?offset=${offset}&limit=${limit}`);
+  const data = await res.json();
+  total = data.total;
+  const tbody = document.querySelector('#tbl tbody');
+  tbody.innerHTML = data.users.map(u=>`<tr data-id="${u.id}"><td>${u.id}</td><td>${u.firstName}</td><td>${u.lastName}</td><td><button class=btn-sm onclick="delUser(${u.id})">Delete</button></td></tr>`).join('');
+  qs('meta').textContent = `Showing ${data.offset+1}-${data.offset+data.users.length} of ${data.total}`;
+  qs('pager').textContent = `Offset ${data.offset} | Page Size ${data.limit} | Remaining ${data.total}`;
+}
+async function delUser(id){
+  // silent delete without browser confirm
+  const res = await fetch('/api/users/'+id,{method:'DELETE'});
+  if(res.ok){
+    // Stay on same offset; refetch; adjust if past end
+    const limit = parseInt(qs('limit').value,10);
+    if(offset >= total-1) offset = Math.max(0, offset - limit);
+    await load();
+  } else {
+    alert('Delete failed');
+  }
+}
+function prevPage(){
+  const limit = parseInt(qs('limit').value,10);
+  offset = Math.max(0, offset - limit);
+  load();
+}
+function nextPage(){
+  const limit = parseInt(qs('limit').value,10);
+  offset = offset + limit;
+  if(offset >= total) offset = total - (total % limit || limit);
+  if(offset < 0) offset = 0;
+  load();
+}
+async function promptAdd(){
+  const fn = prompt('First Name?'); if(!fn) return;
+  const ln = prompt('Last Name?'); if(!ln) return;
+  const res = await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln})});
+  if(res.ok){
+    // Jump to end where new user appended
+    const user = await res.json();
+    total += 1; // optimistic
+    // calculate last page offset
+    const limit = parseInt(qs('limit').value,10);
+    offset = Math.floor((total-1)/limit)*limit;
+    await load();
+    const row = document.querySelector(`tr[data-id='${user.id}']`);
+    if(row) row.style.background='#d1fae5';
+  } else {
+    alert('Add failed');
+  }
+}
+function reloadAll(){ load(); }
+async function resetUsers(){
+  const res = await fetch('/api/users/reset',{method:'POST'});
+  if(res.ok){ offset = 0; await load(); alert('Users reset to 5000 baseline'); } else { alert('Reset failed'); }
+}
+qs('limit').addEventListener('change', ()=>{ offset=0; load(); });
+// default to 100; leave selection if user chooses 5000
+load();
+</script>
+</body>
+</html>

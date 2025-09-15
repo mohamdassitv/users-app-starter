@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Task 2 — Gateway Reachability & Latency (Numeric Codes)</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .muted{color:#94a3b8}
+    .pass{color:#22c55e}
+    .fail{color:#ef4444}
+    .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    input[type="number"]{max-width:220px}
+    input[type="text"]{max-width:260px}
+    .inline{display:block;margin-top:4px}
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+      <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
+      <span class="brand-hacker">CHECK POINT</span>
+    </div>
+  </header>
+  <main class="page fade-in">
+      <div class="exam-bar">
+        <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
+        <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
+        <div class="exam-actions"><button id="btnStart" type="button">Start 6h</button></div>
+      </div>
+    <div class="card">
+  <h2>Task 2 — Gateway Reachability &amp; Latency (NOC Shift)</h2>
+  <p><strong>Background.</strong> During a quiet night shift a monitoring rule fires: <code>ALRT-24117</code> (elevated error ratio and added response time). Before escalation you must gather <em>direct, first‑hand evidence</em> of current gateway behavior across four representative conditions: normal success, explicit denial, upstream failure, and controlled latency. Your output becomes part of the shift handover packet.</p>
+  <p><strong>What To Produce.</strong> Verified HTTP outcomes for each path (you may enter either the numeric status code OR an accepted textual synonym), one latency measurement in milliseconds, the active trace ID header, and the scenario primary key (PK) shown for this run.</p>
+      <ul>
+        <li><strong>Target Base URL:</strong> <code>http://localhost:8081</code></li>
+        <li><strong>Endpoints Under Test:</strong>
+          <ul>
+            <li><code>/gateway/ok</code> — Baseline healthy path</li>
+            <li><code>/gateway/forbidden</code> — Simulated authZ denial (should NOT be retried)</li>
+            <li><code>/gateway/bad</code> — Upstream / dependency failure proxy (gateway maps to 5xx)</li>
+            <li><code>/gateway/delay/1200</code> — Artificial latency to assess client experience & thresholds</li>
+          </ul>
+        </li>
+      </ul>
+      <p><strong>Why This Matters.</strong> Precise numeric codes distinguish between client vs server fault domains (4xx vs 5xx) and guide escalation (e.g. auth service vs upstream microservice vs network). Latency characterization confirms whether user‑visible slowness is systemic or localized.</p>
+  <p class="muted">Use any legitimate HTTP inspection tool. No answers are embedded; you must query and verify.</p>
+    </div>
+
+    <div class="card">
+  <h3>Operational Objectives</h3>
+      <ol>
+  <li>Verify reachability of each endpoint and capture its response classification (numeric code or approved synonym).</li>
+        <li>Measure end‑to‑end latency (client perspective) for <code>/gateway/delay/1200</code>.</li>
+  <li>Extract the correlation trace ID (<code>X‑Lab‑Trace</code> header) from a response.</li>
+  <li>Record the scenario primary key (PK) displayed.</li>
+        <li>Document method, tooling, and interpretation suitable for shift handover.</li>
+      </ol>
+      <p><strong>Constraints.</strong> Treat the environment as read‑only; do not attempt to modify server code. Assume other services may page soon, so keep collection concise & reproducible.</p>
+    </div>
+
+    <div class="card">
+      <h3>Submit Observations</h3>
+      <div class="grid2">
+  <label>Result for <code>/gateway/ok</code>
+          <input id="code_ok" type="text" placeholder="status or label number">
+          <small id="fb_ok" class="inline muted">Enter numeric or synonym.</small>
+        </label>
+        <label>Result for <code>/gateway/forbidden</code>
+          <input id="code_forbidden" type="text" placeholder="status or label number">
+          <small id="fb_forbidden" class="inline muted">Enter numeric or synonym.</small>
+        </label>
+        <label>Result for <code>/gateway/bad</code>
+          <input id="code_bad" type="text" placeholder="status or label number">
+          <small id="fb_bad" class="inline muted">Enter numeric or synonym.</small>
+        </label>
+        <label>Latency for <code>/gateway/delay/1200</code>
+          <input id="lat" type="text" placeholder="ms">
+          <small id="fb_lat" class="inline muted">Milliseconds (e.g. 1200 or 1.2s).</small>
+        </label>
+        <label>Trace ID (<code>X‑Lab‑Trace</code> header)
+          <input id="trace" type="text" placeholder="LAB-XXXXXX">
+          <small id="fb_trace" class="inline muted">Case‑sensitive.</small>
+        </label>
+        <label>Scenario Primary Key (PK)
+          <input id="pk" type="text" placeholder="PK-XXXXXX">
+          <small id="fb_pk" class="inline muted">Shown near title.</small>
+        </label>
+        <label>Confirm OK Endpoint Number
+          <input id="ok_label_input" type="text" placeholder="value returned">
+          <small id="fb_oklabel" class="inline muted">Fetch <code>/gateway/ok</code>; enter the exact body value.</small>
+        </label>
+        <label>Confirm FORBIDDEN Endpoint Number
+          <input id="forbidden_label_input" type="text" placeholder="value returned">
+          <small id="fb_forbiddenlabel" class="inline muted">Fetch <code>/gateway/forbidden</code>; enter the exact body value.</small>
+        </label>
+        <label>Confirm BAD Endpoint Number
+          <input id="bad_label_input" type="text" placeholder="value returned">
+          <small id="fb_badlabel" class="inline muted">Fetch <code>/gateway/bad</code>; enter the exact body value.</small>
+        </label>
+      </div>
+      <p><button onclick="validate()">Validate</button></p>
+      <pre id="result" class="muted"></pre>
+    </div>
+
+    <div class="card">
+      <h3>Deliverable (Shift Handover Extract)</h3>
+      <ul>
+        <li><strong>Status Codes Table:</strong> Each path → numeric code + tool used.</li>
+        <li><strong>Latency:</strong> Raw measurement(s) for delay endpoint (single or averaged) + method.</li>
+        <li><strong>Trace ID:</strong> Exact value of <code>X‑Lab‑Trace</code> and which request captured it.</li>
+        <li><strong>Interpretation Paragraph:</strong> 5–8 sentences: classify each result (client domain vs server domain), initial severity, and next escalation target (if any).</li>
+        <li><strong>Evidence:</strong> One screenshot or command snippet per endpoint (minimal but clear).</li>
+      </ul>
+      <h4>Scoring Rubric</h4>
+      <ul>
+        <li><strong>Accuracy (40%)</strong> — All numeric codes & latency within expected ranges.</li>
+        <li><strong>Traceability (20%)</strong> — Trace ID captured & referenced alongside method.</li>
+        <li><strong>Operational Clarity (25%)</strong> — Interpretation uses proper terminology (e.g., “authorization failure” not just “error”).</li>
+        <li><strong>Professional Presentation (15%)</strong> — Concise, structured, shift‑ready wording.</li>
+      </ul>
+      <p class="muted">When validation passes you have enough raw evidence to attach to alert <code>ALRT-24117</code>.</p>
+    </div>
+  </div>
+  </main>
+  <!-- Right rail removed per simplification request -->
+
+<a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
+  <img src="/help-contact.svg" alt="Help" width="38" height="38">
+  <span class="help-label">Need help? Contact on-call.</span>
+</a>
+<script>
+const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16) header.classList.add('shrink'); else header.classList.remove('shrink');});
+// Exam shared helpers
+async function examStatus(){ const r = await fetch('/api/exam/status'); return r.ok? r.json():{}; }
+function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
+function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){bar.style.width='0%'; return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
+async function tick(){ const st=await examStatus(); const el=document.getElementById('examTimer'); if(!el) return; if(st.running){ el.textContent='Remaining: '+fmt(st.remainingMs); updateProgress(st.startTime, st.duration);} else if(st.startTime){ el.textContent='Expired'; updateProgress(st.startTime, st.duration);} else { el.textContent='Ready (6h)'; updateProgress(null,null);} }
+setInterval(tick,1000); tick();
+document.getElementById('btnStart').addEventListener('click', async ()=>{ const st = await examStatus(); if(!st.phone){ alert('Register phone first via logo.'); return;} if(!st.startTime){ await fetch('/api/exam/start',{method:'POST'});} });
+document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
+function parseLatencyMs(v){
+  if(!v) return NaN;
+  const s = String(v).trim().toLowerCase().replace(/,/g,'');
+  const ms = s.match(/^(\d+(\.\d+)?)\s*ms?$/);
+  if(ms) return Math.round(parseFloat(ms[1]));
+  const sec = s.match(/^(\d+(\.\d+)?)\s*(s|sec|secs|second|seconds)$/);
+  if(sec) return Math.round(parseFloat(sec[1]) * 1000);
+  if(/^\d+(\.\d+)?$/.test(s)) return Math.round(parseFloat(s));
+  return NaN;
+}
+function fb(el, ok, msg){ el.textContent = msg; el.className = 'inline ' + (ok ? 'pass' : 'fail'); }
+async function loadScenario(){
+  try {
+    const sc = await (await fetch('/api/scenario')).json();
+    const h2 = document.querySelector('.card h2');
+    if (h2 && !document.getElementById('scenarioPkTag')) {
+      const span = document.createElement('span');
+      span.id='scenarioPkTag';
+      span.style.fontSize='0.7em';
+      span.style.marginLeft='8px';
+      span.className='muted';
+      span.textContent='['+sc.pk+']';
+      h2.appendChild(span);
+    }
+    // number intentionally NOT shown; must be obtained by calling /gateway/ok
+  } catch(e){ /* ignore */ }
+}
+
+async function validate(){
+  const want = (await (await fetch('/api/token')).json()).token;
+
+  const raw_ok = (document.getElementById('code_ok').value || '').trim().toLowerCase();
+  const raw_forb = (document.getElementById('code_forbidden').value || '').trim().toLowerCase();
+  const raw_bad = (document.getElementById('code_bad').value || '').trim().toLowerCase();
+  function matches(val, list){ return list.some(x=> val === x); }
+  // fetch scenario early so dynamic label numbers also qualify as accepted answers
+  const sc = await (await fetch('/api/scenario')).json();
+  const okSet = ['200','ok','success','healthy', String(sc.okLabelNumber)];
+  const forbSet = ['403','forbidden','denied','blocked', String(sc.forbiddenLabelNumber)];
+  const badSet = ['502','bad gateway','gateway error', String(sc.badLabelNumber)];
+  const ok_ok = matches(raw_ok, okSet);
+  const ok_forb = matches(raw_forb, forbSet);
+  const ok_bad = matches(raw_bad, badSet);
+  const latMs = parseLatencyMs(document.getElementById('lat').value);
+  const trace = (document.getElementById('trace').value || '').trim();
+  const pk = (document.getElementById('pk').value || '').trim();
+  const okLabelInput = (document.getElementById('ok_label_input').value || '').trim();
+  const forbiddenLabelInput = (document.getElementById('forbidden_label_input').value || '').trim();
+  const badLabelInput = (document.getElementById('bad_label_input').value || '').trim();
+
+  // (numeric code normalization removed in favor of synonym set above)
+  const ok_lat = (!Number.isNaN(latMs) && latMs >= 800 && latMs <= 1600);
+  const ok_trace = (trace === want);
+
+  const ok_pk = (pk === sc.pk);
+  const ok_label_match = (okLabelInput === String(sc.okLabelNumber));
+  const forbidden_label_match = (forbiddenLabelInput === String(sc.forbiddenLabelNumber));
+  const bad_label_match = (badLabelInput === String(sc.badLabelNumber));
+  fb(document.getElementById('fb_ok'), ok_ok, ok_ok ? '✅ accepted' : '❌ not accepted');
+  fb(document.getElementById('fb_forbidden'), ok_forb, ok_forb ? '✅ accepted' : '❌ not accepted');
+  fb(document.getElementById('fb_bad'), ok_bad, ok_bad ? '✅ accepted' : '❌ not accepted');
+  fb(document.getElementById('fb_lat'), ok_lat, ok_lat ? '✅ plausible' : '❌ out of range');
+  fb(document.getElementById('fb_trace'), ok_trace, ok_trace ? '✅ matches' : '❌ mismatch');
+  fb(document.getElementById('fb_pk'), ok_pk, ok_pk ? '✅ matches' : '❌ mismatch');
+  fb(document.getElementById('fb_oklabel'), ok_label_match, ok_label_match ? '✅ matches' : '❌ mismatch');
+  fb(document.getElementById('fb_forbiddenlabel'), forbidden_label_match, forbidden_label_match ? '✅ matches' : '❌ mismatch');
+  fb(document.getElementById('fb_badlabel'), bad_label_match, bad_label_match ? '✅ matches' : '❌ mismatch');
+
+  const all = ok_ok && ok_forb && ok_bad && ok_lat && ok_trace && ok_pk && ok_label_match && forbidden_label_match && bad_label_match;
+  const lines = [
+  (ok_ok?'✅':'❌')+' /gateway/ok classification',
+  (ok_forb?'✅':'❌')+' /gateway/forbidden classification',
+  (ok_bad?'✅':'❌')+' /gateway/bad classification',
+    (ok_lat?'✅':'❌')+' latency within 800–1600 ms',
+    (ok_trace?'✅':'❌')+' trace id matches',
+    (ok_pk?'✅':'❌')+' scenario PK matches',
+    (ok_label_match?'✅':'❌')+' ok label number matches',
+    (forbidden_label_match?'✅':'❌')+' forbidden label number matches',
+    (bad_label_match?'✅':'❌')+' bad label number matches',
+    '',
+    'RESULT: ' + (all ? '✅ PASS' : '❌ NOT YET')
+  ];
+  document.getElementById('result').textContent = lines.join('\n');
+}
+loadScenario();
+</script>
+</body>
+</html>
