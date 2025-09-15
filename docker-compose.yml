@@ -7,3 +7,12 @@ services:
     volumes:
       - ./lab/state:/app/state
       - ./lab/logs:/app/logs
+  admin:
+    build: ./admin
+    ports:
+      - "8082:8082"
+    environment:
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-exam-secret-123}
+    volumes:
+      - ./lab/state:/app/lab/state
+      - ./lab/logs:/app/lab/logs

@@ -1,0 +1,5 @@
+{
+  "firstNames": ["Alice","Bob","Carol","David","Eve","Frank","Grace","Heidi","Ivan","Judy","Mallory","Niaj","Olivia","Peggy","Rupert","Sybil","Trent","Victor","Wendy","Yvonne","Zara"],
+  "lastNames": ["Anderson","Baker","Clark","Davis","Evans","Franklin","Green","Hughes","Irwin","Johnson","Klein","Lopez","Miller","Norris","Olsen","Parker","Quinn","Reed","Simpson","Turner","Ulrich","Vance","White","Xu","Young","Zimmer"],
+  "count": 5000
+}

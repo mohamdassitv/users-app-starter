@@ -56,3 +56,79 @@ http://localhost:8081 (index lists both tasks)
 
 ## Notes
 All other tasks were intentionally removed to narrow focus and reduce noise. The state JSON persists dynamic identifiers across rebuilds unless you delete the volume or state file.
+
+## Admin API for Bulk / Destructive Operations
+
+User deletions and dataset resets are now restricted to a separate hardened service that is intentionally unusable from a normal browser (CORS blocked). The UI on port 8081 is read‑only for deletions and will respond 405 for `DELETE /api/users/:id` with a guidance message.
+
+Service: `http://localhost:8082`
+
+Authentication:
+- Send header: `Authorization: Bearer <ADMIN_TOKEN>`
+- Token source: environment variable `ADMIN_TOKEN` (fallback reads `admin/token.txt` inside the container). The sample token in this repo: `exam-secret-123` (change in production!).
+
+Anti‑Console / CORS Hardening:
+- Any request presenting an `Origin` header or using the preflight `OPTIONS` method responds `403 {"error":"CORS blocked"}` with no `Access-Control-Allow-*` headers. This blocks typical browser fetch/XHR usage and forces controlled tooling (curl, Python script, etc.).
+
+### Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /admin/health | Simple health probe `{ ok: true }` |
+| GET | /admin/users?offset=&limit= | (Optional) Paginated listing for verification |
+| DELETE | /admin/users/:id | Delete a single user (204 No Content) |
+| POST | /admin/reset | Rebuild the 5,000-user dataset from seed |
+
+### Example: Delete One User (id 42)
+```bash
+curl -i -H "Authorization: Bearer exam-secret-123" -X DELETE http://localhost:8082/admin/users/42
+```
+
+Expected response (on success): `204 No Content`
+
+### Example: Reset Dataset
+```bash
+curl -s -H "Authorization: Bearer exam-secret-123" -X POST http://localhost:8082/admin/reset | jq
+```
+
+### Python Script to Delete a List of IDs
+```python
+import requests
+
+BASE = "http://localhost:8082"
+TOKEN = "exam-secret-123"  # replace in real use
+HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+
+def delete_ids(ids):
+	for uid in ids:
+		r = requests.delete(f"{BASE}/admin/users/{uid}", headers=HEADERS)
+		if r.status_code == 204:
+			print(f"Deleted {uid}")
+		else:
+			print(f"Failed {uid}: {r.status_code} {r.text}")
+
+if __name__ == "__main__":
+	sample = [10,11,12]
+	delete_ids(sample)
+```
+
+### Operational Rationale
+- Separation of duties: destructive actions run on isolated port + token.
+- Defense-in-depth: Browser-originated deletes blocked (reduces accidental or scripted abuse from exam UI context).
+- Deterministic rebuild: `/admin/reset` ensures a known 5,000-user baseline.
+
+### Changing the Token
+1. Edit `admin/token.txt` or supply an environment variable at runtime:
+   ```powershell
+   $Env:ADMIN_TOKEN = "new-secret-value"
+   docker compose up --build -d
+   ```
+2. Verify:
+   ```bash
+   curl -H "Authorization: Bearer new-secret-value" http://localhost:8082/admin/health
+   ```
+
+### Quick Health Check
+```bash
+curl -s http://localhost:8082/admin/health
+```
+

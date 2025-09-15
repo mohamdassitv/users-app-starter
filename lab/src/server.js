@@ -191,14 +191,7 @@ app.post('/api/users', (req,res)=>{
 });
 // DELETE /api/users/:id
 app.delete('/api/users/:id', (req,res)=>{
-  const id = parseInt(req.params.id,10);
-  const st = readState();
-  const list = ensureUsers(st);
-  const idx = list.findIndex(u=>u.id===id);
-  if(idx===-1) return res.status(404).json({error:'not found'});
-  const removed = list.splice(idx,1)[0];
-  writeState(st);
-  res.json({removed});
+  return res.status(405).json({ error: 'UI is read-only. Use admin API on port 8082.' });
 });
 
 // Root serves simplified index (static file already in public)
