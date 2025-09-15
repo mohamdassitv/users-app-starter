@@ -132,6 +132,30 @@ tbody tr:hover {background:#fff5fa;}
 .fade-in {animation:fadeIn .4s ease;} 
 @keyframes fadeIn {from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
 
+/* Hero (NOC Exam) */
+@font-face {font-family:'JetBrains Mono';src:local('JetBrains Mono');font-display:swap;}
+.hero-wrapper {position:relative;padding:100px 40px 70px;margin:-24px -40px 40px;background:linear-gradient(135deg,#0b1020,#0f203a);overflow:hidden;text-align:center;}
+.hero-wrapper:before {content:"";position:absolute;left:-180px;top:-120px;width:520px;height:520px;background:radial-gradient(circle at 30% 40%,rgba(255,10,108,0.55),rgba(255,10,108,0) 70%);filter:blur(40px);opacity:.55;}
+.hero-wrapper:after {content:"";position:absolute;right:-160px;bottom:-140px;width:420px;height:420px;background:radial-gradient(circle at 50% 50%,rgba(255,10,108,0.35),rgba(255,10,108,0) 70%);filter:blur(50px);opacity:.4;}
+.hero-title {font-family:'JetBrains Mono','Fira Code','SFMono-Regular',Menlo,Consolas,monospace;letter-spacing:.08em;font-weight:900;font-size:clamp(40px,8vw,96px);text-transform:uppercase;margin:0;color:#fefefe;position:relative;display:inline-block;text-shadow:0 0 6px rgba(255,10,108,.9),0 0 18px rgba(255,10,108,.5),0 0 2px rgba(255,255,255,.6);} 
+.hero-caret {display:inline-block;width:.6ch;margin-left:.2ch;background:linear-gradient(#ff0a6c,#ff4aa0);animation:blink 1s steps(2,start) infinite;}
+@keyframes blink {50% {opacity:0;}}
+.hero-sub {margin:14px 0 0;font-size:18px;font-weight:500;color:#d0d6e0;letter-spacing:.04em;text-shadow:0 0 4px rgba(255,10,108,.4);} 
+.hero-intro-card {max-width:980px;margin:48px auto 0;background:#0f1528;border:1px solid #242c3d;border-radius:28px;padding:34px 46px;position:relative;box-shadow:0 10px 40px -14px rgba(0,0,0,.6),0 0 0 1px rgba(255,10,108,.25);text-align:left;color:#dbe2ec;}
+.hero-intro-card h2 {margin:0 0 14px;font-size:26px;font-weight:700;color:#fff;letter-spacing:.5px;}
+.hero-intro-card p {margin:0 0 14px;font-size:15px;line-height:1.55;}
+.badge-inline {display:inline-flex;align-items:center;font-size:10px;font-weight:700;background:var(--bg-accent);color:#fff;padding:4px 8px;border-radius:999px;letter-spacing:.8px;margin-left:10px;text-transform:uppercase;box-shadow:0 0 0 1px rgba(255,10,108,.4),0 4px 10px -2px rgba(255,10,108,.5);} 
+.callout-strong {font-weight:700;color:#fff;} 
+.hero-grid {margin-top:56px;} 
+@media (max-width:820px){
+	.hero-intro-card {padding:28px 28px;border-radius:22px;}
+	.hero-title {font-size:clamp(42px,12vw,88px);} 
+	.hero-sub {font-size:16px;}
+}
+@media (prefers-reduced-motion: reduce){
+	.hero-caret {animation:none;}
+}
+
 /* Forms inside cards */
 .card input[type=text], .card input[type=number], .card textarea {background:#fff;}
 
