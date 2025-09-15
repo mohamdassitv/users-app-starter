@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "body-parser": "^1.20.2"
+    "body-parser": "^1.20.2",
+    "express-rate-limit": "^6.11.2",
+    "cookie-parser": "^1.4.6"
   }
 }

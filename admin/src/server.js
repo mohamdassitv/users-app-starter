@@ -5,11 +5,32 @@ const path = require('path');
 const app = express();
 app.use(express.json({limit:'5mb'}));
 
-const STATE_PATH = path.join(__dirname, '..','..','lab','state','state.json');
+// State JSON is shared from the main lab service via a volume mount at /app/lab/state
+// __dirname = /app/src so we only need to go up one level.
+const STATE_PATH = path.join(__dirname, '..','lab','state','state.json');
 const SEED_PATH = path.join(__dirname, '..','seed','users_seed.json');
 const TOKEN_FILE = path.join(__dirname, '..','token.txt');
 
-function loadState(){ return JSON.parse(fs.readFileSync(STATE_PATH,'utf8')); }
+function initStateFile(){
+  try {
+    fs.mkdirSync(path.dirname(STATE_PATH), { recursive: true });
+    if(!fs.existsSync(STATE_PATH)){
+      fs.writeFileSync(STATE_PATH, JSON.stringify({ users: [] }, null, 2));
+    }
+  } catch(e){
+    console.error('Failed to initialize state file', e);
+  }
+}
+
+function loadState(){
+  try {
+    return JSON.parse(fs.readFileSync(STATE_PATH,'utf8'));
+  } catch(e){
+    console.warn('State file unreadable, reinitializing', e.message);
+    initStateFile();
+    return { users: [] };
+  }
+}
 function saveState(st){ fs.writeFileSync(STATE_PATH, JSON.stringify(st,null,2)); }
 function ensureUsers(st){ if(!st.users) st.users = []; return st.users; }
 
