@@ -11,6 +11,11 @@ function readState(){return JSON.parse(fs.readFileSync(STATE_PATH,'utf8'));}
 function writeState(s){fs.writeFileSync(STATE_PATH, JSON.stringify(s, null, 2));}
 
 app.use(bodyParser.json({limit:'2mb'}));
+
+// Serve login page directly at root BEFORE static so it always wins
+app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','login.html')));
+
+// Static assets (CSS, images, other HTML)
 app.use(express.static(path.join(__dirname,'public')));
 
 // ---- Gateway simulation ----
@@ -107,11 +112,7 @@ app.post('/check/incident', (req,res)=>{
 app.get('/api/token', (req,res)=> res.json({token: 'LAB-QGZK7V'}));
 app.get('/api/state', (req,res)=> res.json(readState()));
 
-// ---- Static pages ----
-// Serve login page directly at root (no redirect)
-app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','login.html')));
-
-// Fallback: keep existing single-page style catch-all for other deep links
-app.get('*', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
+// ---- Static pages catch-all (excluding root which is handled above)
+app.get(/^\/(?!$).*/, (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
 
 app.listen(PORT, ()=> console.log('Ops 101 Exam Lab on http://localhost:'+PORT));
