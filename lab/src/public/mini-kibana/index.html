@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Discover • Mini Kibana</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- App Bar -->
+  <div class="app-bar">
+    <div class="app-bar-left">
+      <button id="burgerBtn" class="icon-btn" aria-label="Toggle navigation">☰</button>
+      <div class="app-name">Discover</div>
+    </div>
+    <div class="app-bar-right">
+      <button class="btn ghost small" disabled>New</button>
+      <button class="btn ghost small" disabled>Save</button>
+      <button class="btn ghost small" disabled>Open</button>
+      <button class="btn ghost small" disabled>Share</button>
+      <button class="btn ghost small" disabled>Reporting</button>
+      <button class="btn ghost small" disabled>Inspect</button>
+      <button id="darkModeBtn" class="btn ghost small">Dark</button>
+    </div>
+  </div>
+
+  <!-- Search Row -->
+  <div class="search-row">
+    <select id="indexPattern" class="index-pattern">
+      <option>eu-west-1-kube*</option>
+    </select>
+    <div class="kql-wrapper">
+      <button id="kqlToggle" class="chip kql-chip on" title="Toggle KQL parsing">KQL</button>
+      <input id="kqlInput" class="kql-bar" placeholder="data.message:login.fail AND data.level:ERROR" autocomplete="off" />
+      <div id="filterChips" class="filter-chips" aria-live="polite"></div>
+    </div>
+    <div class="search-actions">
+      <button id="addFilterBtn" class="btn ghost">+ Add filter</button>
+      <button id="showDatesBtn" class="btn ghost" data-on="false">Show dates</button>
+      <button id="refreshBtn" class="btn">Refresh</button>
+      <select id="timeRange" class="time-range">
+        <option value="15m">Last 15 minutes</option>
+        <option value="45m" selected>Last 45 minutes</option>
+        <option value="1h">Last 1 hour</option>
+        <option value="6h">Last 6 hours</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="abs">Absolute…</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Histogram Section -->
+  <div class="histogram-section">
+    <div class="histogram-header">
+      <div class="y-label">Count</div>
+      <div class="hist-caption">@timestamp per 30 seconds</div>
+      <div class="hist-hits" id="histHits">– hits</div>
+    </div>
+    <canvas id="histogram" height="140"></canvas>
+    <div class="time-window" id="timeWindowLabel"></div>
+    <div id="brushOverlay" class="brush-overlay" aria-hidden="true"></div>
+  </div>
+
+  <!-- Main Two-Column Layout -->
+  <div class="discover-body">
+    <aside class="field-browser" id="fieldBrowser">
+      <div class="field-browser-section">
+        <div class="section-title">Selected fields</div>
+        <div id="selectedFieldChips" class="chips"></div>
+      </div>
+      <div class="field-browser-section">
+        <div class="section-title">Filter by type</div>
+        <input id="fieldSearch" class="field-search" placeholder="Search fields" />
+      </div>
+      <div class="field-browser-section">
+        <div class="section-title">Popular</div>
+        <ul id="popularFields" class="field-list"></ul>
+      </div>
+      <div class="field-browser-section">
+        <div class="section-title">Available fields</div>
+        <ul id="availableFields" class="field-list"></ul>
+      </div>
+    </aside>
+    <section class="results-area">
+      <div class="results-table-header" id="resultsHeader">
+        <div class="col-time">Time</div>
+        <div class="col-source">_source</div>
+      </div>
+      <div id="resultsViewport" class="results-viewport" tabindex="0" aria-label="Search results">
+        <div id="resultsContent"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">No results for current time range and query.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Filter Builder Modal (hidden by default) -->
+  <div id="filterBuilder" class="filter-builder" role="dialog" aria-modal="true" style="display:none;">
+    <div class="fb-inner">
+      <div class="fb-head">Add Filter <button id="fbClose" class="icon-btn" aria-label="Close">✕</button></div>
+      <div class="fb-row">
+        <label>Field
+          <input id="fbField" list="fbFieldList" />
+          <datalist id="fbFieldList"></datalist>
+        </label>
+        <label>Operator
+          <select id="fbOp">
+            <option value="exists">is</option>
+            <option value="eq">is</option>
+            <option value="neq">is not</option>
+          </select>
+        </label>
+        <label>Value
+          <input id="fbValue" />
+        </label>
+      </div>
+      <div class="fb-actions">
+        <button id="fbAdd" class="btn">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">Mini Kibana Discover • Synthetic dataset • Brush to zoom time • Double-click histogram to reset</footer>
+  <script src="app.js" defer></script>
+</body>
+</html>

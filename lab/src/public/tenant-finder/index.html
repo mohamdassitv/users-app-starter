@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Tenant Finder — Log Correlation</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="app-header"><h1>Tenant Finder — Log Correlation</h1></header>
+<main class="page" id="appRoot" hidden>
+  <section class="task-card">
+    <h2>Task</h2>
+    <p>Find the tenant ID for alias <code>zenith-core</code> by correlating logs with the same <code>req_id</code>. Paste the exact ID below, and provide one <code>req_id</code> proving your correlation.</p>
+    <div class="inputs-grid">
+      <div class="field">
+        <label for="tenantIdInput">Tenant ID (UUID)</label>
+        <input id="tenantIdInput" class="text-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" />
+        <div class="hint" id="tenantIdFeedback"></div>
+      </div>
+      <div class="field">
+        <label for="reqIdInput">Correlation req_id</label>
+        <input id="reqIdInput" class="text-input" placeholder="paste req_id" autocomplete="off" />
+        <div class="hint" id="reqIdFeedback"></div>
+      </div>
+      <div class="field action-col">
+        <button id="submitBtn" class="btn primary" disabled>Submit</button>
+        <div id="submitStatus" class="submit-status" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel-group">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>NDJSON Events</h3>
+        <div class="toolbar">
+          <input id="ndjsonFilter" class="filter-box" placeholder="Filter (substring across all fields)" />
+          <div class="chips" id="quickChips"></div>
+          <label class="toggle"><input type="checkbox" id="groupToggle" /> Group by req_id</label>
+        </div>
+      </div>
+      <div id="ndjsonList" class="log-list" tabindex="0" aria-label="NDJSON events"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Syslog Mirror</h3>
+        <div class="toolbar">
+          <input id="syslogFilter" class="filter-box" placeholder="Filter (grep substring)" />
+        </div>
+      </div>
+      <pre id="syslogPane" class="syslog" aria-label="Syslog lines"></pre>
+    </div>
+  </section>
+
+  <details class="hint-box">
+    <summary>Show Hints</summary>
+    <ul>
+      <li>Hint 1: some <code>upstream.call</code> lines carry a masked header like <code>tid:&lt;first8&gt;...</code>.</li>
+      <li>Hint 2: the final <code>authz.decision</code> usually contains the full <code>tenant_id</code>.</li>
+    </ul>
+  </details>
+
+  <section class="cli-samples">
+    <button id="showCli" class="btn ghost">Copy sample CLI</button>
+    <pre id="cliBlock" class="cli-block" hidden>$ jq -r '.req_id + " " + (.tenant_id // "")' auth_gateway_logs.ndjson | grep zenith-core
+$ grep zenith-core auth_gateway_syslog.txt
+$ jq -r 'select(.tenant_alias=="zenith-core" and .tenant_id) | .tenant_id' auth_gateway_logs.ndjson | sort -u</pre>
+  </section>
+</main>
+<section id="loaderSection" class="loader-section" aria-live="polite">
+  <div class="loader-card">
+    <h2>Load Log Files</h2>
+    <p>Attempting fetch of <code>/data/auth_gateway_logs.ndjson</code> and <code>/data/auth_gateway_syslog.txt</code>…</p>
+    <div id="fetchStatus" class="fetch-status">Starting…</div>
+    <div class="fallback" id="fallback" hidden>
+      <p><strong>Fetch failed or blocked.</strong> Use the file inputs or drag & drop both files here.</p>
+      <div class="file-pickers">
+        <div><label>NDJSON File<input type="file" id="ndjsonFile" accept=".ndjson,.log,.txt,application/jsonl" /></label></div>
+        <div><label>Syslog File<input type="file" id="syslogFile" accept=".txt,.log" /></label></div>
+      </div>
+      <div class="drop-zone" id="dropZone" tabindex="0">Drop files here</div>
+      <button id="manualLoad" class="btn primary" disabled>Load Selected</button>
+    </div>
+  </div>
+</section>
+<footer class="app-footer">All parsing is client-side. Nothing is uploaded.</footer>
+<script src="app.js" defer></script>
+</body>
+</html>

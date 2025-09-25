@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Infinity Portal – Mock</title>
+  <style>
+    :root{
+      /* Core surface & text */
+      --bg:#fff5fa;            /* very light pink background */
+      --card:#ffffff;
+      --ink:#3a0f24;           /* deep plum for primary text */
+      --ink-2:#6a2c4a;         /* secondary text */
+      --border:#f1cfe0;        /* soft pink border */
+      --muted:#a25579;         /* muted text */
+      --table-head:#ffe6f1;    /* light pink header */
+      --shadow:0 2px 4px rgba(176,46,109,.12);
+      /* Accent palette */
+      --pink:#ec4899;          /* primary accent */
+      --pink-soft:#f472b6;     /* softer accent */
+      --pink-bg:#ffe0f0;       /* subtle fill */
+      --success:#24b47e;       /* keep a green for semantic success if needed */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font:14px/1.4 Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    .topbar{
+      height:48px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:0 12px;
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:5;
+    }
+    .crumb{color:var(--muted)}
+    .crumb strong{color:var(--ink); font-weight:600}
+    .wrap{max-width:1100px; margin:16px auto; padding:0 12px}
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:8px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    table{width:100%; border-collapse:collapse}
+    thead{background:var(--table-head); color:var(--ink-2)}
+    th,td{padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap;}
+    tbody tr:hover{background:#f8fafc}
+    .dot{display:inline-flex; align-items:center; gap:6px}
+  .dot i{width:8px; height:8px; border-radius:999px; background:var(--pink); display:inline-block}
+  .badge{padding:2px 8px; border:1px solid var(--pink-soft); border-radius:999px; color:var(--ink-2); background:var(--pink-bg); font-size:12px}
+    .terminal{
+      background:#1d0d17; /* deep plum-ish terminal background */
+      color:#ffd9eb;
+      font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      min-height:260px;
+      max-height:360px;
+      overflow:auto;
+      border-top:1px solid #351b2b;
+      padding:10px 12px 56px;
+      position:relative;
+    }
+    .prompt{display:block; white-space:pre-wrap}
+  .cursor{display:inline-block; width:8px; height:15px; background:var(--pink-soft); animation:blink 1s steps(2) infinite}
+    @keyframes blink{50%{opacity:0}}
+    .inputbar{
+      position:absolute; left:0; right:0; bottom:0;
+      background:#1d0d17;
+      border-top:1px solid #351b2b;
+      padding:8px 12px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .inputbar input{
+      width:100%; border:1px solid #5d2843; background:#2a1322; color:#ffe5f2;
+      padding:8px 10px; border-radius:6px; outline:none;
+      font:13px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    .inputbar button{
+      border:1px solid var(--pink-soft); background:var(--pink); color:#fff;
+      padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600;
+      box-shadow:0 1px 2px rgba(0,0,0,.15);
+    }
+    .inputbar button:hover{background:var(--pink-soft)}
+    .inputbar button:active{transform:translateY(1px)}
+  .helpchips{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0 0}
+  .helpchips .chip{background:var(--pink-bg); border:1px solid var(--pink-soft); color:var(--ink-2); padding:4px 8px; border-radius:6px; font-size:12px}
+  .footer-note{color:var(--muted); font-size:12px; margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="crumb">Account: <strong>Mitsubishi HC Capital BO</strong></span>
+    <span class="crumb">Account Id: <strong>8ab93415-5bb1-4fdf-b1dc-2d1174626109</strong></span>
+    <span class="crumb">Sites: <strong>9</strong></span>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px">i.</th>
+            <th style="min-width:220px">Name</th>
+            <th>Status Check</th>
+            <th>State</th>
+            <th>Public IPv4</th>
+            <th>Private IP</th>
+            <th>Version</th>
+            <th>Machine Size</th>
+            <th>Type</th>
+            <th>Provider</th>
+            <th>Location</th>
+            <th>Connected</th>
+            <th>Creation Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>g1</td><td>g-220f24cda17290cc5c1c</td><td class="dot"><i></i>Running</td><td>Active</td><td>16.163.185.27</td><td>100.69.7.204</td><td>R81.10</td><td>Size-1-burst</td><td>aws</td><td>Asia: Hong Kong</td><td class="badge">1</td><td>11/12/24 17:57</td></tr>
+          <tr><td>g2</td><td>g-51b9c8b8d54c02ee332</td><td class="dot"><i></i>Running</td><td>Active</td><td>16.163.6.76</td><td>100.69.30.183</td><td>R81.10</td><td>Size-1-burst</td><td>aws</td><td>Asia: Hong Kong</td><td class="badge">1</td><td>11/12/24 17:51</td></tr>
+          <tr><td>g3</td><td>g-758056da36784e493c0e</td><td class="dot"><i></i>Running</td><td>Active</td><td>100.66.242.57</td><td>--</td><td>R81.10</td><td>Size-2</td><td>aws</td><td>Asia: Singapore</td><td class="badge">8</td><td>15/12/24 19:16</td></tr>
+          <tr style="background:#ffe9f4"><td>g4</td><td>g-c4f9dec4c7654988a8dc</td><td class="dot"><i></i>Running</td><td>Active</td><td>18.139.89.218</td><td>100.66.233.15</td><td>R81.10</td><td>Size-2</td><td>aws</td><td>Asia: Singapore</td><td class="badge">8</td><td>16/12/24 21:29</td></tr>
+        </tbody>
+      </table>
+      <div class="terminal" id="term">
+        <div id="screen">
+          <span class="prompt">Welcome to the Support Page terminal!
+Type "help" for list of available commands
+$ <span class="cursor"></span></span>
+        </div>
+        <div class="inputbar">
+          <input id="cmd" placeholder='Type commands prefixed with "g4" (e.g., g4 df -h /var/log)' spellcheck="false" autofocus />
+          <button id="run">Run</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="helpchips">
+      <div class="chip">Prefix every command with <strong>g4</strong></div>
+      <div class="chip">Sample: <code>g4 df -h /var/log</code></div>
+      <div class="chip">Sample: <code>g4 rm -r $DLPDIR/ftp/0*</code></div>
+      <div class="chip">Sample: <code>g4 rm -rf /var/log/crash</code></div>
+    </div>
+    <div class="footer-note">
+      Notes: Disk usage starts at <strong>90%</strong> on <code>/var/log</code>. After clean-up it drops to <strong>81%</strong> and stays stuck there by design.
+    </div>
+  </div>
+
+<script>
+(() => {
+  const screen = document.getElementById('screen');
+  const input = document.getElementById('cmd');
+  const runBtn = document.getElementById('run');
+
+  // Simulated state
+  let varLogUse = 90;      // percent
+  let cleanedOnce = false; // once we reach 81% we never go lower
+
+  const nowHHMM = () => {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2,'0');
+    const m = String(d.getMinutes()).padStart(2,'0');
+    return `${h}:${m}`;
+  };
+
+  const append = (text, withPrompt=true) => {
+    const block = document.createElement('div');
+    block.className = 'prompt';
+    block.textContent = text + (withPrompt ? `\n$ ` : '');
+    screen.appendChild(block);
+    screen.scrollTop = screen.scrollHeight;
+  };
+
+  const lsDf = () => {
+    const usedG = (43 * varLogUse / 100).toFixed(0);
+    const availG = (43 - usedG);
+    return `stdout:
+Filesystem                         Size  Used  Avail Use% Mounted on
+/dev/mapper/vg_splat-lv_current     20G   17G   3.0G  85% /
+/dev/nvme0n1p1                    291M   27M   250M  10% /boot
+tmpfs                               16G   18M    16G   1% /dev/shm
+/dev/mapper/vg_splat-lv_log         43G   ${String(usedG).padStart(2,' ')}G   ${String(availG).padStart(2,' ')}G  ${String(varLogUse).padStart(2,' ')}% /var/log
+
+stderr: This system is for authorized use only.`;
+  };
+
+  const dfVarLog = () => {
+    append(lsDf());
+  };
+
+  const help = () => {
+    append(`Supported commands (prefix with gateway id "g4 "):
+  g4 help
+  g4 df -h /var/log
+  g4 rm -r $DLPDIR/ftp/0*
+  g4 rm -r $DLPDIR/ftp/1*
+  g4 rm -r $DLPDIR/ftp/3*
+  g4 rm -rf /var/log/crash
+  g4 clear
+  g4 history
+  g4 exit`);
+  };
+
+  const history = [];
+  const pushHistory = (cmd) => {
+    history.push(`[${nowHHMM()}] ${cmd}`);
+    if (history.length > 100) history.shift();
+  };
+
+  const run = (raw) => {
+    const cmd = raw.trim();
+    if (!cmd) return;
+
+    // print the command the user typed
+    const shown = `$ ${cmd}`;
+    append(shown, false);
+
+    if (!cmd.startsWith('g4')) {
+      append(`error: please choose a gateway and prefix your command with it (e.g., "g4 df -h /var/log")`);
+      return;
+    }
+
+    pushHistory(cmd);
+
+    // strip the prefix "g4 "
+    const actual = cmd.replace(/^g4\s*/, '');
+
+    // Commands
+    if (actual === 'help') { help(); return; }
+    if (actual === 'clear') { screen.innerHTML = ''; return; }
+    if (actual === 'history') { append(history.join('\\n')); return; }
+    if (actual === 'exit') { append('Session closed. Type anything to start again.'); return; }
+
+    if (/^df\s+-h\s+\/?var\/?log$/.test(actual)) { dfVarLog(); return; }
+
+    if (/^rm\s+-r\s+\$DLPDIR\/ftp\/[013]\*$/i.test(actual) || /^rm\s+-rf\s+\/var\/log\/crash\/?$/.test(actual)) {
+      // Simulate cleanup - only the first time drops to 81%
+      if (!cleanedOnce) {
+        cleanedOnce = true;
+        varLogUse = 81;
+        append(`[${nowHHMM()}] cleanup: removed matching files. Disk usage reduced to 81%.
+Tip: additional deletions won't go below 81% on this mock.`);
+      } else {
+        append(`[${nowHHMM()}] cleanup: nothing else to delete. Still 81%.`);
+      }
+      return;
+    }
+
+    append(`sh: ${actual.split(' ')[0]}: command not found
+Type "g4 help" to see supported commands.`);
+  };
+
+  runBtn.addEventListener('click', () => {
+    run(input.value); input.value='';
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { run(input.value); input.value=''; }
+  });
+})();
+</script>
+</body>
+</html>

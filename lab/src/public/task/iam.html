@@ -19,9 +19,17 @@ curl -X POST http://localhost:8081/iam/grant \
 </div>
 <script>
 async function check(){
-  const iam = await (await fetch('/iam/status')).json();
-  const ok = (iam.student && iam.student.roles || []).includes('LogReader');
-  document.getElementById('out').textContent = ok ? '✅ Role present' : '❌ Not yet';
+  try {
+    const res = await fetch('/iam/status');
+    if(!res.ok){ document.getElementById('out').textContent='Fetch failed'; return; }
+    const iam = await res.json();
+    const roles = (iam.roles||[]);
+    const ok = roles.includes('LogReader');
+    document.getElementById('out').textContent = ok ? '✅ Role present' : '❌ Not yet';
+  } catch(e){
+    document.getElementById('out').textContent='Error';
+  }
 }
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </body></html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Alert | Compute instance health | Disk full (For Gateway Instance)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+:root {
+  --gray-50:#F2F4F8; --gray-60:#E0E0E0; --gray-70:#C6C6C6; --gray-100:#161616;
+  --blue-link:#0F62FE; --band-prelim:#E6F2FF; --band-invest:#FFF8E1; --band-danger:#FF7043; --band-resolved:#C8F7DC;
+  --font-sans: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; --mono: ui-monospace,Menlo,Consolas,monospace;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:var(--font-sans); font-size:16px; line-height:1.45; background:#fff; color:#222; }
+.page { max-width:1180px; margin:0 auto; padding:28px 46px 80px; }
+.breadcrumbs { font-size:12px; color:#5f6a72; letter-spacing:.5px; display:flex; gap:4px; flex-wrap:wrap; }
+.breadcrumbs span.sep { opacity:.55; }
+.main-title { font-size:28px; line-height:1.15; margin:14px 0 6px; font-weight:700; }
+.link-line { font-size:13px; margin:0 0 20px; }
+.link-line a { color:var(--blue-link); text-decoration:none; }
+.link-line a:hover { text-decoration:underline; }
+.divider { height:1px; background:var(--gray-60); margin:18px 0 30px; }
+.summary-table { width:100%; border-collapse:collapse; margin:0 0 42px; font-size:14px; }
+.summary-table th, .summary-table td { border:1px solid var(--gray-60); padding:6px 10px; vertical-align:top; }
+.summary-table th { width:200px; background:var(--gray-50); text-align:left; font-weight:600; }
+.section-title { font-size:22px; font-weight:700; margin:0 0 18px; }
+.playbook-table { width:100%; border-collapse:collapse; margin:0 0 34px; font-size:13.5px; }
+.playbook-table th, .playbook-table td { border:1px solid var(--gray-60); padding:8px 10px; vertical-align:top; }
+.playbook-table .band { font-weight:700; text-align:center; letter-spacing:.5px; }
+.playbook-table .band-prelim { background:var(--band-prelim); }
+.playbook-table .band-invest { background:var(--band-invest); }
+.playbook-table .band-danger { background:var(--band-danger); color:#fff; }
+.playbook-table .band-resolved { background:var(--band-resolved); }
+.playbook-table thead th { background:#F7FAFF; font-weight:700; }
+.subtle { color:#555; font-size:12px; }
+code, pre { font-family:var(--mono); font-size:13px; background:#fafafa; border:1px solid var(--gray-60); border-radius:4px; padding:2px 4px; }
+pre { padding:10px 12px; line-height:1.4; overflow:auto; }
+ol, ul { margin:8px 0 12px 20px; padding:0; }
+ol li { margin:0 0 4px; }
+.inner-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin:6px 0 4px; }
+.inner-card { border:1px solid var(--gray-60); border-radius:6px; padding:10px 12px 12px; background:#fff; }
+.inner-card h4 { margin:0 0 8px; font-size:13.5px; font-weight:700; letter-spacing:.4px; }
+.inline-run { font-family:var(--mono); font-size:13px; }
+ul.inline-bullets { list-style:disc; margin-left:20px; }
+.note-branch { font-weight:600; }
+/* Accessibility utility */
+.visually-hidden { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+@media (max-width:900px){ .page { padding:24px 24px 70px; } .main-title { font-size:24px; } }
+@media print {
+  body { font-size:12px; }
+  .breadcrumbs, .link-line { display:none !important; }
+  .page { padding:10mm 12mm; max-width:none; }
+  a { color:#000 !important; text-decoration:none; }
+  .playbook-table .band-prelim { background:#dceeff !important; }
+  .playbook-table .band-invest { background:#ffefcc !important; }
+  .playbook-table .band-danger { background:#ff5e2e !important; color:#fff !important; }
+  .playbook-table .band-resolved { background:#b9efcc !important; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <nav class="breadcrumbs" aria-label="Breadcrumbs">
+    <span>Pages</span><span class="sep">/</span>
+    <span>Harmony Connect: Playbook Center</span><span class="sep">/</span>
+    <span>Compute instance health</span>
+  </nav>
+  <h1 class="main-title">Alert | Compute instance health | Disk full (For Gateway Instance)</h1>
+  <p class="link-line print-hide"><a href="#" aria-label="Search for other results matching this alert title">Press here to see other results for "Alert | Compute instance health | Disk full (For Gateway Instance)".</a></p>
+  <div class="divider" role="separator" aria-hidden="true"></div>
+
+  <section aria-labelledby="summary-heading">
+    <h2 id="summary-heading" class="visually-hidden">Summary</h2>
+    <table class="summary-table" aria-describedby="summary-heading">
+      <tbody>
+        <tr><th scope="row">Description</th><td>The instance is running out of storage</td></tr>
+        <tr><th scope="row">Impact</th><td>Gateway instability</td></tr>
+        <tr><th scope="row">Priority</th><td>P3</td></tr>
+        <tr><th scope="row">DUT</th><td>GW</td></tr>
+        <tr><th scope="row">R&amp;D Owner</th><td>SASE Dataplane</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section aria-labelledby="playbook-heading">
+    <h2 id="playbook-heading" class="section-title">Playbook</h2>
+    <table class="playbook-table" aria-describedby="playbook-heading">
+      <tbody>
+        <tr class="band band-prelim" aria-label="Preliminary stage"><td colspan="2">Preliminary</td></tr>
+        <tr><td colspan="2">Common Practices</td></tr>
+        <tr class="band band-invest" aria-label="Investigation stage"><td colspan="2">Investigation</td></tr>
+        <tr>
+          <th scope="col" style="width:260px;">What</th>
+          <th scope="col">How</th>
+        </tr>
+        <tr>
+          <td>Verify which partition is full</td>
+          <td>
+            <ol>
+              <li>Connect via SSH to the Gateway</li>
+              <li>Run: <code>df -h</code></li>
+            </ol>
+          </td>
+        </tr>
+        <tr>
+          <td>Clean Up folders accordingly</td>
+          <td>
+            <div class="inner-grid" aria-label="Cleanup directories">
+              <div class="inner-card" aria-label="/var/log/ cleanup card">
+                <h4>/var/log/</h4>
+                <ol>
+                  <li>Check the following folder “/var/log/crash” size</li>
+                  <li>Verify if there are old crash dumps and remove them if there are any</li>
+                  <li>If there are new crash dumps
+                    <ol type="a">
+                      <li>Copy the crash files out from the machine (via SFTP)</li>
+                      <li>Remove the files</li>
+                      <li>Go to Not Resolved</li>
+                    </ol>
+                  </li>
+                </ol>
+                <p class="inline-run">Run: <code>df -h</code></p>
+                <ol type="a">
+                  <li>if there is enough free storage, go to <strong>Resolved</strong></li>
+                  <li>If the disk is still not free – go to <strong>Not Resolved</strong></li>
+                </ol>
+              </div>
+              <div class="inner-card" aria-label="$DLPDIR/ftp cleanup card">
+                <h4>$DLPDIR/ftp:</h4>
+                <ol>
+                  <li>Remove all folders with the following commands:
+                    <ol type="a">
+                      <li><code>rm -r $DLPDIR/ftp/0*</code></li>
+                      <li><code>rm -r $DLPDIR/ftp/1*</code></li>
+                      <li><code>rm -r $DLPDIR/ftp/3*</code></li>
+                    </ol>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr class="band band-danger" aria-label="Not resolved stage"><td colspan="2">Not resolved</td></tr>
+        <tr>
+          <td>Assign TM</td>
+          <td>&nbsp;</td>
+        </tr>
+        <tr class="band band-resolved" aria-label="Resolved stage"><td colspan="2">Resolved</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

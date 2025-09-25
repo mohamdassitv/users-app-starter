@@ -1,127 +1,43 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Ops 101 Lab – Tasks</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <header class="site-header" id="siteHeader">
-    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='index.html'">
-      <img src="logo.svg" alt="logo" />
-      <span class="brand-hacker" title="Return to hub">CHECK POINT</span>
-    </div>
-  </header>
-  <main class="page fade-in">
-    <div class="hero-wrapper" id="hero">
-      <h1 class="hero-title" id="heroTitle" aria-label="NOC Exam">NOC Exam<span class="hero-caret" aria-hidden="true"></span></h1>
-      <p class="hero-sub">Network Operations Certification – Practical Assessment</p>
-      <div class="hero-intro-card" id="introCard">
-        <h2>Welcome Candidate</h2>
-        <p>You are entering a condensed, high‑fidelity operations reliability exercise. Two focused tracks simulate real on‑shift pressure: rapid evidence capture of live HTTP gateway symptoms and surgical remediation of a large duplicate user dataset. <span class="callout-strong">Document everything</span><span class="badge-inline">Docs Required</span> — assume a senior reviewer will audit your notes for clarity, sufficiency, and operational judgment.</p>
-        <p>Your objectives: gather unambiguous, timestamped observations; perform limited, low‑risk corrective actions; articulate fault domains versus symptoms; and propose next-step escalation or automation improvements. Efficiency matters, but precision and traceability win.</p>
-        <p>When the timer starts, treat this as a real P1 shift: capture raw outputs first (status codes, tokens, latency). Only then synthesize patterns and summaries. Minimize speculative language unless clearly labeled as hypothesis.</p>
-      </div>
-    </div>
-    <section class="section hero-grid">
-      <div class="exam-bar">
-        <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
-        <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
-        <div class="exam-actions">
-          <button id="btnStart" type="button">Start 6h</button>
-          <button id="btnResetAll" class="pill-reset" type="button" aria-label="Reset">RESET</button>
-        </div>
-      </div>
-    </section>
-    <section class="section">
-      <div class="grid">
-        <div class="card">
-          <span class="badge">Operations</span>
-          <h3>Task 1 — High-Volume User Cleanup</h3>
-          <p class="muted" style="flex:1">Emergency duplicate purge & correction console for 5,000 users during a failed HR import window.</p>
-          <div><a class="btn" href="/task/users.html">Explore →</a></div>
-        </div>
-        <div class="card">
-          <span class="badge">Gateway</span>
-          <h3>Task 2 — HTTP & Latency Basics</h3>
-          <p class="muted" style="flex:1">Investigate alert ALRT-24117: collect live status evidence (ok / forbidden / upstream failure / induced delay) with dynamic numeric labels.</p>
-          <div><a class="btn" href="/task/http.html">Explore →</a></div>
-        </div>
-      </div>
-    </section>
-  </main>
-  <!-- Right rail removed per simplification request -->
-  <a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
-    <img src="/help-contact.svg" alt="Help" width="38" height="38">
-    <span class="help-label">Need help? Contact on-call.</span>
-  </a>
-  <script>
-    const header=document.getElementById('siteHeader');    
-    let last=0;window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16 && !header.classList.contains('shrink')) header.classList.add('shrink'); else if(y<=16 && header.classList.contains('shrink')) header.classList.remove('shrink'); last=y;});
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ops 101 Exam Lab</title>
+<link rel="stylesheet" href="/styles.css"></head>
+<body><div class="container">
+  <div class="card"><h2>Ops 101 Exam Lab</h2>
+    <p>Welcome! This portal guides you through a realistic, step-by-step exam. Open each task and follow the instructions. Most tasks have a <strong>Check</strong> button that validates your work.</p>
+    <p class="small">Timebox: ~3–5 hours. Use your browser dev tools, <kbd>curl</kbd>, and a text editor.</p>
+    <p>Admin API key (for IAM task): <code>admin123</code></p>
+    <p>Useful endpoints live here (local): <code>http://localhost:8081</code></p>
+  </div>
 
-    // Typewriter effect for hero title
-    (function(){
-      const el = document.getElementById('heroTitle');
-      if(!el) return;
-      const full = 'NOC Exam';
-      const caret = el.querySelector('.hero-caret');
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(reduce){ el.firstChild.textContent = full; if(caret) caret.style.display='none'; return; }
-      // Clear existing text nodes except caret
-      el.childNodes.forEach(n=>{ if(n.nodeType===3) n.textContent=''; });
-      let i=0; function step(){
-        if(i<=full.length){ el.firstChild.textContent = full.slice(0,i); i++; setTimeout(step, i<full.length? 90: 400); }
-      }
-      step();
-    })();
+  <div class="grid">
+    <div class="card"><h3>1) HTTP & Latency Basics</h3><p>Gateway with ok/403/502 + delay.</p><p><a href="/task/http.html">Open Task</a></p></div>
+    <div class="card"><h3>2) IAM: Unlock Logs</h3><p>Grant yourself <em>LogReader</em> via API, then fetch logs.</p><p><a href="/task/iam.html">Open Task</a></p></div>
+    <div class="card"><h3>3) Regex</h3><p>Strict email pattern (.com/.net only).</p><p><a href="/task/regex.html">Open Task</a></p></div>
+    <div class="card"><h3>4) Log Analysis</h3><p>Count errors, spot issues, propose a fix.</p><p><a href="/task/logs.html">Open Task</a></p></div>
+    <div class="card"><h3>5) Automation</h3><p>Write a small script to measure latency and post results.</p><p><a href="/task/automation.html">Open Task</a></p></div>
+    <div class="card"><h3>6) Incident Update</h3><p>Write a blameless customer update with next ETA.</p><p><a href="/task/incident.html">Open Task</a></p></div>
+    <div class="card"><h3>7) NAT & Routing (Concept)</h3><p>Pick the correct NAT egress from simple traces.</p><p><a href="/task/nat.html">Open Task</a></p></div>
+    <div class="card"><h3>8) Policy & Rollback</h3><p>Block /admin, keep /public accessible.</p><p><a href="/task/policy.html">Open Task</a></p></div>
+  </div>
 
-    async function fetchStatus(){
-      const r = await fetch('/api/exam/status');
-      return r.ok ? r.json() : {};
-    }
-    function fmt(ms){
-      if(ms==null) return '--:--:--';
-      let s = Math.floor(ms/1000);
-      const h = String(Math.floor(s/3600)).padStart(2,'0'); s%=3600;
-      const m = String(Math.floor(s/60)).padStart(2,'0'); s%=60;
-      const sec = String(s).padStart(2,'0');
-      return `${h}:${m}:${sec}`;
-    }
-    function updateProgress(startTime,duration){
-      const bar=document.getElementById('examProgress');
-      if(!bar) return; if(!startTime){bar.style.width='0%'; return;}
-      const now=Date.now();
-      const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total);
-      const pct=(used/total)*100; bar.style.width=pct+"%";
-    }
-    async function refresh(){
-      const st = await fetchStatus();
-      const el = document.getElementById('examTimer');
-      if(st.running) el.textContent = 'Remaining: '+fmt(st.remainingMs);
-      else if(st.startTime) el.textContent = 'Expired';
-      else el.textContent='Ready (6h)';
-      updateProgress(st.startTime, st.duration);
-    }
-    document.getElementById('btnStart').addEventListener('click', async ()=>{
-      const st = await fetchStatus();
-      if(!st.phone){
-        alert('Register phone first. Clicking logo will take you to registration.');
-        return;
-      }
-      if(!st.startTime){
-        await fetch('/api/exam/start',{method:'POST'});
-      }
-    });
-    document.getElementById('btnResetAll').addEventListener('click', async ()=>{
-      const pw = prompt('Enter reset password');
-      if(pw!== '2025') return alert('Incorrect password');
-      const r = await fetch('/api/exam/reset-all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
-      if(r.ok){ alert('Environment reset'); location.reload(); }
-      else alert('Reset failed');
-    });
-    setInterval(refresh,1000);refresh();
-    // Logo click: if no phone registered redirect to /register.html
-    document.querySelector('.brand').addEventListener('click', async (e)=>{
-      e.preventDefault();
-      const st = await fetchStatus();
-      if(!st.phone){ window.location='/register.html'; } else { window.location='/'; }
-    });
-  </script>
+  <div class="card">
+    <h3>Progress</h3>
+    <p class="small">Green means the built-in checker passed.</p>
+    <div id="progress"></div>
+  </div>
+</div>
+<script>
+async function refresh(){
+  const s = await (await fetch('/api/state')).json();
+  const checks = [];
+  // Basic derived pass/fail
+  checks.push(['IAM LogReader', (s.iam.student.roles||[]).includes('LogReader')]);
+  checks.push(['Automation submission', !!s.submissions.health]);
+  checks.push(['Regex submitted', !!s.submissions.regex]);
+  checks.push(['Incident submitted', !!s.submissions.incident_text]);
+  checks.push(['Policy blocks /admin', (s.policy.deny||[]).includes('/admin')]);
+  const el = document.getElementById('progress');
+  el.innerHTML = checks.map(([name,ok])=>`<div><span class="badge">${ok?'✅':'⬜'}</span> ${name}</div>`).join('');
+}
+refresh(); setInterval(refresh, 2000);
+</script>
 </body></html>

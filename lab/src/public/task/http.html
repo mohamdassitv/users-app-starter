@@ -16,17 +16,13 @@
 </head>
 <body>
   <header class="site-header" id="siteHeader">
-    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
       <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
       <span class="brand-hacker">CHECK POINT</span>
     </div>
   </header>
   <main class="page fade-in">
-      <div class="exam-bar">
-        <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
-        <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
-        <div class="exam-actions"><button id="btnStart" type="button">Start 6h</button></div>
-      </div>
+      <!-- exam bar removed; header timer present globally -->
     <div class="card">
   <h2>Task 2 — Gateway Reachability &amp; Latency (NOC Shift)</h2>
   <p><strong>Background.</strong> During a quiet night shift a monitoring rule fires: <code>ALRT-24117</code> (elevated error ratio and added response time). Before escalation you must gather <em>direct, first‑hand evidence</em> of current gateway behavior across four representative conditions: normal success, explicit denial, upstream failure, and controlled latency. Your output becomes part of the shift handover packet.</p>
@@ -134,9 +130,7 @@ const header=document.getElementById('siteHeader');window.addEventListener('scro
 async function examStatus(){ const r = await fetch('/api/exam/status'); return r.ok? r.json():{}; }
 function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
 function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){bar.style.width='0%'; return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
-async function tick(){ const st=await examStatus(); const el=document.getElementById('examTimer'); if(!el) return; if(st.running){ el.textContent='Remaining: '+fmt(st.remainingMs); updateProgress(st.startTime, st.duration);} else if(st.startTime){ el.textContent='Expired'; updateProgress(st.startTime, st.duration);} else { el.textContent='Ready (6h)'; updateProgress(null,null);} }
-setInterval(tick,1000); tick();
-document.getElementById('btnStart').addEventListener('click', async ()=>{ const st = await examStatus(); if(!st.phone){ alert('Register phone first via logo.'); return;} if(!st.startTime){ await fetch('/api/exam/start',{method:'POST'});} });
+// old exam timer removed
 document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
 function parseLatencyMs(v){
   if(!v) return NaN;
@@ -225,4 +219,5 @@ async function validate(){
 loadScenario();
 </script>
 </body>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </html>

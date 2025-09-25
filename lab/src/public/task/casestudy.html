@@ -1,0 +1,659 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Task 1 — Branch Performance (Chat)</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css"><!-- keep global styles for header ONLY -->
+<style>
+/* Pink Product Theme (scoped below main wrapper) */
+:root{
+  --pink-600:#FF5CA8;--pink-500:#FF72B0;--pink-400:#FF8CC1;--pink-200:#FFD3EC;--pink-100:#FFF5FA;
+  --ink-900:#1B1B1F;--ink-700:#2E2E33;--ink-500:#6B6B72;--ink-200:#EAEAF0;--ink-50:#FFFFFF;
+  --radius:22px;--space:16px;--grad-bg:radial-gradient(circle at 35% 30%,#FFE6F2 0%,#FFD6EA 42%,#FFEFF7 100%);
+  --shadow-card:0 10px 30px rgba(255,92,168,.18);
+  --shadow-btn:0 6px 16px -6px rgba(255,92,168,.5),0 2px 4px rgba(0,0,0,.08);
+  --trans:160ms cubic-bezier(.4,.2,.2,1);
+  --font-stack: "SF Pro Display","Segoe UI Variable",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+}
+body{font-family:var(--font-stack);background:var(--grad-bg);min-height:100vh;margin:0;color:var(--ink-700);-webkit-font-smoothing:antialiased;}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(45deg,rgba(255,92,168,.05)0 2px,transparent 2px 6px);mix-blend-mode:overlay;opacity:.4;}
+main.pink-app{max-width:1320px;margin:0 auto;padding:28px 28px 140px;}
+@media (max-width:860px){main.pink-app{padding:20px 16px 120px;}}
+h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;letter-spacing:.02em;font-weight:800;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));-webkit-background-clip:text;background-clip:text;color:transparent;position:relative;}
+ p.hero-sub{margin:0 0 34px;font-size:clamp(1rem,1.3vw,1.25rem);line-height:1.5;color:var(--ink-500);max-width:800px;font-weight:500;}
+ .sparkles{position:absolute;inset:0;pointer-events:none;}
+ .sparkles svg{position:absolute;animation:floatSpark 12s linear infinite;}
+ .sparkles svg:nth-child(2){left:160px;top:10px;animation-duration:18s;}
+ .sparkles svg:nth-child(3){left:320px;top:40px;animation-duration:22s;}
+@keyframes floatSpark{0%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-18px) rotate(180deg);}100%{transform:translateY(0) rotate(360deg);}}
+
+/* Tabs & layout */
+.task-shell{background:rgba(255,255,255,.65);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);border:1px solid rgba(255,92,168,.25);border-radius:28px;padding:26px 30px 40px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;}
+.task-shell:before{content:"";position:absolute;inset:0;background:linear-gradient(140deg,rgba(255,92,168,.18),rgba(255,92,168,.05));pointer-events:none;mix-blend-mode:overlay;}
+.task-head{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin:0 0 14px;}
+.task-head h2{margin:0;font-size:clamp(1.4rem,2.2vw,2rem);font-weight:700;letter-spacing:.5px;color:var(--ink-900);}
+
+.tablist{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:0;list-style:none;}
+.tablist button{border:none;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;background:linear-gradient(90deg,var(--pink-200),var(--pink-100));color:var(--ink-700);box-shadow:0 2px 6px rgba(0,0,0,.06);transition:var(--trans);position:relative;}
+.tablist button[aria-selected="true"],.tablist button:hover{background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:0 6px 18px -6px rgba(255,92,168,.6);}
+.tab-panel{display:none;animation:fadeSlide .5s ease;}
+.tab-panel.active{display:block;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popUp{from{opacity:0;transform:scale(0.8) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.msg.animate{animation:popUp 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+
+/* Chat */
+.chat-wrap{background:var(--ink-50);border:1px solid rgba(255,92,168,.25);border-radius:22px;padding:18px 0 12px;display:flex;flex-direction:column;max-height:none;min-height:380px;}
+.chat-scroll{overflow:auto;padding:0 24px 12px;list-style:none;margin:0;display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth;}
+.msg{display:flex;gap:22px;line-height:1.7;font-size:18px;margin-bottom:28px;font-weight:500;}
+.msg.left{flex-direction:row;}
+.msg.right{flex-direction:row-reverse;}
+.msg .avatar{width:72px;height:72px;border-radius:50%;background:#ffffff url("data:image/svg+xml,%3csvg width='512' height='512' viewBox='0 0 512 512' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='256' cy='140' r='100' fill='%23FF6AA8'/%3e%3cellipse cx='256' cy='380' rx='230' ry='132' fill='%23FF6AA8'/%3e%3c/svg%3e") center/contain no-repeat;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px -10px rgba(255,92,168,.7),0 0 0 3px rgba(255,255,255,.5);border:3px solid rgba(255,92,168,.7);overflow:hidden;}
+.bubble{background:linear-gradient(160deg,#ffffff,#ffe9f4);padding:26px 30px 28px;border-radius:36px;min-width:200px;max-width:850px;position:relative;border:1px solid rgba(255,92,168,.4);box-shadow:0 6px 20px -6px rgba(255,92,168,.4),0 2px 8px -2px rgba(0,0,0,.1);} 
+.right .bubble{background:linear-gradient(140deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:0 8px 24px -8px rgba(255,92,168,.7);} 
+.bubble header{font-size:15px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--pink-600);display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:0 0 14px;opacity:.95;text-shadow:0 1px 1px rgba(255,255,255,.5);}
+.right .bubble header{color:#ffe9f5;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+.bubble p{margin:0;font-size:19px;line-height:1.75;font-weight:500;color:var(--ink-700);letter-spacing:0.01em;} 
+.bubble .tag{background:var(--pink-200);color:var(--pink-600);padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.06em;}
+.right .tag{background:rgba(255,255,255,.3);color:#fff;}
+.msg.info .bubble{border-color:#8b5cf6;}
+.msg.info .tag{background:#ede9fe;color:#6d28d9;}
+.msg.system .avatar{background:linear-gradient(145deg,#fef3c7,#fde68a);border-color:#fbbf24;}
+.msg.system .bubble header{color:#92400e;}
+/* Manager highlight */
+.msg.manager .bubble{background:linear-gradient(140deg,#c80060,#ff5ca8 50%,#ff8cc1);color:#fff;box-shadow:0 12px 32px -10px rgba(200,0,96,.6),0 0 0 2px rgba(255,92,168,.4),inset 0 1px 0 rgba(255,255,255,.2);} 
+.msg.manager .bubble header{color:#ffe9f5;letter-spacing:.2em;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.3);} 
+.msg.manager .bubble p{font-size:21px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);line-height:1.8;letter-spacing:0.02em;} 
+.msg.manager .avatar{background:linear-gradient(145deg,#ff3d96,#c80060);color:#fff;border-color:#ffb3d6;box-shadow:0 10px 28px -10px rgba(200,0,96,.7),0 0 0 3px rgba(255,255,255,.3);}
+
+/* NOC Shift Messages */
+
+.msg.noc-header .bubble{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;text-align:center;font-weight:700;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;padding:12px 24px;border-radius:24px;box-shadow:0 4px 12px rgba(79,70,229,.3);min-width:300px;}
+.msg.noc-header .avatar{width:48px;height:48px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-color:#8b5cf6;}
+.msg.maya .bubble{background:linear-gradient(160deg,#f59e0b,#f97316);color:#fff;box-shadow:0 8px 24px -8px rgba(245,158,11,.6);}
+.msg.maya .bubble header{color:#fef3c7;}
+.msg.maya .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+.msg.kenji .bubble{background:linear-gradient(160deg,#10b981,#059669);color:#fff;box-shadow:0 8px 24px -8px rgba(16,185,129,.6);}
+.msg.kenji .bubble header{color:#d1fae5;}
+.msg.kenji .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+.msg.ava .bubble{background:linear-gradient(160deg,#8b5cf6,#7c3aed);color:#fff;box-shadow:0 8px 24px -8px rgba(139,92,246,.6);}
+.msg.ava .bubble header{color:#ede9fe;}
+.msg.ava .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+.msg.liam .bubble{background:linear-gradient(160deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 24px -8px rgba(239,68,68,.6);}
+.msg.liam .bubble header{color:#fee2e2;}
+.msg.liam .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);} 
+
+/* Buttons */
+.pill-btn{border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:var(--shadow-btn);display:inline-flex;align-items:center;gap:8px;transition:var(--trans);} 
+.pill-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px -10px rgba(255,92,168,.75);} 
+.ghost-btn{background:var(--pink-100);color:var(--pink-600);border:1px solid var(--pink-400);} 
+.ghost-btn:hover{background:var(--pink-200);} 
+
+/* Workspace */
+.workspace-wrap{display:flex;flex-direction:column;gap:16px;}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;}
+.toolbar button{background:var(--pink-200);border:1px solid var(--pink-400);color:var(--pink-600);padding:6px 10px;font-size:13px;border-radius:10px;cursor:pointer;font-weight:600;}
+.toolbar button:hover{background:var(--pink-400);color:#fff;}
+.rte{min-height:200px;background:#fff;border:1px solid var(--pink-200);padding:14px 16px;border-radius:16px;font-size:14px;line-height:1.5;}
+.rte:focus{outline:2px solid var(--pink-400);} 
+.ascii-helper{font-family:ui-monospace,Menlo,Consolas,monospace;background:#fff;border:1px dashed var(--pink-400);padding:10px 12px;border-radius:16px;white-space:pre;overflow:auto;font-size:12px;}
+.dropzone{border:2px dashed var(--pink-400);border-radius:18px;padding:26px;text-align:center;font-size:13px;color:var(--ink-500);background:var(--pink-100);cursor:pointer;transition:var(--trans);}
+.dropzone.drag{background:var(--pink-200);border-color:var(--pink-600);}
+.uploads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:12px;}
+.upload-item{background:#fff;border:1px solid var(--pink-200);border-radius:16px;position:relative;padding:6px 6px 10px;display:flex;flex-direction:column;gap:4px;}
+.upload-item img{max-width:100%;border-radius:10px;display:block;}
+.upload-item button{position:absolute;top:4px;right:4px;border:none;background:rgba(0,0,0,.55);color:#fff;width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:12px;}
+.caption-input{border:1px solid var(--ink-200);border-radius:10px;padding:4px 6px;font-size:11px;}
+
+/* Notes */
+.notes-wrap{display:flex;flex-direction:column;gap:24px;}
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+.checklist li{background:#fff;border:1px solid var(--pink-200);border-radius:14px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:flex-start;}
+.checklist input{margin-top:4px;}
+.inline-fields{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+.inline-field{display:flex;flex-direction:column;gap:4px;}
+.inline-field label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pink-600);}
+.inline-field input{padding:8px 10px;border:1px solid var(--pink-200);border-radius:10px;font-size:13px;}
+.inline-field input:focus{outline:2px solid var(--pink-400);} 
+.task-complete{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;font-weight:600;}
+
+/* Export */
+.export-bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;}
+
+/* High contrast */
+.high-contrast body,body.high-contrast{--pink-400:#ff3d96;--pink-600:#c80060;--ink-500:#202026;} 
+body.high-contrast .task-shell{background:#fff;border-color:#111;}
+body.high-contrast .bubble{box-shadow:none;}
+body.high-contrast .pill-btn{box-shadow:none;}
+
+/* Progress bar */
+.progress-bar{position:fixed;top:0;left:0;height:5px;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));width:0%;transition:width .4s ease;z-index:50;}
+
+/* CKEditor5 Integration Styles */
+.ckeditor-container .ck-editor__editable {
+  min-height: 300px !important;
+  font-family: var(--font-stack) !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  padding: 20px !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.ckeditor-container .ck-toolbar {
+  border-radius: 16px 16px 0 0 !important;
+  background: linear-gradient(90deg, var(--pink-100), rgba(255,255,255,0.9)) !important;
+  border: 1px solid var(--pink-200) !important;
+  border-bottom: none !important;
+}
+
+.ckeditor-container .ck-button {
+  color: var(--ink-700) !important;
+}
+
+.ckeditor-container .ck-button:hover {
+  background: var(--pink-200) !important;
+}
+
+.ckeditor-container .ck-button.ck-on {
+  background: var(--pink-400) !important;
+  color: #fff !important;
+}
+
+.ckeditor-container .ck-editor__editable.ck-focused {
+  border-color: var(--pink-400) !important;
+  box-shadow: 0 0 0 2px rgba(255,92,168,.2) !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+</style>
+</head><body class="high-contrast">
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+<!-- Progress bar removed -->
+<main class="pink-app fade-in" id="appRoot" data-task="task1">
+  <h1 class="hero">Know Your Network. Own Your Shift.
+    <span class="sparkles" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="#FF5CA8" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2.2 2.2M16.8 16.8 19 19M5 19l2.2-2.2M16.8 7.2 19 5" stroke="#FF8CC1" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4l1.8 3.6L18 8.4l-3 3 0.7 4.2L12 13.6l-3.7 2 0.7-4.2-3-3 4.2-.8L12 4z" stroke="#FF72B0" stroke-width="1.4" fill="none"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2" stroke="#FF5CA8" stroke-width="2"/><path d="M12 6v2M12 16v2M6 12h2M16 12h2" stroke="#FF5CA8" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </span>
+  </h1>
+  <p class="hero-sub">Fast, friendly drills for everyday NOC realities. Evidence first, clarity always.</p>
+
+  <section class="task-shell" id="taskShell">
+    <div class="task-head" style="justify-content:flex-end;">
+      <button class="pill-btn ghost-btn" id="btnSaveManual" type="button" title="Save current notes">Save</button>
+    </div>
+    <div class="chat-wrap" id="chatWrap">
+      <ol class="chat-scroll" id="chatLog" aria-live="polite"></ol>
+    </div>
+    <div class="workspace-wrap" style="margin-top:30px;">
+      <h3 style="margin:10px 0 6px;font-size:18px;color:var(--ink-900);">Diagram & Notes</h3>
+      <div id="ckEditor" class="ckeditor-container" style="min-height:300px;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;"></div>
+      <div class="ascii-helper" id="asciiHelper" aria-label="ASCII diagram helper" contenteditable="true"></div>
+      <div class="dropzone" id="dropzone" tabindex="0">Drop screenshots or paste (Ctrl+V)</div>
+      <div class="uploads-grid" id="uploads"></div>
+      <!-- Removed Copy as Markdown & Idle status per request -->
+    </div>
+    <!-- Removed notes/checklist/export section -->
+  </section>
+</main>
+<script src="/vendor/ckeditor/ckeditor5-build-classic-dna-master/build/ckeditor.js"></script>
+<script>
+// --- Data Keys ---
+const STORAGE_KEY='task1_state_v1';
+let state={chat:[],uploads:[],rte:'',rte2:''};
+// --- Seeded Conversation (trimmed) ---
+function candidateName(){return localStorage.getItem('candidateName')||'Candidate';}
+function managerMessageText(){return 'Add a quick topology sketch (ASCII or screenshot) and a short note describing the flow. Please draw a topology diagram.';}
+const seeded=[
+  {role:'client',time:'08:17',text:'We have slow web browsing. We have 3 branches: Tokyo, Osaka, Kyoto. Each branch has an EDGE router. All three go to the same VeloCloud Gateway (VC-GW), and from there to Harmony Connect (internet/security). Please show how traffic flows.'},
+  {role:'teammate',time:'08:18',text:'Correct—same VC-GW for all three branches.'},
+  {role:'manager',time:'08:18',text:'Add a quick topology sketch (ASCII or screenshot) and a short note describing the flow. Please draw a topology diagram.'}
+];
+function load(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state=Object.assign(state,JSON.parse(raw));
+      // Migration: trim any legacy prompt/system lines from earlier version
+      if(Array.isArray(state.chat)){
+        const filtered=state.chat.filter(m=>['client','teammate','manager','you'].includes(m.role));
+        // Ensure first three are the seeded scenario roles (client, teammate, manager)
+        const hasManager=filtered.some(m=>m.role==='manager');
+        if(filtered.length>3 || !hasManager){
+          state.chat=[...seeded];
+        } else {
+          // Keep only first occurrence of each of the three initial roles in order
+          const order=['client','teammate','manager'];
+          const firstThree=[];
+            for(const r of order){
+              const found=filtered.find(m=>m.role===r);
+              if(found) firstThree.push(found);
+            }
+          state.chat=[...firstThree, ...filtered.filter(m=>!order.includes(m.role))];
+        }
+      } else {
+        state.chat=[...seeded];
+      }
+    } else {
+      state.chat=[...seeded];
+      save();
+    }
+  }catch(e){
+    console.warn('load fail',e);state.chat=[...seeded];
+  }
+}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){console.warn('save fail',e);} }
+// Enhanced save to persist function-based manager text
+// (Wrapper added below definition to avoid duplicate name confusion)
+function saveEnhanced(){
+  try{
+    const chatOut=state.chat.map(m=>{
+      if(typeof m.text==='function') return {...m,text:m.text()};
+      if(m.role==='manager' && (!m.text || !m.text.trim())) return {...m,text:(typeof managerMessageText==='function'?managerMessageText():m.text)};
+      return m;
+    });
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({...state,chat:chatOut}));
+  }catch(e){console.warn('save fail',e);} 
+}
+// Swap references
+save = saveEnhanced;
+
+// --- Chat Rendering ---
+const chatLog=document.getElementById('chatLog');
+function renderChat(){chatLog.innerHTML='';state.chat.forEach((m,i)=>{chatLog.appendChild(renderMsg(m,i));});chatLog.scrollTop=chatLog.scrollHeight;}
+function renderMsg(m,i){const roleClass = (m.role==='you')?'right': 'left';
+  const li=document.createElement('li');li.className='msg '+roleClass+' '+m.role+(m.role==='system'?' system':'')+(m.role==='manager'?' manager':'')+(m.tag? (' '+m.tag.toLowerCase()):'');
+const av=document.createElement('div');av.className='avatar';li.appendChild(av);
+const bub=document.createElement('div');bub.className='bubble';const hdr=document.createElement('header');
+const label=roleLabel(m.role,m);if(m.role!=='noc-header'){hdr.textContent=label+(label?' • ':'')+(m.time||timeNow());if(m.tag){const span=document.createElement('span');span.className='tag';span.textContent=m.tag;hdr.appendChild(document.createTextNode(' '));hdr.appendChild(span);}}bub.appendChild(hdr);
+const p=document.createElement('p');
+let txt=m.text; 
+if(typeof txt==='function'){ try{ txt=txt(); }catch(e){ txt=''; } }
+if(m.role==='manager' && (!txt || !txt.trim())){ txt=managerMessageText(); }
+p.textContent=txt; bub.appendChild(p); li.appendChild(bub); return li;}
+function avatarText(role){if(role==='client') return 'CL'; if(role==='teammate') return 'NT'; if(role==='system') return 'SYS'; if(role==='prompt') return 'PR'; if(role==='manager') return 'MG'; return 'YOU';}
+function roleLabel(role,msg){if(role==='client') return 'Client'; if(role==='teammate') return 'Teammate'; if(role==='system') return 'System'; if(role==='prompt') return 'Prompt'; if(role==='manager') return 'Manager'; if(msg && msg.name) return msg.name; if(role==='noc-header') return ''; return 'You';}
+function timeNow(){const d=new Date();return d.toTimeString().slice(0,5);} 
+
+// (Composer removed per requirement)
+function mirrorToNotes(txt){/* no-op now */}
+
+// --- Escape utility ---
+function escapeHtml(str){return str.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+// (Tabs removed)
+
+// --- CKEditor5 initialization ---
+let ckEditorInstance = null;
+function initializeCKEditor() {
+  // Check if ClassicEditor is available
+  if (typeof ClassicEditor === 'undefined') {
+    console.error('ClassicEditor not loaded. Falling back to simple textarea.');
+    createFallbackEditor('ckEditor');
+    return;
+  }
+  
+  ClassicEditor.create(document.querySelector('#ckEditor'), {
+    toolbar: {
+      items: [
+        'heading', '|',
+        'bold', 'italic', 'underline', '|',
+        'bulletedList', 'numberedList', '|',
+        'code', 'codeBlock', '|',
+        'insertTable', 'link', '|',
+        'imageUpload', 'blockQuote', '|',
+        'undo', 'redo'
+      ]
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    placeholder: 'Add your topology diagram, investigation notes, and analysis here...',
+    image: {
+      toolbar: ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
+    }
+  })
+  .then(editor => {
+    ckEditorInstance = editor;
+    
+    // Load saved content
+    if (state.rte) {
+      editor.setData(state.rte);
+    }
+    
+    // Auto-save on content change
+    editor.model.document.on('change:data', () => {
+      state.rte = editor.getData();
+      save();
+    });
+  })
+  .catch(error => {
+    console.error('CKEditor initialization failed:', error);
+    createFallbackEditor('ckEditor');
+  });
+}
+
+// Fallback editor function
+function createFallbackEditor(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div style="background:#fff;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(90deg,var(--pink-100),rgba(255,255,255,0.9));padding:12px 16px;border-bottom:1px solid var(--pink-200);font-size:14px;font-weight:600;color:var(--ink-700);">
+        Rich Text Editor
+      </div>
+      <textarea 
+        id="${containerId}TextArea" 
+        style="width:100%;min-height:300px;border:none;padding:20px;font-family:var(--font-stack);font-size:16px;line-height:1.6;resize:vertical;outline:none;"
+        placeholder="${containerId === 'ckEditor' ? 'Add your topology diagram, investigation notes, and analysis here...' : 'Submit your analysis here:\n\n• What did you find in each terminal?\n• Which branch is experiencing the slowdown?\n• What is the most likely cause?\n• Provide your one-sentence conclusion...'}"
+      ></textarea>
+    </div>
+  `;
+  
+  const textarea = document.getElementById(containerId + 'TextArea');
+  
+  // Load saved content
+  const stateKey = containerId === 'ckEditor' ? 'rte' : 'rte2';
+  if (state[stateKey]) {
+    textarea.value = state[stateKey].replace(/<[^>]*>/g, ''); // Strip HTML tags
+  }
+  
+  // Auto-save on input
+  textarea.addEventListener('input', () => {
+    state[stateKey] = textarea.value;
+    save();
+  });
+  
+  // Update editor instance reference
+  if (containerId === 'ckEditor') {
+    ckEditorInstance = { getData: () => textarea.value, setData: (data) => { textarea.value = data; } };
+  } else {
+    ckEditorInstance2 = { getData: () => textarea.value, setData: (data) => { textarea.value = data; } };
+  }
+}
+
+// --- Uploads / Dropzone ---
+const dropzone=document.getElementById('dropzone');const uploads=document.getElementById('uploads');
+['dragenter','dragover'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();if(ev==='drop'){handleFiles(e.dataTransfer.files);}dropzone.classList.remove('drag');}));
+document.addEventListener('paste',e=>{if(document.querySelector('.ck-editor__editable').contains(document.activeElement)){const items=e.clipboardData.items;const files=[];for(const it of items){if(it.type && it.type.startsWith('image/')) files.push(it.getAsFile());} if(files.length) handleFiles(files);} });
+function handleFiles(fileList){[...fileList].forEach(f=>{const reader=new FileReader();reader.onload=e=>{state.uploads.push({id:Date.now()+Math.random(),data:e.target.result,cap:''});save();renderUploads();};reader.readAsDataURL(f);});}
+function renderUploads(){uploads.innerHTML='';state.uploads.forEach(u=>{const wrap=document.createElement('div');wrap.className='upload-item';wrap.innerHTML='<button title="Delete">×</button><img alt="upload" src="'+u.data+'"/><input class="caption-input" placeholder="Caption" value="'+escapeHtml(u.cap||'')+'" />';wrap.querySelector('button').onclick=()=>{state.uploads=state.uploads.filter(x=>x.id!==u.id);save();renderUploads();};wrap.querySelector('input').oninput=(e)=>{u.cap=e.target.value;save();};uploads.appendChild(wrap);});}
+
+// Removed checklist / markdown / export / contrast toggle
+document.getElementById('btnSaveManual').addEventListener('click',()=>{if(ckEditorInstance){state.rte=ckEditorInstance.getData();save();}});
+
+// --- Animated Chat Display ---
+function animateInitialChat(){
+  if(state.animationShown) return; // Only animate once
+  state.animationShown = true;
+  
+  // Clear chat and show messages with animation
+  chatLog.innerHTML = '';
+  
+  // Show first 3 messages with staggered pop-up animation
+  let delay = 500;
+  state.chat.forEach((msg, index) => {
+    setTimeout(() => {
+      const msgElement = renderMsg(msg, index);
+      msgElement.classList.add('animate');
+      chatLog.appendChild(msgElement);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }, delay);
+    delay += 1000; // 1 second between each message
+  });
+}
+
+function updateProgress(){} // disabled
+
+// --- Restore ---
+function restore(){
+  // Use animation for first load, regular render for subsequent
+  if(!state.animationShown){
+    animateInitialChat();
+  } else {
+    renderChat();
+  }
+  
+  // Initialize CKEditor after DOM is ready
+  setTimeout(() => {
+    initializeCKEditor();
+  }, 100);
+  
+  renderUploads();
+}
+
+// --- Init ---
+load();restore();
+// ---------------- Branch Terminal Simulation ----------------
+// Inject after main content (below notes section) for clarity
+const terminalSection=document.createElement('section');terminalSection.id='branchTerminals';terminalSection.innerHTML=`
+  <h2 style="margin:60px 0 14px;font-size:clamp(1.6rem,2.4vw,2.3rem);font-weight:700;color:var(--ink-900);">Branch Terminals — Live Checks</h2>
+  <div id="nocChat" class="chat-wrap" style="margin-bottom:20px;min-height:auto;">
+    <ol class="chat-scroll" id="nocChatLog" aria-live="polite"></ol>
+  </div>
+
+  <div class="bt-shell" aria-label="Branch terminal simulator">
+    <div class="bt-tabs" role="tablist" aria-label="Branch terminals">
+      <button role="tab" aria-selected="true" data-branch="tokyo">Tokyo</button>
+      <button role="tab" aria-selected="false" data-branch="osaka">Osaka</button>
+      <button role="tab" aria-selected="false" data-branch="kyoto">Kyoto</button>
+
+    </div>
+    <div class="bt-terminal" aria-live="polite">
+      <pre id="termOutput" class="bt-output" tabindex="0"></pre>
+      <div class="bt-input-row">
+        <label for="termInput" id="promptLabel" class="prompt-label">tokyo$</label>
+        <input id="termInput" type="text" autocomplete="off" spellcheck="false" aria-labelledby="promptLabel" />
+      </div>
+    </div>
+  </div>`;
+document.querySelector('main').appendChild(terminalSection);
+
+// Add NOC conversation to terminal section
+const nocMessages = [
+  {role:'client',time:'09:01',text:'Users in Osaka report slow web browsing. Tokyo and Kyoto are normal.',name:'Kenji (Japan Bank IT)'},
+  {role:'teammate',time:'09:02',text:'No planned changes on our side. All three branches share the same upstream.',name:'Ava (Teammate)'},
+  {role:'manager',time:'09:03',text:'please verify the reported browsing slowdown using the three branch terminals (Tokyo, Osaka, Kyoto). Measure only—no configuration changes. Terminals accept whitelisted commands; type help in any tab to see what\'s available. From each terminal, run your standard checks, capture screenshots/transcripts, and submit one sentence on where the slowdown most likely sits.',name:'Manager'}
+];
+
+const nocChatLog = document.getElementById('nocChatLog');
+// Animate NOC messages
+let nocDelay = 2000; // Start after main chat animation
+nocMessages.forEach((msg, index) => {
+  setTimeout(() => {
+    nocChatLog.appendChild(renderMsg(msg, index));
+    nocChatLog.scrollTop = nocChatLog.scrollHeight;
+  }, nocDelay);
+  nocDelay += 800;
+});
+// Styles for terminal
+const termStyle=document.createElement('style');termStyle.textContent=`
+.bt-shell{margin-top:10px;background:#1c1f27;border:1px solid #343a46;border-radius:24px;padding:18px 18px 26px;box-shadow:0 10px 28px -10px rgba(0,0,0,.4);} 
+.bt-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;} 
+.bt-tabs button{background:#2a303b;color:#d0d6e2;border:1px solid #3b4350;padding:8px 16px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:.4px;transition:background .2s;} 
+.bt-tabs button[aria-selected=true]{background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;border-color:var(--pink-500);} 
+.bt-output{margin:0;background:#11151b;border:1px solid #2a313d;border-radius:16px;padding:20px 20px;max-height:600px;overflow:auto;font:16px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#e2e8f0;box-shadow:inset 0 0 0 1px #1e242d;} 
+.bt-input-row{display:flex;align-items:center;gap:10px;margin-top:12px;background:#11151b;border:1px solid #2a313d;border-radius:14px;padding:10px 14px;} 
+.bt-input-row input{flex:1;background:transparent;border:none;color:#fff;font:16px ui-monospace,Menlo,Consolas,monospace;outline:none;} 
+.prompt-label{font:16px ui-monospace,Menlo,Consolas,monospace;color:#ff72b0;font-weight:600;} 
+.bt-output::-webkit-scrollbar{width:10px;} .bt-output::-webkit-scrollbar-thumb{background:#303742;border-radius:6px;} 
+`;document.head.appendChild(termStyle);
+// Scenario model
+const SCENARIO={
+  vcgwHost:'vc-gw.jpbank.local',internetHost:'www.example.com',dns:{server:'10.10.10.10',domain:'jpbank.local'},
+  branches:{
+    tokyo:{prompt:'tokyo$',ping:{vcgw:{base:25,jitter:5,loss:0},internet:{base:35,jitter:7,loss:0}},trace:{vcgw:['tokyo-edge','tokyo-metro-pe','carrier-core-1','vc-gw.jpbank.local'],internet:['tokyo-edge','tokyo-metro-pe','carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.10.1.1',lan:'10.10.10.0/24'},routes:['default via 10.10.10.1','10.0.0.0/16 via vc-gw']},
+    kyoto:{prompt:'kyoto$',ping:{vcgw:{base:28,jitter:6,loss:0},internet:{base:38,jitter:8,loss:0}},trace:{vcgw:['kyoto-edge','kyoto-metro-pe','carrier-core-1','vc-gw.jpbank.local'],internet:['kyoto-edge','kyoto-metro-pe','carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.20.1.1',lan:'10.20.20.0/24'},routes:['default via 10.20.20.1','10.0.0.0/16 via vc-gw']},
+    osaka:{prompt:'osaka$',ping:{vcgw:{base:220,jitter:40,loss:12},internet:{base:240,jitter:50,loss:8}},trace:{vcgw:['osaka-edge',{hop:'osaka-metro-eth1',note:'high latency'},'carrier-core-1','vc-gw.jpbank.local'],internet:['osaka-edge',{hop:'osaka-metro-eth1',note:'high latency'},'carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.30.1.1',lan:'10.30.30.0/24'},routes:['default via 10.30.30.1','10.0.0.0/16 via vc-gw']}
+  }
+};
+let activeBranch='tokyo';
+const termOutput=document.getElementById('termOutput');
+const termInput=document.getElementById('termInput');
+const promptLabel=document.getElementById('promptLabel');
+const branchTabs=[...document.querySelectorAll('.bt-tabs button[data-branch]')];
+const transcripts={tokyo:[],osaka:[],kyoto:[]};
+const histories={tokyo:[],osaka:[],kyoto:[]};
+const historyIndex={tokyo:0,osaka:0,kyoto:0};
+function ts(){return 'engineer@'+activeBranch+':';}
+function print(line){transcripts[activeBranch].push(ts()+' '+line);renderTranscript();}
+function renderTranscript(){termOutput.textContent=transcripts[activeBranch].join('\n');termOutput.scrollTop=termOutput.scrollHeight;}
+function switchBranch(b){activeBranch=b;branchTabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.branch===b));promptLabel.textContent=SCENARIO.branches[b].prompt;renderTranscript();}
+branchTabs.forEach(btn=>btn.addEventListener('click',()=>switchBranch(btn.dataset.branch)));
+// Help text initial
+if(!localStorage.getItem('bt_init')){['tokyo','osaka','kyoto'].forEach(b=>transcripts[b].push(ts()+' Type help for commands.'));localStorage.setItem('bt_init','1');}
+// Persistence
+function saveTermState(){try{localStorage.setItem('bt_state_v1',JSON.stringify({transcripts,histories}));}catch(e){}}
+function loadTermState(){try{const raw=localStorage.getItem('bt_state_v1');if(raw){const data=JSON.parse(raw);['tokyo','osaka','kyoto'].forEach(b=>{if(data.transcripts&&data.transcripts[b]) transcripts[b]=data.transcripts[b]; if(data.histories&&data.histories[b]) histories[b]=data.histories[b];});}}catch(e){}}
+loadTermState();renderTranscript();
+// Command parsing
+const HOST_ALIASES={ 'vc-gw':'vc-gw.jpbank.local','vc-gw.jpbank.local':'vc-gw.jpbank.local','internet':'www.example.com','www.example.com':'www.example.com','www.google.com':'www.example.com'};
+termInput.addEventListener('keydown',e=>{if(e.key==='Enter'){const cmd=termInput.value.trim();if(!cmd) return; histories[activeBranch].push(cmd); historyIndex[activeBranch]=histories[activeBranch].length; print(promptLabel.textContent+' '+cmd); execute(cmd); termInput.value=''; saveTermState();}
+ else if(e.key==='ArrowUp'){e.preventDefault();if(historyIndex[activeBranch]>0){historyIndex[activeBranch]--;termInput.value=histories[activeBranch][historyIndex[activeBranch]]||'';}}
+ else if(e.key==='ArrowDown'){e.preventDefault();if(historyIndex[activeBranch]<histories[activeBranch].length){historyIndex[activeBranch]++;termInput.value=histories[activeBranch][historyIndex[activeBranch]]||'';}}
+});
+function execute(input){const parts=input.split(/\s+/);const base=parts[0];
+  if(base==='help'){showHelp();return;}
+  if(base==='clear'){transcripts[activeBranch]=[];renderTranscript();saveTermState();return;}
+  if(base==='whoami'){print('noc.candidate');return;}
+  if(base==='date'){print(new Date().toString());return;}
+  if(base==='ping'){simulatePing(parts);return;}
+  if(base==='traceroute'||base==='trace'){simulateTrace(parts);return;}
+  if(base==='curl'){simulateCurl(parts);return;}
+  if(base==='dig'||base==='nslookup'){simulateDNS(parts);return;}
+  if(base==='vcstat'){simulateVCStat();return;}
+  if(base==='ip' && parts[1]==='addr'){simulateIP();return;}
+  if(base==='route' && parts[1]==='-n'){simulateRoute();return;}
+  print(base+': command not found');
+}
+function showHelp(){['help - list commands','ping <host> [-c N]','traceroute|trace <host>','curl -s -o /dev/null -w "timers" https://www.example.com','dig <host>','nslookup <host>','vcstat','ip addr','route -n','date','whoami','clear'].forEach(l=>print(l));}
+function pickHost(arg){return HOST_ALIASES[arg]||null;}
+function simulatePing(parts){let count=4; let host=null; const cIndex=parts.findIndex(p=>p==='-c'); if(cIndex>-1){count=parseInt(parts[cIndex+1]||'4',10)||4;}
+  // host = first token not option
+  for(const p of parts.slice(1)){if(p==='-c') {continue;} if(!p.startsWith('-') && !host) host=p;}
+  host=pickHost(host); if(!host){print('Usage: ping <host> [-c N]');return;}
+  const branch=SCENARIO.branches[activeBranch]; const profile = host===SCENARIO.vcgwHost? branch.ping.vcgw: branch.ping.internet;
+  print(`PING ${host} (10.0.0.1): 56 data bytes`);
+  let rtts=[]; let lost=0; for(let i=1;i<=count;i++){const lossChance=profile.loss/100; if(Math.random()<lossChance){print(`Request timeout for icmp_seq ${i}`); lost++; continue;} const val = jitter(profile.base, profile.jitter); rtts.push(val); print(`64 bytes from 10.0.0.1: icmp_seq=${i} ttl=${host===SCENARIO.vcgwHost?62:61} time=${val.toFixed(1)} ms`);} 
+  const transmitted=count; const received=transmitted-lost; const lossPct=Math.round((lost/transmitted)*100); const min=Math.min(...rtts); const max=Math.max(...rtts); const avg=rtts.reduce((a,b)=>a+b,0)/rtts.length; const mdev=stddev(rtts,avg);
+  print(`--- ${host} ping statistics ---`);
+  print(`${transmitted} packets transmitted, ${received} received, ${lossPct}% packet loss, time ${(count*1000+3)}ms`);
+  print(`rtt min/avg/max/mdev = ${isFinite(min)?min.toFixed(1):'0.0'}/${isFinite(avg)?avg.toFixed(1):'0.0'}/${isFinite(max)?max.toFixed(1):'0.0'}/${isFinite(mdev)?mdev.toFixed(1):'0.0'} ms`);
+}
+function jitter(base,jit){const delta=(Math.random()*jit*2)-jit;return base+delta;}
+function stddev(list,mean){if(!list.length) return 0; const v=list.reduce((a,b)=>a+Math.pow(b-mean,2),0)/list.length; return Math.sqrt(v);}
+function simulateTrace(parts){let host=pickHost(parts[1]); if(!host){print('Usage: traceroute <host>');return;} const branch=SCENARIO.branches[activeBranch]; const which= host===SCENARIO.vcgwHost? 'vcgw':'internet'; const hops=branch.trace[which]; print(`traceroute to ${host} (10.0.0.1), 30 hops max`); hops.forEach((h,i)=>{ if(typeof h==='string'){print(`${i+1}  ${h} (10.${i}.0.${i+1})  ${latencyLine(branch,which)}`);} else {print(`${i+1}  ${h.hop} (172.16.20.${i+10})  ${degradedLatencyLine()}  * ${h.note} *`);} }); }
+function latencyLine(branch,which){const prof=branch.ping[which]; return `${jitter(prof.base,prof.jitter).toFixed(1)} ms  ${jitter(prof.base,prof.jitter).toFixed(1)} ms  ${jitter(prof.base,prof.jitter).toFixed(1)} ms`;}
+function degradedLatencyLine(){return `${(200+Math.random()*40).toFixed(1)} ms  ${(210+Math.random()*30).toFixed(1)} ms  ${(230+Math.random()*30).toFixed(1)} ms`;}
+function simulateCurl(parts){printTiming(activeBranch==='osaka');}
+function printTiming(degraded){ if(!degraded){ print('time_namelookup:0.008'); print('time_connect:0.026'); print('time_total:0.142'); } else { print('time_namelookup:0.021'); print('time_connect:0.182'); print('time_total:0.732'); } }
+function simulateDNS(parts){const host=pickHost(parts[1]); if(!host){print('Usage: dig <host>');return;} print(`;; <<>> DiG 9.18 <<>> ${host}`); print(`;; SERVER: ${SCENARIO.dns.server}#53(${SCENARIO.dns.server})`); print(';; ANSWER SECTION:'); print(`${host}.  300 IN A 10.0.0.1`); print(';; Query time: 8 msec');}
+function simulateVCStat(){print('VC-GW reachability: OK'); print('Path quality: '+(activeBranch==='osaka'?'Degraded – Elevated latency detected between osaka-edge and metro':'Good'));}
+function simulateIP(){const b=SCENARIO.branches[activeBranch]; print(`lo: inet ${b.ip.loop}`); print(`br-lan: inet ${b.ip.lan}`); }
+function simulateRoute(){const b=SCENARIO.branches[activeBranch]; b.routes.forEach(r=>print(r)); }
+// Buttons
+
+// --- Add Answer Submission Editor Section ---
+const secondEditorSection = document.createElement('section');
+secondEditorSection.innerHTML = `
+  <div style="margin-top:50px;padding-top:30px;border-top:2px solid var(--pink-200);">
+    <h3 style="margin:0 0 20px;font-size:clamp(1.4rem,2vw,1.8rem);font-weight:700;color:var(--ink-900);">📝 Submit Your Analysis</h3>
+    <p style="margin:0 0 16px;font-size:15px;color:var(--ink-500);line-height:1.5;">Based on your terminal investigations, provide your findings and conclusion about the network slowdown:</p>
+    <div id="ckEditor2" class="ckeditor-container" style="min-height:350px;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;"></div>
+  </div>
+`;
+document.querySelector('main').appendChild(secondEditorSection);
+
+// Initialize second CKEditor instance
+let ckEditorInstance2 = null;
+function initializeSecondCKEditor() {
+  // Check if ClassicEditor is available
+  if (typeof ClassicEditor === 'undefined') {
+    console.error('ClassicEditor not loaded. Falling back to simple textarea.');
+    createFallbackEditor('ckEditor2');
+    return;
+  }
+  
+  ClassicEditor.create(document.querySelector('#ckEditor2'), {
+    toolbar: {
+      items: [
+        'heading', '|',
+        'bold', 'italic', 'underline', '|',
+        'bulletedList', 'numberedList', '|',
+        'code', 'codeBlock', '|',
+        'insertTable', 'link', '|',
+        'imageUpload', 'blockQuote', '|',
+        'undo', 'redo'
+      ]
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    placeholder: 'Submit your analysis here:\n\n• What did you find in each terminal?\n• Which branch is experiencing the slowdown?\n• What is the most likely cause?\n• Provide your one-sentence conclusion...',
+    image: {
+      toolbar: ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
+    }
+  })
+  .then(editor => {
+    ckEditorInstance2 = editor;
+    
+    // Load saved content for second editor
+    if (state.rte2) {
+      editor.setData(state.rte2);
+    }
+    
+    // Auto-save on content change
+    editor.model.document.on('change:data', () => {
+      state.rte2 = editor.getData();
+      save();
+    });
+  })
+  .catch(error => {
+    console.error('Second CKEditor initialization failed:', error);
+  });
+}
+
+// Update the restore function to include second editor
+const originalRestore = restore;
+restore = function() {
+  originalRestore();
+  
+  // Initialize second CKEditor after DOM is ready
+  setTimeout(() => {
+    initializeSecondCKEditor();
+  }, 200);
+};
+
+// Update save button to save both editors
+const originalBtnSave = document.getElementById('btnSaveManual');
+if (originalBtnSave) {
+  originalBtnSave.addEventListener('click', () => {
+    if (ckEditorInstance2) {
+      state.rte2 = ckEditorInstance2.getData();
+      save();
+    }
+  });
+}
+
+// Ensure transcript persists
+window.addEventListener('beforeunload',saveTermState);
+</script>
+<script src="/header-timer.js" defer></script>
+</body></html>

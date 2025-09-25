@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discover — Standalone Logs Viewer</title>
+<style>
+  :root{
+    --bg:#0b0c0f;
+    --panel:#12141a;
+    --panel-2:#171a21;
+    --text:#e8eaed;
+    --muted:#9aa0a6;
+    --accent:#3ea6ff;
+    --accent-2:#6ee7b7;
+    --warn:#ffb020;
+    --danger:#ff6b6b;
+    --ok:#22c55e;
+    --border:#22242b;
+    --chip:#2a2e39;
+    --chip-border:#353a45;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#0a0b0e 0%, #0f1117 100%);
+    color:var(--text);
+    font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",Arial,"Apple Color Emoji","Segoe UI Emoji";
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    background:rgba(10,12,16,.9); backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .bar{
+    display:flex; gap:8px; align-items:center; padding:10px 12px; flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px}
+  .logo{width:22px;height:22px;background:linear-gradient(135deg,#3ea6ff,#8b5cf6); border-radius:4px}
+  .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--chip-border); background:var(--chip); padding:6px 8px; border-radius:6px}
+  .chip label{font-size:12px; color:var(--muted); margin-right:4px}
+  input, select, button, textarea{
+    color:var(--text); background:var(--panel); border:1px solid var(--border);
+    border-radius:6px; padding:8px 10px; outline:none;
+  }
+  input[type="datetime-local"]{padding:6px 8px}
+  input::placeholder{color:#899098}
+  .btn{cursor:pointer; transition:.15s transform ease, .2s background ease}
+  .btn:hover{transform:translateY(-1px); background:var(--panel-2)}
+  .btn.primary{background:#0e2238; border-color:#153251; color:#cfe9ff}
+  .btn.ghost{background:transparent}
+  .btn.icon{display:inline-flex; align-items:center; gap:8px}
+  .btn.small{padding:6px 8px; font-size:12px}
+  .spacer{flex:1}
+  main{display:grid; grid-template-columns: 280px 1fr; gap:12px; padding:12px; max-width:1700px; margin:0 auto}
+  aside{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; overflow:auto; max-height:calc(100vh - 140px);
+  }
+  .aside-title{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px}
+  .field-input{width:100%}
+  .fields{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+  .field{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 8px; background:var(--panel); border:1px solid var(--border); border-radius:6px}
+  .field .name{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:12px; color:#c7ccd2}
+  .toggle{cursor:pointer; padding:3px 8px; border-radius:6px; background:#0f1724; border:1px solid #1f2635; color:#c4d0ff; font-size:12px}
+  section{
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .hist{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px;
+  }
+  .hist-header{display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap}
+  .hist-canvas{width:100%; height:140px; background:var(--panel); border:1px dashed var(--border); border-radius:8px}
+  .stats{display:flex; gap:8px; align-items:center; color:var(--muted); font-size:12px}
+  .stats .pill{padding:4px 8px; border-radius:99px; border:1px solid var(--border); background:var(--panel); color:#c8d0d8}
+  .table{
+    background:var(--panel-2); border:1px solid var(--border); border-radius:10px; overflow:hidden;
+  }
+  table{width:100%; border-collapse:separate; border-spacing:0}
+  thead{background:var(--panel)}
+  th, td{padding:10px; border-bottom:1px solid var(--border); vertical-align:top; text-align:left}
+  th{position:sticky; top:0; background:var(--panel); z-index:1}
+  tr:hover td{background:rgba(255,255,255,0.02)}
+  .time{white-space:nowrap; color:#cfe9ff; font-variant-numeric:tabular-nums}
+  .lvl{font-weight:700}
+  .lvl.INFO{color:#a0f0ff}
+  .lvl.WARN{color:var(--warn)}
+  .lvl.ERROR{color:#ff8e8e}
+  .lvl.DEBUG{color:#8be58b}
+  .row-actions{display:flex; gap:6px}
+  .json{
+    white-space:pre-wrap; font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:12px;
+    background:#0b0d12; border:1px solid #202530; border-radius:8px; padding:10px; color:#d4dbe7
+  }
+  details summary{cursor:pointer; color:#c4d0ff}
+  .footer-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .saved{display:flex; gap:8px; align-items:center}
+  .kql{
+    flex:1; min-width:260px; border-radius:8px; border:1px solid var(--border); padding:0; overflow:hidden; display:flex; align-items:center;
+  }
+  .kql input{
+    border:0; background:transparent; padding:10px 12px; flex:1; min-width:0;
+    font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  }
+  .quick{display:flex; gap:6px; flex-wrap:wrap}
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:99px; background:#0e1320; border:1px solid #1e2638; color:#c8d0df; font-size:12px}
+  .muted{color:var(--muted)}
+  .hidden{display:none !important}
+  .modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:99;
+  }
+  .modal.open{display:flex}
+  .card{
+    width:min(900px,94vw); background:var(--panel-2); border:1px solid var(--border); border-radius:12px; padding:14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.45);
+  }
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .row > *{flex:1}
+  .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+  .link{color:#9cc7ff; text-decoration:none}
+  .link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="bar">
+    <div class="brand"><div class="logo"></div> Discover — Logs</div>
+    <div class="chip">
+      <label>From</label>
+      <input id="from" type="datetime-local">
+    </div>
+    <div class="chip">
+      <label>To</label>
+      <input id="to" type="datetime-local">
+    </div>
+    <div class="quick">
+      <button class="btn small" data-range="15m">Last 15m</button>
+      <button class="btn small" data-range="1h">Last 1h</button>
+      <button class="btn small" data-range="24h">Last 24h</button>
+      <button class="btn small" data-range="7d">Last 7d</button>
+    </div>
+    <div class="kql">
+      <input id="query" placeholder="KQL — try: level:ERROR AND service:auth-service  |  message:\"timeout\"  |  host:node-1 OR host:node-2">
+      <button id="run" class="btn primary">Run</button>
+    </div>
+    <div class="spacer"></div>
+    <button id="loadData" class="btn icon"><span>📥</span> Load logs</button>
+    <button id="exportCsv" class="btn icon"><span>⬇️</span> Export CSV</button>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="aside-title">
+      <div style="font-weight:700">Fields</div>
+      <button id="resetColumns" class="btn small">Reset columns</button>
+    </div>
+    <input id="fieldFilter" class="field-input" placeholder="Filter fields">
+    <div id="fields" class="fields"></div>
+  </aside>
+  <section>
+    <div class="hist">
+      <div class="hist-header">
+        <div class="stats">
+          <span class="pill" id="hitCount">0 hits</span>
+          <span class="pill">Group by 
+            <select id="bucket">
+              <option value="1m">1 minute</option>
+              <option value="5m">5 minutes</option>
+              <option value="1h" selected>1 hour</option>
+            </select>
+          </span>
+          <span id="execInfo" class="muted">—</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="badge">Click a bar to zoom to that time bucket</div>
+      </div>
+      <canvas id="hist" class="hist-canvas" height="150"></canvas>
+    </div>
+
+    <div class="table">
+      <table id="tbl">
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="footer-actions">
+      <div class="saved">
+        <input id="saveName" placeholder="Saved query name">
+        <button id="saveQuery" class="btn">Save</button>
+        <select id="savedQueries"></select>
+        <button id="loadQuery" class="btn">Load</button>
+        <button id="deleteQuery" class="btn">Delete</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="muted">All times are local; format: <span class="mono">YYYY-MM-DD HH:mm:ss</span> (shows hours clearly).</div>
+    </div>
+  </section>
+</main>
+
+<!-- Load data modal -->
+<div id="dataModal" class="modal">
+  <div class="card">
+    <h3 style="margin:6px 0 10px">Load logs (JSON / JSONL)</h3>
+    <p class="muted">Paste an array of JSON objects or JSON Lines. Each object must include <span class="mono">@timestamp</span> in ISO format. Example:</p>
+    <pre class="json">{"@timestamp":"2025-01-12T03:00:03.531Z","level":"ERROR","service":"auth-service","message":"Login failed","host":"node-2","env":"prod"}</pre>
+    <textarea id="paste" rows="10" class="json" placeholder='[{"@timestamp":"...","level":"INFO",...}, ...] or one JSON object per line'></textarea>
+    <div class="row" style="margin-top:10px">
+      <button id="applyData" class="btn primary">Use data</button>
+      <button id="cancelData" class="btn">Cancel</button>
+      <div class="spacer"></div>
+      <label class="chip"><input id="appendMode" type="checkbox"> Append (keep current)</label>
+      <span class="muted">Tip: your data is stored locally in this browser (no upload).</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ----------------------- Utilities -----------------------
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtLocal(ts){
+  const d = new Date(ts);
+  const y=d.getFullYear(), m=pad(d.getMonth()+1), day=pad(d.getDate());
+  const hh=pad(d.getHours()), mm=pad(d.getMinutes()), ss=pad(d.getSeconds());
+  return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+}
+function parseISO(s){ const t = Date.parse(s); return isNaN(t)? null : t; }
+
+function parseRange(tag){
+  const now = Date.now();
+  const map = { '15m':15*60e3, '1h':3600e3,'24h':24*3600e3,'7d':7*24*3600e3 };
+  const dur = map[tag]||3600e3;
+  return {from: now-dur, to: now};
+}
+
+function download(filename, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ----------------------- Data -----------------------
+const DEFAULT_COLUMNS = ['@timestamp','level','service','message'];
+let state = {
+  logs: [],
+  view: [],
+  columns: [...DEFAULT_COLUMNS],
+  query: '',
+  range: parseRange('1h'),
+  bucket: '1h',
+  sortDesc: true
+};
+
+// Generate sample logs across the last 6 hours (includes around 03:00 local if you set time accordingly)
+function generateSample(){
+  const now = Date.now();
+  const start = now - 6*3600e3;
+  const services = ['auth-service','payment-api','orders','frontend','inventory'];
+  const hosts = ['node-1','node-2','node-3','node-4'];
+  const envs = ['prod','staging'];
+  const levels = ['INFO','WARN','ERROR','DEBUG'];
+  const msgsInfo = ['User action processed','Background job completed','Cache refreshed','Heartbeat OK'];
+  const msgsWarn = ['High latency detected','Near rate limit','Memory pressure warning','Slow query warning'];
+  const msgsErr  = ['Unhandled exception','Timeout waiting for DB','Login failed','Payment declined','Upstream 502'];
+  const msgsDbg  = ['SQL executed','Trace span finished','Cache miss','Retry attempt'];
+  const data = [];
+  let i=0;
+  for(let t=start; t<=now; t+= 60e3){ // 1-min samples
+    const level = levels[(i*13 + Math.floor(t/1e6))%levels.length];
+    const service = services[(i*17 + Math.floor(t/1e5))%services.length];
+    const host = hosts[(i*29 + Math.floor(t/1e4))%hosts.length];
+    const env = envs[(i*7 + Math.floor(t/1e7))%envs.length];
+    const pick = arr => arr[(i*11 + Math.floor(t/1e3))%arr.length];
+    const message = level==='ERROR'? pick(msgsErr) : level==='WARN'? pick(msgsWarn) : level==='DEBUG'? pick(msgsDbg) : pick(msgsInfo);
+    const ts = new Date(t).toISOString();
+    data.push({
+      '@timestamp': ts,
+      level, service, host, env,
+      message: `${message} in ${service}`,
+      traceId: 'tr-'+(Math.abs(Math.sin(t/123456))*1e6|0).toString(16),
+      userId: (i%10===0)? ('user-'+((i*37)%500)) : undefined
+    });
+    i++;
+  }
+  // Add a few explicit 03:00-ish entries for clarity
+  const today = new Date();
+  today.setMinutes(0,0,0);
+  const threeLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 3, 0, 3);
+  data.push({'@timestamp': new Date(threeLocal.getTime()).toISOString(), level:'ERROR', service:'auth-service', host:'node-2', env:'prod', message:'Explicit 03:00 error – demo'});
+  return data;
+}
+
+function loadSampleOnce(){
+  if(!localStorage.getItem('standaloneLogs')){
+    localStorage.setItem('standaloneLogs', JSON.stringify(generateSample()));
+  }
+  state.logs = JSON.parse(localStorage.getItem('standaloneLogs')||'[]');
+}
+
+// ----------------------- KQL-ish parsing -----------------------
+function tokenizeKQL(q){
+  const out=[]; let cur=''; let inQ=false;
+  for(let i=0;i<q.length;i++){
+    const c=q[i];
+    if(c==='\"'){ inQ=!inQ; cur+=c; continue; }
+    if(!inQ && /\s/.test(c)){ if(cur){ out.push(cur); cur=''; } }
+    else cur+=c;
+  }
+  if(cur) out.push(cur);
+  return out;
+}
+
+function compilePredicate(q){
+  if(!q || !q.trim()) return ()=>true;
+  const tokens = tokenizeKQL(q.trim());
+  // Build simple boolean evaluator supporting AND OR NOT, and terms field:value or free text
+  // We'll convert to disjunction of conjunctions for simplicity.
+  function termToFn(tok){
+    let neg=false;
+    if(/^NOT$/i.test(tok)) return {type:'NOT'};
+    if(/^-.+/.test(tok)){ neg=true; tok=tok.slice(1); }
+    let fn;
+    if(tok.includes(':')){
+      const idx = tok.indexOf(':');
+      const field = tok.slice(0,idx);
+      let val = tok.slice(idx+1);
+      if(val.startsWith('"') && val.endsWith('"')) val = val.slice(1,-1);
+      const f = field.trim();
+      const v = val.trim().toLowerCase();
+      fn = (row)=> String(row[f]??'').toLowerCase().includes(v);
+    }else{
+      const v = tok.toLowerCase();
+      fn = (row)=> Object.keys(row).some(k => String(row[k]??'').toLowerCase().includes(v));
+    }
+    return neg ? (row)=> !fn(row) : fn;
+  }
+  // Parse with precedence: NOT > AND > OR
+  // We'll reduce tokens into OR groups of AND terms.
+  const groups=[]; let cur=[]; let expectOp=false;
+  for(let i=0;i<tokens.length;i++){
+    const t=tokens[i];
+    if(/^OR$/i.test(t)){ groups.push(cur); cur=[]; expectOp=false; continue; }
+    if(/^AND$/i.test(t)){ continue; }
+    if(/^NOT$/i.test(t)){
+      // merge NOT with next token
+      const next = tokens[i+1] || '';
+      cur.push(termToFn('NOT')); // marker
+      cur.push(termToFn(next));
+      i++;
+      continue;
+    }
+    cur.push(termToFn(t));
+  }
+  if(cur.length) groups.push(cur);
+  return (row)=> groups.some(andTerms => {
+    // Evaluate NOT markers
+    const stack=[];
+    for(let i=0;i<andTerms.length;i++){
+      const fn=andTerms[i];
+      if(fn && fn.type==='NOT'){
+        const next=andTerms[i+1];
+        if(!next) continue;
+        stack.push( (r)=> !next(r) );
+        i++;
+      }else{
+        stack.push(fn);
+      }
+    }
+    return stack.every(fn => fn(row));
+  });
+}
+
+// ----------------------- Filtering, bucketing, rendering -----------------------
+function applyFilters(){
+  const t0 = performance.now();
+  const pred = compilePredicate(state.query);
+  const from = state.range.from, to = state.range.to;
+  const view = state.logs.filter(r=>{
+    const ts = parseISO(r['@timestamp']); if(ts==null) return false;
+    return ts>=from && ts<=to && pred(r);
+  });
+  // sort by time
+  view.sort((a,b)=> (parseISO(a['@timestamp']) - parseISO(b['@timestamp'])) * (state.sortDesc? -1:1));
+  state.view = view;
+  $('#hitCount').textContent = `${view.length} hits`;
+  $('#execInfo').textContent = `filtered in ${Math.round(performance.now()-t0)} ms`;
+  drawTable(); drawHist();
+}
+
+function bucketMs(){
+  switch(state.bucket){
+    case '1m': return 60e3;
+    case '5m': return 5*60e3;
+    case '1h': return 3600e3;
+    default: return 3600e3;
+  }
+}
+
+function drawHist(){
+  const c = $('#hist'); const ctx = c.getContext('2d');
+  const W = c.clientWidth, H=c.height; // width adjusts via CSS; we need to sync canvas size
+  c.width = c.clientWidth; // ensure crisp
+  ctx.clearRect(0,0,c.width,c.height);
+  const from=state.range.from, to=state.range.to;
+  const bms = bucketMs(); const bins = Math.max(1, Math.ceil((to-from)/bms));
+  const counts = new Array(bins).fill(0);
+  for(const r of state.view){
+    const ts = parseISO(r['@timestamp']); const idx = Math.min(bins-1, Math.floor((ts-from)/bms));
+    counts[idx]++;
+  }
+  const max = Math.max(1, ...counts);
+  const bw = c.width / bins;
+  // axis
+  ctx.fillStyle = '#253043';
+  ctx.fillRect(0, H-1, c.width, 1);
+  // bars
+  for(let i=0;i<bins;i++){
+    const h = Math.round((counts[i]/max) * (H-20));
+    ctx.fillStyle = 'rgba(62,166,255,.85)';
+    ctx.fillRect(i*bw+1, H-1-h, Math.max(1,bw-2), h);
+  }
+  // labels (start and end)
+  ctx.fillStyle = '#9aa0a6';
+  ctx.font = '12px system-ui, sans-serif';
+  ctx.fillText(fmtLocal(from), 4, 14);
+  const endLabel = fmtLocal(to);
+  ctx.fillText(endLabel, c.width - ctx.measureText(endLabel).width - 4, 14);
+
+  // interactivity: click to zoom to bucket
+  c.onclick = (ev)=>{
+    const x = ev.offsetX; const idx = Math.floor(x / bw);
+    const start = from + idx*bms; const end = Math.min(to, start + bms - 1);
+    setRange(start,end);
+    applyFilters();
+    refreshInputsFromState();
+  };
+}
+
+function drawTable(){
+  // header
+  const thead = $('#thead'); thead.innerHTML='';
+  for(const col of state.columns){
+    const th=document.createElement('th');
+    th.textContent = col==='@timestamp'?'Time':col;
+    if(col==='@timestamp'){
+      const btn = document.createElement('button');
+      btn.className='btn small';
+      btn.style.marginLeft='8px';
+      btn.textContent = state.sortDesc? '↓' : '↑';
+      btn.title='Toggle sort by time';
+      btn.onclick=()=>{ state.sortDesc=!state.sortDesc; applyFilters(); };
+      th.appendChild(btn);
+    }
+    thead.appendChild(th);
+  }
+  const tbody = $('#tbody'); tbody.innerHTML='';
+  for(const row of state.view){
+    const tr=document.createElement('tr');
+    for(const col of state.columns){
+      const td=document.createElement('td');
+      let val = row[col];
+      if(col==='@timestamp'){ val = fmtLocal(row['@timestamp']); td.className='time'; }
+      if(col==='level'){ td.innerHTML = `<span class="lvl ${row.level||''}">${row.level||''}</span>`; }
+      else if(val===undefined){ td.innerHTML = '<span class="muted">—</span>'; }
+      else td.textContent = String(val);
+      // cell filter shortcuts
+      if(col!=='@timestamp'){
+        td.title='Click to filter in • Alt+Click to filter out';
+        td.style.cursor='pointer';
+        td.onclick=(e)=>{
+          const tok = `${col}:"${String(row[col])}"`;
+          const cur = $('#query').value.trim();
+          $('#query').value = cur ? `${cur} AND ${tok}` : tok;
+          state.query = $('#query').value;
+          applyFilters();
+        };
+        td.onauxclick=(e)=>{ // mid-click: filter out
+          e.preventDefault();
+          const tok = `NOT ${col}:"${String(row[col])}"`;
+          const cur = $('#query').value.trim();
+          $('#query').value = cur ? `${cur} AND ${tok}` : tok;
+          state.query = $('#query').value;
+          applyFilters();
+        };
+      }
+      tr.appendChild(td);
+    }
+    // details row
+    const td=document.createElement('td');
+    td.colSpan = state.columns.length;
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent='Show JSON';
+    const pre = document.createElement('pre');
+    pre.className='json';
+    pre.textContent = JSON.stringify(row,null,2);
+    det.appendChild(sum); det.appendChild(pre);
+    const tr2=document.createElement('tr');
+    tr2.appendChild(td); td.appendChild(det);
+    tbody.appendChild(tr);
+    tbody.appendChild(tr2);
+  }
+}
+
+// ----------------------- Fields panel -----------------------
+function refreshFields(){
+  const container = $('#fields'); container.innerHTML='';
+  const allKeys = new Set();
+  for(const r of state.logs){ Object.keys(r).forEach(k=>allKeys.add(k)); }
+  const arr = Array.from(allKeys).sort();
+  const filter = $('#fieldFilter').value.trim().toLowerCase();
+  for(const k of arr){
+    if(filter && !k.toLowerCase().includes(filter)) continue;
+    const div=document.createElement('div'); div.className='field';
+    const left=document.createElement('div');
+    left.innerHTML = `<div class="name">${k}</div>`;
+    const right=document.createElement('div'); right.style.display='flex'; right.style.gap='6px';
+    const add=document.createElement('button'); add.className='toggle'; add.textContent = state.columns.includes(k)?'− Remove':'＋ Add';
+    add.onclick=()=>{
+      if(state.columns.includes(k)) state.columns = state.columns.filter(x=>x!==k);
+      else state.columns.push(k);
+      drawTable(); refreshFields();
+    };
+    right.appendChild(add);
+    div.appendChild(left); div.appendChild(right);
+    container.appendChild(div);
+  }
+}
+
+// ----------------------- State & Inputs -----------------------
+function setRange(from,to){
+  state.range = {from, to};
+  // clamp
+  if(state.range.to < state.range.from){ const t=state.range.from; state.range.from=state.range.to; state.range.to=t; }
+}
+
+function refreshInputsFromState(){
+  const to = new Date(state.range.to);
+  const from = new Date(state.range.from);
+  // datetime-local expects local time string without timezone
+  function toLocalInput(d){
+    const y=d.getFullYear(), m=pad(d.getMonth()+1), day=pad(d.getDate());
+    const hh=pad(d.getHours()), mm=pad(d.getMinutes());
+    return `${y}-${m}-${day}T${hh}:${mm}`;
+  }
+  $('#from').value = toLocalInput(from);
+  $('#to').value = toLocalInput(to);
+  $('#query').value = state.query || '';
+  $('#bucket').value = state.bucket;
+}
+
+// ----------------------- CSV Export -----------------------
+function toCSV(rows, cols){
+  const esc = (v)=>{
+    if(v===undefined || v===null) return '';
+    const s=String(v).replace(/"/g,'""');
+    if(/[,"\n]/.test(s)) return `"${s}"`; return s;
+  };
+  const header = cols.join(',');
+  const lines = rows.map(r => cols.map(c => esc(c==='@timestamp'? fmtLocal(r[c]) : r[c])).join(','));
+  return [header, ...lines].join('\n');
+}
+
+// ----------------------- Saved Queries -----------------------
+function loadSavedQueries(){
+  const raw = localStorage.getItem('savedQueries') || '[]';
+  const list = JSON.parse(raw);
+  const sel = $('#savedQueries');
+  sel.innerHTML = list.map((q,i)=>`<option value="${i}">${q.name}</option>`).join('');
+}
+function saveCurrentQuery(){
+  const raw = localStorage.getItem('savedQueries') || '[]';
+  const list = JSON.parse(raw);
+  const name = $('#saveName').value.trim() || `Query ${list.length+1}`;
+  list.push({name, query: state.query, range: state.range, bucket: state.bucket, columns: state.columns});
+  localStorage.setItem('savedQueries', JSON.stringify(list));
+  $('#saveName').value='';
+  loadSavedQueries();
+}
+function loadSelectedQuery(){
+  const idx = parseInt($('#savedQueries').value,10);
+  const list = JSON.parse(localStorage.getItem('savedQueries')||'[]');
+  const q = list[idx]; if(!q) return;
+  state.query = q.query || '';
+  state.bucket = q.bucket || '1h';
+  state.columns = q.columns || [...DEFAULT_COLUMNS];
+  setRange(q.range?.from ?? state.range.from, q.range?.to ?? state.range.to);
+  refreshInputsFromState();
+  applyFilters(); refreshFields();
+}
+function deleteSelectedQuery(){
+  const idx = parseInt($('#savedQueries').value,10);
+  const list = JSON.parse(localStorage.getItem('savedQueries')||'[]');
+  if(idx>=0){ list.splice(idx,1); localStorage.setItem('savedQueries', JSON.stringify(list)); loadSavedQueries(); }
+}
+
+// ----------------------- Load/Paste Data -----------------------
+function openModal(){ $('#dataModal').classList.add('open'); }
+function closeModal(){ $('#dataModal').classList.remove('open'); $('#paste').value=''; }
+function applyPasted(){
+  const text = $('#paste').value.trim();
+  if(!text){ closeModal(); return; }
+  let arr=[];
+  try{
+    if(text.startsWith('[')){ arr = JSON.parse(text); }
+    else{ arr = text.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line)); }
+  }catch(e){
+    alert('Invalid JSON / JSONL'); return;
+  }
+  if(!Array.isArray(arr)) { alert('Expected an array or JSON lines'); return; }
+  const valid = arr.filter(o => typeof o==='object' && o && '@timestamp' in o && !isNaN(Date.parse(o['@timestamp'])));
+  if(valid.length===0){ alert('No valid objects with @timestamp found'); return; }
+  const keep = $('#appendMode').checked ? (state.logs||[]) : [];
+  const merged = keep.concat(valid);
+  merged.sort((a,b)=> Date.parse(a['@timestamp']) - Date.parse(b['@timestamp']));
+  localStorage.setItem('standaloneLogs', JSON.stringify(merged));
+  state.logs = merged;
+  closeModal();
+  refreshFields(); applyFilters();
+}
+
+// ----------------------- Wire up -----------------------
+function init(){
+  loadSampleOnce();
+  state.range = parseRange('1h');
+  state.bucket = '1h';
+  refreshInputsFromState();
+  refreshFields();
+  applyFilters();
+  loadSavedQueries();
+
+  // Events
+  $('#run').onclick = ()=>{ state.query = $('#query').value; applyFilters(); };
+  $('#query').onkeydown = (e)=>{ if(e.key==='Enter'){ state.query = $('#query').value; applyFilters(); } };
+
+  $$('.quick .btn').forEach(b => b.onclick = ()=>{
+    const r = parseRange(b.dataset.range); setRange(r.from, r.to);
+    refreshInputsFromState(); applyFilters();
+  });
+  $('#from').onchange = ()=>{
+    const d = new Date($('#from').value); const to = state.range.to;
+    if(!isNaN(d)) setRange(d.getTime(), to); applyFilters();
+  };
+  $('#to').onchange = ()=>{
+    const d = new Date($('#to').value); const from = state.range.from;
+    if(!isNaN(d)) setRange(from, d.getTime()); applyFilters();
+  };
+  $('#bucket').onchange = ()=>{ state.bucket = $('#bucket').value; drawHist(); };
+  $('#resetColumns').onclick = ()=>{ state.columns=[...DEFAULT_COLUMNS]; drawTable(); refreshFields(); };
+  $('#fieldFilter').oninput = refreshFields;
+
+  $('#exportCsv').onclick = ()=>{
+    const csv = toCSV(state.view, state.columns);
+    download('discover-logs.csv', csv);
+  };
+
+  $('#saveQuery').onclick = saveCurrentQuery;
+  $('#loadQuery').onclick = loadSelectedQuery;
+  $('#deleteQuery').onclick = deleteSelectedQuery;
+
+  $('#loadData').onclick = openModal;
+  $('#cancelData').onclick = closeModal;
+  $('#applyData').onclick = applyPasted;
+
+  window.addEventListener('resize', drawHist);
+}
+init();
+</script>
+<script src="/header-timer.js" defer></script>
+</body>
+</html>

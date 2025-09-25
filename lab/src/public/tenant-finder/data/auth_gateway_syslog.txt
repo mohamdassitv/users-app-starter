@@ -1,0 +1,9 @@
+2025-09-18T19:20:01Z gw1 ingress.accept req_id=REQ-1001 path=/login alias=zenith-core
+2025-09-18T19:20:01Z gw1 upstream.call req_id=REQ-1001 service=directory hdr=tid:ead9000d...
+2025-09-18T19:20:02Z gw1 authz.decision req_id=REQ-1001 status=401 reason=token.expired tenant_id=ead9000d-89ea-4d02-922d-518d469e2509
+2025-09-18T19:22:11Z gw1 ingress.accept req_id=REQ-1002 path=/login alias=zenith-core
+2025-09-18T19:22:11Z gw1 upstream.call req_id=REQ-1002 service=directory hdr=tid:ead9000d...
+2025-09-18T19:22:12Z gw1 authz.decision req_id=REQ-1002 status=401 reason=token.expired tenant_id=ead9000d-89ea-4d02-922d-518d469e2509
+2025-09-18T19:25:44Z gw1 ingress.accept req_id=REQ-1003 path=/health alias=public
+2025-09-18T19:25:45Z gw1 upstream.call req_id=REQ-1003 service=directory hdr=tid:publicxxx...
+2025-09-18T19:25:45Z gw1 authz.decision req_id=REQ-1003 status=200 decision=allow

@@ -1,0 +1,65 @@
+<!-- Copied tasks page (was index.html) -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Ops 101 Lab – Tasks</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='tasks.html'">
+      <img src="/logo.svg" alt="logo" />
+      <span class="brand-hacker" title="Return to hub">CHECK POINT</span>
+    </div>
+  </header>
+  <main class="page fade-in">
+    <div class="hero-wrapper" id="hero" style="padding:60px 40px 40px;">
+      <h1 class="hero-title" id="heroTitle" aria-label="Tasks">Tasks<span class="hero-caret" aria-hidden="true"></span></h1>
+      <p class="hero-sub" id="candidateGreeting" style="margin-top:6px;">Loading session…</p>
+      <div style="margin-top:12px;font-size:13px;color:#d0d6e0;" id="switchCandidateWrap"></div>
+    </div>
+    <section class="section hero-grid"></section>
+    <section class="section">
+      <div class="task-list" role="list" aria-label="Assessment tasks">
+        <div class="task-row" role="listitem">
+          <div class="task-badge">Case Study</div>
+          <h3>Task 1 — Branch Performance Degradation</h3>
+          <div class="actions"><a class="btn" href="/task/casestudy.html">Open →</a></div>
+        </div>
+        <div class="task-row" role="listitem">
+          <div class="task-badge">Communication</div>
+          <h3>Task 2 — Customer Escalation Email</h3>
+          <div class="actions"><a class="btn" href="/task/mail.html">Open →</a></div>
+        </div>
+        <div class="task-row" role="listitem">
+          <div class="task-badge">Operations</div>
+          <h3>Task 3 — High-Volume User Cleanup</h3>
+          <div class="actions"><a class="btn" href="/task/users.html">Open →</a></div>
+        </div>
+        <div class="task-row" role="listitem">
+          <div class="task-badge">Reliability</div>
+          <h3>Task 4 — Shift Alert Correlation & Handover</h3>
+          <div class="actions"><a class="btn" href="/task/alerts.html">Open →</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
+    <img src="/help-contact.svg" alt="Help" width="38" height="38">
+    <span class="help-label">Need help? Contact on-call.</span>
+  </a>
+  <script>
+    (function(){
+      const header=document.getElementById('siteHeader');
+      window.addEventListener('scroll',()=>{const y=window.scrollY;header.classList.toggle('shrink', y>16);});
+      const email=localStorage.getItem('candidateEmail');
+      const name=localStorage.getItem('candidateName');
+      const greet=document.getElementById('candidateGreeting');
+      const wrap=document.getElementById('switchCandidateWrap');
+      if(email){
+        if(greet) greet.textContent=(name? name+' – ':'')+'Select a task to begin or continue.';
+        if(wrap){wrap.innerHTML='Logged in as <strong>'+(name||email)+'</strong>. <a href="#" id="switchCandidateLink">Switch candidate</a>';wrap.querySelector('#switchCandidateLink').addEventListener('click',ev=>{ev.preventDefault();if(confirm('Switch candidate? Timer persists.')){localStorage.removeItem('candidateEmail');localStorage.removeItem('candidateName');document.cookie='cand=; Max-Age=0; path=/';location.href='/login.html';}});} }
+      else { if(greet) greet.textContent='Not logged in'; if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>'; }
+    })();
+  </script>
+  <script src="/header-timer.js" defer></script>
+  <script src="/collab-dock-simple.js?v=2" defer></script>
+</body></html>

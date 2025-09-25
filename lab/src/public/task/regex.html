@@ -16,9 +16,16 @@
 <script>
 async function run(){
   const pattern = document.getElementById('pat').value.trim();
-  const res = await fetch('/check/regex',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pattern})});
-  const data = await res.json();
-  document.getElementById('res').textContent = 'Score: ' + data.score + '\n' + JSON.stringify(data.detail,null,2);
+  if(!pattern){ document.getElementById('res').textContent='Enter a pattern'; return; }
+  try {
+    const res = await fetch('/check/regex',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ pattern })});
+    if(!res.ok){ document.getElementById('res').textContent='Server error'; return; }
+    const data = await res.json();
+    document.getElementById('res').textContent = 'Score: ' + data.score + '\n' + JSON.stringify(data.detail,null,2);
+  } catch(e){
+    document.getElementById('res').textContent='Request failed';
+  }
 }
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </body></html>

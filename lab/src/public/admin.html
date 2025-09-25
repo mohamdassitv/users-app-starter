@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Exam Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/theme.css" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+body{background:#fff;color:#222;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;}
+.admin-wrap{max-width:1100px;margin:34px auto 90px;padding:0 34px;}
+.panel{background:#ffffff;border:1px solid #ffd3e8;padding:26px 30px;border-radius:28px;margin-bottom:34px;box-shadow:0 6px 28px -10px rgba(255,92,168,.25),0 0 0 1px rgba(255,92,168,.25);} 
+.panel h2{margin:0 0 14px;font-size:21px;letter-spacing:.04em;color:#c91863;font-weight:700;}
+.panel label{display:block;font-size:12px;font-weight:600;letter-spacing:.5px;margin:16px 0 6px;color:#9a0f4c;text-transform:uppercase;}
+.panel input[type=text], .panel textarea{width:100%;background:#fff;border:1px solid #ffbadb;color:#222;padding:10px 12px;border-radius:12px;font-size:13px;font-family:inherit;box-shadow:0 1px 0 0 #ffc2e2 inset;} 
+.panel input[type=text]:focus, .panel textarea:focus{outline:2px solid #ff86c1;border-color:#ff86c1;}
+.panel textarea{min-height:120px;resize:vertical;line-height:1.5;}
+small.desc{display:block;font-size:11px;color:#b2497a;margin-top:4px;}
+button.primary{background:linear-gradient(135deg,#ff5ca8,#ff92c5);color:#fff;border:none;padding:10px 22px;font-weight:700;border-radius:999px;cursor:pointer;letter-spacing:.8px;font-size:13px;box-shadow:0 4px 18px -6px rgba(255,92,168,.55);} 
+button.primary:hover{filter:brightness(1.06);} 
+.actions-line{display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;}
+.badge{display:inline-block;background:#ff5ca8;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.6px;color:#fff;margin-left:10px;border:1px solid #ff8dbf;}
+.notice{background:#fff4fa;color:#680f37;border:1px solid #ffb5da;padding:10px 14px;border-radius:16px;font-size:12px;}
+.readout{font-family:ui-monospace,monospace;background:#fff;border:1px solid #ffd3e8;padding:12px 14px;border-radius:16px;white-space:pre-wrap;max-height:300px;overflow:auto;font-size:12px;color:#7b1f54;}
+hr.div{border:none;height:1px;background:linear-gradient(90deg,transparent,#ffc7e3,transparent);margin:40px 0;}
+table thead tr{color:#c91863;}
+table tbody tr:nth-child(even){background:#fff7fb;}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+<main class="admin-wrap fade-in container">
+  <h1 class="page-title">Exam Administration <span class="spark">✨</span></h1>
+  <p class="muted" style="max-width:760px;">Protected controls for configuration and maintenance. Changes immediately affect active candidates. Keep distribution list updated. All actions require password verification (cached for session only).</p>
+
+  <div class="panel card" id="sessionPanel" style="display:none;">
+    <h2>Admin Session <span class="badge" id="authState">CHECK</span></h2>
+    <p style="font-size:13px;line-height:1.5;" id="sessionMsg">Verifying session…</p>
+    <div class="actions-line" id="sessionActions" style="display:none;">
+  <button class="btn btn-primary" id="btnAdminLogout">Logout</button>
+  <button class="btn btn-ghost" id="btnGoLogin" style="display:none;">Login</button>
+    </div>
+  </div>
+
+  <div class="panel card" id="candidatesPanel" style="display:none;">
+    <h2>Candidates <span class="badge" id="candCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
+    <div style="overflow:auto;max-height:260px;border:1px solid #1e2533;border-radius:14px;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead style="background:#132033;position:sticky;top:0;">
+          <tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Name</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Status</th><th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th></tr>
+        </thead>
+        <tbody id="candRows"></tbody>
+      </table>
+    </div>
+    <div class="actions-line" style="margin-top:14px;">
+  <button class="btn btn-ghost" id="btnReloadCandidates">Refresh</button>
+  <button class="btn btn-primary" id="btnShowCreate" type="button">New Candidate</button>
+    </div>
+  <form id="createCandidateForm" style="display:none;margin-top:8px;padding:18px 20px;background:rgba(255,255,255,.75);border:1px solid var(--pink-200);border-radius:20px;backdrop-filter:blur(4px);">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+  <input id="newCandName" class="input" placeholder="Full Name" required style="flex:1;min-width:160px;" />
+  <input id="newCandEmail" class="input" type="email" placeholder="email@example.com" required style="flex:1;min-width:200px;" />
+  <button type="submit" class="btn btn-primary" style="background:linear-gradient(180deg,#10b981,#059669);">Save</button>
+  <button type="button" id="btnCreateAndOpen" class="btn btn-primary">Save & Open Login</button>
+  <button type="button" id="btnCancelCreate" class="btn btn-ghost" style="padding:0 18px;">Cancel</button>
+      </div>
+      <small id="createCandMsg" class="desc" style="margin-top:6px;"></small>
+    </form>
+    <small class="desc">Starts are idempotent; if a candidate already began their 4h window it will not reset.</small>
+  </div>
+
+  <div class="panel card" id="configPanel" style="display:none;">
+    <h2>Case Study Distribution <span class="badge" id="configDirty" style="display:none;background:#b45309;border:1px solid #f59e0b;">UNSAVED</span></h2>
+    <label for="recipients">Recipient Emails (comma separated)</label>
+  <textarea id="recipients" class="input" placeholder="a@example.com, b@example.com"></textarea>
+    <label for="onCall">On-Call Contact (phone or alias)</label>
+  <input type="text" id="onCall" class="input" placeholder="+81-xxx-xxxx" />
+    <div class="actions-line">
+  <button class="btn btn-primary" id="btnSaveConfig">Save Config</button>
+  <button class="btn btn-ghost" id="btnShowConfig">Reload</button>
+    </div>
+    <small class="desc">List stored in state file. Used for simulated email log when candidate submits case study.</small>
+  </div>
+
+  <div class="panel card" id="submissionPanel" style="display:none;">
+    <h2>Candidate Submission</h2>
+    <div id="submissionStatus" class="notice">No submission yet.</div>
+    <div id="submissionContent" style="margin-top:16px;display:none;">
+      <h3 style="margin:0 0 8px;font-size:16px;">Rendered HTML</h3>
+      <div class="readout" id="submissionHtml"></div>
+      <h3 style="margin:26px 0 8px;font-size:16px;">Metadata</h3>
+      <div class="readout" id="submissionMeta"></div>
+    </div>
+  </div>
+
+  <!-- Global maintenance panel removed per new per-candidate reset requirement -->
+  <button type="button" class="floating-refresh" id="floatingRefresh" title="Refresh Candidates">⟳ Refresh</button>
+</main>
+<script>
+// Admin page now expects cookie-based session established via /admin-login.html
+// Still supports header fallback if needed (not used when cookie present)
+let authToken=null;
+function gateFetch(url,opts={}){
+  opts.headers = Object.assign(authToken? {'X-Admin-Password':authToken}: {}, opts.headers||{});
+  return fetch(url, opts);
+}
+function showPanels(){
+  document.getElementById('configPanel').style.display='block';
+  document.getElementById('submissionPanel').style.display='block';
+  // maintenance panel removed
+  document.getElementById('candidatesPanel').style.display='block';
+}
+async function verifySession(){
+  // Try a cheap call that requires admin; use config endpoint
+  const r = await gateFetch('/api/admin/config');
+  const stateEl = document.getElementById('authState');
+  const msgEl = document.getElementById('sessionMsg');
+  const actions = document.getElementById('sessionActions');
+  const btnLogin = document.getElementById('btnGoLogin');
+  if(r.ok){
+    stateEl.textContent='ACTIVE';
+    stateEl.style.background='#065f46';
+    stateEl.style.border='1px solid #059669';
+    msgEl.textContent='Session authenticated via cookie.';
+    actions.style.display='flex';
+    btnLogin.style.display='none';
+    showPanels();
+    loadConfig();
+    loadSubmission();
+    loadCandidates();
+  } else {
+    stateEl.textContent='NONE';
+    stateEl.style.background='#7f1d1d';
+    stateEl.style.border='1px solid #b91c1c';
+    msgEl.innerHTML='No admin session. <strong>Use the Admin Login page.</strong>';
+    actions.style.display='flex';
+    document.getElementById('btnAdminLogout').style.display='none';
+    btnLogin.style.display='inline-block';
+  }
+  document.getElementById('sessionPanel').style.display='block';
+}
+async function adminLogout(){
+  await fetch('/api/auth/admin-logout',{method:'POST'});
+  location.href='/admin-login.html';
+}
+document.getElementById('btnAdminLogout').addEventListener('click', adminLogout);
+document.getElementById('btnGoLogin').addEventListener('click', ()=> location.href='/admin-login.html');
+verifySession();
+
+// Config save
+const recipientsEl=document.getElementById('recipients');
+const onCallEl=document.getElementById('onCall');
+[recipientsEl,onCallEl].forEach(el=> el.addEventListener('input',()=> document.getElementById('configDirty').style.display='inline-block'));
+
+document.getElementById('btnSaveConfig').addEventListener('click', async ()=>{
+  const body={recipients: recipientsEl.value, onCall: onCallEl.value};
+  const r= await gateFetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ document.getElementById('configDirty').style.display='none'; }
+});
+
+document.getElementById('btnShowConfig').addEventListener('click', loadConfig);
+async function loadConfig(){
+  const r= await gateFetch('/api/admin/config');
+  if(r.ok){ const j=await r.json(); recipientsEl.value=j.recipients||''; onCallEl.value=j.onCall||''; document.getElementById('configDirty').style.display='none'; }
+}
+
+async function loadSubmission(){
+  const r=await gateFetch('/api/case-study/submission');
+  if(r.ok){ const j=await r.json(); if(j && j.submitted){
+    document.getElementById('submissionStatus').textContent='Submitted '+ new Date(j.submittedAt).toLocaleString();
+    document.getElementById('submissionContent').style.display='block';
+    document.getElementById('submissionHtml').innerHTML=j.html;
+    document.getElementById('submissionMeta').textContent=JSON.stringify(j, null, 2);
+  } }
+}
+
+// Removed global reset logic
+
+// Candidate list logic
+async function loadCandidates(){
+  const r = await gateFetch('/api/admin/candidates');
+  if(!r.ok) return; const j = await r.json();
+  document.getElementById('candCount').textContent=j.total;
+  const tbody=document.getElementById('candRows');
+  tbody.innerHTML='';
+  j.candidates.sort((a,b)=> (a.startTime?1:0)-(b.startTime?1:0) || a.name.localeCompare(b.name));
+  j.candidates.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+(c.startTime? ('Started '+ new Date(c.startTime).toLocaleTimeString()+ (c.running? ' (running)':' (ended)')):'Not started')+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;display:flex;gap:6px;justify-content:center;">'+
+        (c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+
+        '<button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#ff5ca8,#ff8fc4);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button>'+
+      '</td>';
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
+    const email=e.target.getAttribute('data-email');
+    const r2= await gateFetch('/api/candidate/'+encodeURIComponent(email)+'/start',{method:'POST'});
+    if(r2.ok){ loadCandidates(); }
+  }));
+  tbody.querySelectorAll('.resetBtn').forEach(btn=> btn.addEventListener('click', async e=>{
+    const email=e.target.getAttribute('data-reset');
+    if(!confirm('Reset candidate '+email+'?')) return;
+    const r3=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/reset',{method:'POST'});
+    if(r3.ok) loadCandidates();
+  }));
+}
+document.getElementById('btnReloadCandidates').addEventListener('click', loadCandidates);
+document.getElementById('floatingRefresh').addEventListener('click', loadCandidates);
+
+// Create candidate UI logic
+const showCreateBtn=document.getElementById('btnShowCreate');
+const createForm=document.getElementById('createCandidateForm');
+const createMsg=document.getElementById('createCandMsg');
+const cancelCreate=document.getElementById('btnCancelCreate');
+const btnCreateAndOpen=document.getElementById('btnCreateAndOpen');
+showCreateBtn.addEventListener('click',()=>{ createForm.style.display='block'; showCreateBtn.style.display='none'; createMsg.textContent=''; });
+cancelCreate.addEventListener('click',()=>{ createForm.reset(); createForm.style.display='none'; showCreateBtn.style.display='inline-block'; });
+createForm.addEventListener('submit', async (e)=>{
+  e.preventDefault(); await submitCreate(false); });
+btnCreateAndOpen.addEventListener('click', async ()=>{ await submitCreate(true); });
+async function submitCreate(openLogin){
+  createMsg.textContent='Saving…';
+  const name=document.getElementById('newCandName').value.trim();
+  const email=document.getElementById('newCandEmail').value.trim();
+  if(!name||!email){ createMsg.textContent='Name & email required'; return; }
+  try {
+    const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+    if(!r.ok){ createMsg.textContent='Save failed'; return; }
+    createMsg.textContent='Saved.';
+    loadCandidates();
+    if(openLogin){
+      window.open('/login.html?email='+encodeURIComponent(email)+'&name='+encodeURIComponent(name),'_blank');
+    }
+  } catch(err){ createMsg.textContent='Error'; }
+}
+
+function escapeHtml(str){ return (str||'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s])); }
+ </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
+</body>
+</html>

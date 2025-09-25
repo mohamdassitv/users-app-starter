@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Task 4 — Shift Alert Correlation & Handover</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+.page{max-width:1280px;margin:0 auto;padding:24px 40px 120px;}
+.hero-box{background:linear-gradient(150deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:hbPulse 16s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:30px;padding:38px 44px 40px;position:relative;box-shadow:0 18px 50px -14px rgba(190,24,93,.55),0 6px 18px -6px rgba(190,24,93,.5);margin:0 0 60px;overflow:hidden;}
+.hero-box:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 22%,rgba(255,192,220,.42),transparent 65%);mix-blend-mode:screen;pointer-events:none;}
+.hero-box h1{margin:0 0 12px;font-size:40px;letter-spacing:.05em;}
+.hero-desc{margin:0;font-size:15px;line-height:1.55;font-weight:500;max-width:960px;}
+.tabs-bar{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 28px;}
+.tab-btn{background:#fff;border:1px solid #fbcfe8;color:#831843;padding:10px 18px 9px;font-size:14px;font-weight:600;border-radius:14px;cursor:pointer;letter-spacing:.4px;display:inline-flex;align-items:center;gap:8px;position:relative;transition:.18s;}
+.tab-btn.active{background:linear-gradient(135deg,#f472b6,#ec4899,#db2777);color:#fff;box-shadow:0 6px 18px -6px rgba(236,72,153,.5);}
+.tab-btn:not(.active):hover{background:#fff5fa;}
+.panels{border:1px solid #fbcfe8;background:#fffafb;border-radius:30px;padding:34px 40px 46px;position:relative;box-shadow:0 6px 28px -12px rgba(219,39,119,.35),0 2px 6px -2px rgba(0,0,0,.08);} 
+.panel{display:none;animation:fadeSlide .4s ease;}
+.panel.active{display:block;}
+.panel h2{margin:0 0 14px;font-size:22px;letter-spacing:.5px;color:#0f172a;}
+.small-hint{font-size:12px;color:#475569;margin:0 0 16px;}
+textarea,input[type=text]{font-family:ui-monospace,Menlo,Consolas,monospace;}
+.field-set{display:flex;flex-direction:column;gap:18px;margin:0 0 28px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;}
+.text-box, .mini-box{width:100%;border:1px solid #cbd5e1;border-radius:14px;padding:12px 14px;font-size:13px;background:#f8fafc;resize:vertical;min-height:120px;line-height:1.5;transition:border-color .18s,box-shadow .18s;}
+.text-box:focus,.mini-box:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.35);background:#fff;}
+.mini-box{min-height:56px;}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.alert-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 0;}
+.alert-table th, .alert-table td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left;vertical-align:top;}
+.alert-table th{background:#ffe4ef;color:#581c39;font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;}
+.alert-row{cursor:pointer;}
+.alert-row:hover{background:#fff0f7;}
+.status-pill{display:inline-block;padding:2px 8px 1px;font-size:11px;font-weight:600;border-radius:999px;letter-spacing:.05em;}
+.pill-open{background:#dc2626;color:#fff;}
+.pill-investigating{background:#f59e0b;color:#581c1c;}
+.pill-mitigated{background:#059669;color:#fff;}
+.sev-pill{display:inline-block;padding:2px 8px 1px;font-size:10px;font-weight:700;border-radius:8px;letter-spacing:.06em;}
+.sev-P1{background:#7f1d1d;color:#fff;}
+.sev-P2{background:#b91c1c;color:#fff;}
+.sev-P3{background:#f59e0b;color:#581c1c;}
+.sev-P4{background:#10b981;color:#053321;}
+.sev-P5{background:#64748b;color:#fff;}
+.inline-btn{background:#fff;color:#be185d;border:1px solid #f9a8d4;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;transition:.18s;}
+.inline-btn:hover{background:#fff0f7;border-color:#ec4899;}
+.actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;}
+.btn-primary{background:linear-gradient(135deg,#f472b6,#ec4899,#db2777);color:#fff;font-weight:600;border:none;padding:14px 28px;border-radius:16px;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;letter-spacing:.4px;box-shadow:0 6px 20px -8px rgba(236,72,153,.5),0 2px 4px -1px rgba(0,0,0,.35);transition:transform .18s, box-shadow .18s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -12px rgba(236,72,153,.6),0 4px 8px -3px rgba(0,0,0,.28);}
+.btn-primary:active{transform:translateY(0);}
+.btn-ghost{background:#fff;color:#be185d;border:1px solid #f9a8d4;padding:12px 22px;border-radius:14px;font-weight:500;cursor:pointer;font-size:14px;transition:background .18s,border-color .18s,box-shadow .18s,color .18s;}
+.btn-ghost:hover{background:#fff0f7;border-color:#f472b6;color:#9d174d;}
+.save-state{font-size:12px;color:#64748b;}
+.save-state.dirty{color:#b45309;}
+.save-state.saved{color:#059669;}
+.timeline-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.timeline-item{background:#fff;border:1px solid #fbcfe8;padding:10px 14px;border-radius:14px;display:flex;flex-direction:column;gap:4px;position:relative;}
+.timeline-item:before{content:"";position:absolute;left:-14px;top:18px;width:10px;height:10px;border-radius:50%;background:linear-gradient(145deg,#f472b6,#ec4899,#db2777);box-shadow:0 0 0 4px #ffe4ef;}
+.tmeta{font-size:11px;color:#475569;display:flex;gap:12px;flex-wrap:wrap;}
+.tag{background:#ffe4ef;color:#831843;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.05em;}
+.code-block{font-family:ui-monospace,Consolas,Menlo,monospace;background:#0f172a;color:#fbcfe8;padding:10px 12px;border-radius:10px;overflow:auto;font-size:12px;line-height:1.4;}
+.badge-inline{display:inline-block;background:#ffe4ef;color:#9d174d;padding:3px 8px 2px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;margin-left:6px;}
+.flex-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.counter-box{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 16px;}
+.counter{background:#fff;border:1px solid #fbcfe8;padding:12px 16px 11px;border-radius:16px;font-size:12px;font-weight:600;letter-spacing:.08em;color:#831843;box-shadow:0 2px 6px -2px rgba(219,39,119,.25);} 
+.export-hint{font-size:11px;margin-top:6px;}
+/* Tenants table specific */
+.tenants-header-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:0 0 14px;}
+.tenants-search-box{border:1px solid #cbd5e1;border-radius:12px;padding:10px 14px;font-size:13px;width:320px;background:#fff;}
+.tenants-search-box:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.25);} 
+.tenants-summary{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 12px;}
+.ten-chip{background:#f1f5f9;color:#0f172a;font-size:11px;font-weight:600;padding:6px 10px 5px;border-radius:999px;letter-spacing:.05em;border:1px solid #e2e8f0;}
+.tenants-table-wrap{max-width:100%;overflow:auto;border:1px solid #e5e7eb;border-radius:18px;background:#fff;}
+table.tenants-table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
+table.tenants-table thead th{position:sticky;top:0;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#475569;padding:10px 12px;text-align:left;cursor:pointer;user-select:none;}
+table.tenants-table thead th.sortable:hover{background:#eef6fb;}
+table.tenants-table tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;color:#0f172a;}
+table.tenants-table tbody tr:nth-child(even){background:#fcfdff;}
+table.tenants-table tbody tr:hover{background:#f1faff;}
+.mono{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12.5px;}
+.tenant-link{color:#0ea5e9;text-decoration:none;font-weight:600;}
+.tenant-link:hover{text-decoration:underline;}
+.inst-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px 4px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0;line-height:1;}
+.inst-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;}
+.inst-ok .inst-dot{background:#22c55e;}
+.inst-warn .inst-dot{background:#f59e0b;}
+.inst-down .inst-dot{background:#ef4444;}
+.inst-ok{color:#15803d;}
+.inst-warn{color:#b45309;}
+.inst-down{color:#b91c1c;}
+.hibernated-status{color:#475569;font-weight:600;}
+.hibernated-status a{margin-left:6px;font-size:11px;color:#0ea5e9;text-decoration:none;}
+.hibernated-status a:hover{text-decoration:underline;}
+.pagination-bar{display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:14px 4px 0;font-size:12px;color:#475569;flex-wrap:wrap;}
+.pagination-bar select{border:1px solid #cbd5e1;border-radius:10px;padding:6px 10px;font-size:12px;background:#fff;}
+.pagination-bar button{background:#fff;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:600;padding:6px 12px;border-radius:10px;cursor:pointer;}
+.pagination-bar button:disabled{opacity:.4;cursor:not-allowed;}
+.empty-state{padding:40px 0;text-align:center;font-size:13px;color:#64748b;}
+.sort-ind{font-size:10px;margin-left:4px;color:#475569;}
+/* Detail drawer */
+#alertDetail{margin-top:24px;border:1px solid #fbcfe8;background:#fff;border-radius:26px;padding:26px 30px 30px;box-shadow:0 4px 24px -10px rgba(219,39,119,.35),0 1px 4px -1px rgba(0,0,0,.12);display:none;}
+#alertDetail.active{display:block;animation:fadeSlide .35s ease;}
+#alertDetail h3{margin:0 0 10px;font-size:20px;letter-spacing:.5px;color:#0f172a;}
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 26px;margin:14px 0 8px;font-size:12px;}
+.kv-item{display:flex;flex-direction:column;gap:2px;background:#fffafb;border:1px solid #f1d1e6;padding:10px 12px;border-radius:14px;}
+.kv-item span.key{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#831843;}
+.kv-item span.val{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;}
+.detail-meta{font-size:11px;color:#475569;margin:8px 0 14px;}
+.detail-section{margin:18px 0 0;}
+.close-detail{position:absolute;top:12px;right:12px;background:#fff;color:#be185d;border:1px solid #f9a8d4;padding:6px 10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;}
+.close-detail:hover{background:#fff0f7;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes hbPulse{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+@media (max-width:860px){.panels{padding:26px 26px 34px;border-radius:26px;} .hero-box{padding:30px 30px 32px;} .tabs-bar{gap:8px;} }
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+<main class="page fade-in">
+  <section class="hero-box">
+    <h1>Task 4 — Shift Alert Correlation & Handover</h1>
+  <p class="hero-desc">Scenario: You are in the <strong>middle of an ongoing shift</strong>. A noisy burst of alerts has just landed in the last few minutes while other engineers are tied up. You have to rapidly: isolate the first alert to tackle, articulate why, collapse duplicates/noise, map dependencies, and outline impact — all while preparing a succinct handover for the next shift. Work the panels in order; do not assume any alert text is trustworthy without validation.<span class="badge-inline">Critical</span></p>
+  </section>
+  <div class="tabs-bar" role="tablist">
+    <button class="tab-btn active" data-tab="alerts" role="tab" aria-selected="true">Active Alerts</button>
+  <button class="tab-btn" data-tab="tenants" role="tab" aria-selected="false">Tenants List</button>
+  <button class="tab-btn" data-tab="timeline" role="tab" aria-selected="false">Portal</button>
+    <button class="tab-btn" data-tab="actions" role="tab" aria-selected="false">Mitigation Actions</button>
+    <button class="tab-btn" data-tab="rootcause" role="tab" aria-selected="false">Root Cause & Handover</button>
+  </div>
+  <section class="panels">
+    <!-- Active Alerts Panel -->
+    <div class="panel active" id="panel-alerts" data-panel="alerts">
+      <h2>Active Alerts (Static)</h2>
+      <p class="small-hint">Static snapshot of current shift alerts. Click a row for full details (disk usage P1 has expanded metadata). No add/edit in this mode.</p>
+      <div class="counter-box">
+        <div class="counter" id="ctrTotal">TOTAL: 0</div>
+        <div class="counter" id="ctrP1">P1: 0</div>
+        <div class="counter" id="ctrP2P3">P2/P3: 0</div>
+        <div class="counter" id="ctrLower">P4/P5: 0</div>
+      </div>
+      <table class="alert-table" aria-label="Static shift alerts">
+        <thead><tr><th>Product</th><th>Priority</th><th>Alert</th><th>Context</th><th>Opened</th><th>More Info</th><th>Playbooks</th></tr></thead>
+        <tbody id="alertsBody"></tbody>
+      </table>
+      <div id="alertDetail" aria-live="polite"></div>
+      <div id="prioritizationBlock" style="margin-top:34px;">
+        <h3 style="margin:34px 0 10px;font-size:18px;color:#0f172a;">Prioritization Question</h3>
+        <p style="font-size:13px;line-height:1.55;max-width:900px;">Given the current alert snapshot above (mixed severities, overlapping functional areas, potential duplicate symptoms), which single alert would you triage <strong>first</strong> and why? In your answer justify based on: potential blast radius, user impact signals, dependency fan‑out, and mitigation leverage. If two are strongly coupled, state the pair and primary driver.</p>
+        <label for="priorityAnswer" style="display:block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;margin:16px 0 6px;">Your Answer</label>
+  <textarea id="priorityAnswer" class="text-box" data-rich="1" placeholder="State ONLY the single alert (or tightly coupled pair) you would start with and the justification. Avoid generic answers (e.g. 'because it is P1')." style="min-height:140px;"></textarea>
+    <label for="priorityDescribe" style="display:block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;margin:22px 0 6px;">Describe Selected Alert & Impact</label>
+    <p style="margin:0 0 6px;font-size:12px;color:#475569;">Describe (a) what the chosen alert technically represents, (b) potential / observed blast radius, (c) user or system impact signals, and (d) why handling it first yields the highest mitigation leverage.</p>
+  <textarea id="priorityDescribe" class="text-box" data-rich="1" placeholder="Describe the alert in your own words, its failure domain, user/system impact, downstream risk, and leverage gained by fixing it first." style="min-height:160px;"></textarea>
+      </div>
+    </div>
+    <!-- Tenants List Panel -->
+    <div class="panel" id="panel-tenants" data-panel="tenants">
+      <h2>Tenants Table</h2>
+      <div class="tenants-summary" id="tenSummary"></div>
+      <div class="tenants-header-row">
+        <div style="flex:1;min-width:240px;"></div>
+        <input type="text" id="tenSearch" class="tenants-search-box" placeholder="Search By Tenant Name or Id…" aria-label="Search tenants" />
+      </div>
+      <div class="tenants-table-wrap">
+        <table class="tenants-table" id="tenTable" aria-label="Tenants list">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th class="sortable" data-sort="name">Name <span class="sort-ind" id="sortInd-name"></span></th>
+              <th class="sortable" data-sort="sites" style="text-align:right;">Number Of Sites <span class="sort-ind" id="sortInd-sites"></span></th>
+              <th class="sortable" data-sort="instances">Instances Status <span class="sort-ind" id="sortInd-instances"></span></th>
+              <th class="sortable" data-sort="tenantStatus">Tenant Status <span class="sort-ind" id="sortInd-tenantStatus"></span></th>
+              <th class="sortable" data-sort="regDate" style="white-space:nowrap;">Registration Date <span class="sort-ind" id="sortInd-regDate"></span></th>
+            </tr>
+          </thead>
+          <tbody id="tenBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar" id="tenPagination" aria-label="Pagination controls">
+        <label style="display:flex;align-items:center;gap:6px;">Rows per page <select id="tenRows"><option>25</option><option>10</option><option>50</option></select></label>
+        <div id="tenRange">0–0 of 0</div>
+        <div style="display:flex;gap:8px;">
+          <button id="tenPrev" disabled>Prev</button>
+          <button id="tenNext" disabled>Next</button>
+        </div>
+      </div>
+      <div id="tenEmpty" class="empty-state" style="display:none;">No results</div>
+      <div id="tenQuestions" style="margin-top:34px;">
+        <h3 style="margin:10px 0 12px;font-size:18px;color:#0f172a;">Tenant ID Exercise</h3>
+        <ol style="margin:0 0 20px 22px;font-size:13px;line-height:1.55;max-width:920px;">
+          <li style="margin-bottom:14px;">Search the table for a tenant ID you observed earlier in an alert or investigation material. Record the tenant <strong>ID</strong>, its <strong>Name</strong>, and its <strong>Registration Date</strong> exactly as shown.</li>
+          <li>One of your peers reported a possible data consistency bug involving two specific clients: <strong>NorthPeak Mining</strong> and <strong>Metro Legal Assoc</strong>. Inspect them in the table and explain what you believe the underlying problem is and why it could be risky for downstream systems.</li>
+        </ol>
+        <div class="field-set" style="margin-top:4px;">
+          <div class="field">
+            <label>Question 1 — Tenant ID, Name & Registration Date</label>
+            <textarea id="q1Answer" class="text-box" data-rich="1" placeholder="Format suggestion: ID = ...\nName = ...\nRegistration Date = ..." style="min-height:120px;"></textarea>
+          </div>
+          <div class="field">
+            <label>Question 2 — Bug Analysis (NorthPeak Mining & Metro Legal Assoc)</label>
+            <textarea id="q2Answer" class="text-box" data-rich="1" placeholder="Describe the issue you see between the two tenants, potential root cause (e.g. data ingest, duplication, key collision), risks (reporting, billing, isolation), and suggested remediation." style="min-height:160px;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div id="jibanaEmbed" style="margin-top:46px;">
+        <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Jibana Log Explorer</h3>
+        <p style="font-size:12.5px;color:#475569;margin:0 0 16px;max-width:980px;">Embedded lightweight log explorer. Use the time range, KQL-like query bar, histogram, and field selector to inspect synthetic gateway/auth logs. This version has no quiz elements.</p>
+        <iframe src="/kibana/index.html" title="Jibana Log Explorer" style="width:100%;height:820px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;box-shadow:0 4px 18px -6px rgba(0,0,0,.08);"></iframe>
+        <div style="font-size:11px;color:#64748b;margin-top:8px;">Open in new tab: <a href="/kibana/index.html" target="_blank">/kibana/index.html</a></div>
+      </div>
+      <div id="ownershipMatrixEmbed" style="margin-top:54px;">
+        <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">SASE Ownership Matrix & Ticket Intake</h3>
+        <p style="font-size:12.5px;color:#475569;margin:0 0 16px;max-width:980px;">Reference ownership across modules and practice rapid incident ticket drafting. Filter matrix, run quick assignment quiz, then generate a markdown ticket. Data is mock training content.</p>
+  <iframe src="/task/sase_ownership_matrix_ticket.html" title="SASE Ownership Matrix & Ticket Intake" style="width:100%;height:920px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;box-shadow:0 4px 20px -6px rgba(219,39,119,.18);"></iframe>
+        <div style="font-size:11px;color:#64748b;margin-top:8px;">Open in new tab: <a href="/task/sase_ownership_matrix_ticket.html" target="_blank">/task/sase_ownership_matrix_ticket.html</a></div>
+      </div>
+    </div>
+    <!-- Portal Panel (renamed from Timeline) -->
+    <div class="panel" id="panel-timeline" data-panel="timeline">
+      <h2>Portal</h2>
+      <p class="small-hint">Embedded Infinity Portal mock below. Original timeline input retained above if needed.</p>
+      <div class="flex-row" style="gap:10px;align-items:flex-end;margin-bottom:12px;">
+        <div style="flex:3;min-width:260px;">
+          <label style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;">Entry</label>
+          <input type="text" id="timelineEntry" class="mini-box" placeholder="e.g. Elevated latency on GW-3 vs baseline 45ms → 120ms" />
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <label style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;">Tag</label>
+          <select id="timelineTag" class="mini-box" style="min-height:48px;">
+            <option value="obs">observation</option>
+            <option value="action">action</option>
+            <option value="result">result</option>
+            <option value="escalation">escalation</option>
+            <option value="handover">handover</option>
+          </select>
+        </div>
+        <button type="button" class="btn-primary" id="btnAddTimeline">Append</button>
+      </div>
+      <ol class="timeline-list" id="timelineList" aria-label="Portal notes list"></ol>
+      <div style="margin-top:26px;">
+        <h3 style="margin:0 0 12px;font-size:17px;color:#0f172a;">Infinity Portal (Embedded)</h3>
+        <iframe src="/infinity-portal-mock.html" title="Infinity Portal Mock" style="width:100%;height:780px;border:1px solid #e0d2e9;border-radius:18px;background:#fff;box-shadow:0 4px 18px -6px rgba(180,60,160,.18);"></iframe>
+        <div style="font-size:11px;color:#885088;margin-top:8px;">Open standalone: <a href="/infinity-portal-mock.html" target="_blank">/infinity-portal-mock.html</a></div>
+      </div>
+    </div>
+    <!-- Mitigation Actions -->
+    <div class="panel" id="panel-actions" data-panel="actions">
+      <h2>Mitigation Actions & Verification</h2>
+      <p class="small-hint">Track each attempted mitigation and its verification step/results.</p>
+      <div class="field-set">
+        <div class="field">
+          <label>Actions & Rationale</label>
+          <textarea id="actActions" class="text-box" data-rich="1" placeholder="List each action with rationale.\nEx: Disabled noisy synthetic probe #4 to reduce gateway CPU contention."></textarea>
+        </div>
+        <div class="field">
+          <label>Verification Checks</label>
+          <textarea id="actVerif" class="text-box" data-rich="1" placeholder="Post-mitigation metrics / packet loss / latency / user error rate."></textarea>
+        </div>
+        <div class="field">
+          <label>Rollback / Contingency</label>
+          <textarea id="actRollback" class="text-box" data-rich="1" placeholder="Rollback triggers & safe revert path."></textarea>
+        </div>
+      </div>
+    </div>
+    <!-- Root Cause & Handover -->
+    <div class="panel" id="panel-rootcause" data-panel="rootcause">
+      <h2>Root Cause Synthesis & Shift Handover</h2>
+      <p class="small-hint">Summarize confirmed root cause (or current leading hypothesis), residual risk, user impact, metrics trajectory, and explicit next steps for incoming shift.</p>
+      <div class="field-set">
+        <div class="field">
+          <label>Confirmed Root Cause / Leading Hypothesis</label>
+          <textarea id="rcCause" class="text-box" data-rich="1" placeholder="Ex: ISP uplink-A 12% packet loss due to upstream maintenance window; latency & CPU cascade."></textarea>
+        </div>
+        <div class="field">
+          <label>Impact Assessment</label>
+          <textarea id="rcImpact" class="text-box" data-rich="1" placeholder="Scope, duration, affected branches/users, error rates."></textarea>
+        </div>
+        <div class="field">
+          <label>Residual Risk / Watch Items</label>
+          <textarea id="rcRisk" class="text-box" data-rich="1" placeholder="Remaining elevated latency on GW-3 (65ms > 45ms baseline); monitor for next 30m."></textarea>
+        </div>
+        <div class="field">
+          <label>Handover Note</label>
+          <textarea id="rcHandover" class="text-box" data-rich="1" placeholder="Concise shift handover message for successor."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="actions">
+    <button type="button" class="btn-primary" id="btnSaveAll">Save All</button>
+    <button type="button" class="btn-ghost" id="btnExport">Export JSON</button>
+    <button type="button" class="btn-ghost" id="btnClearAll">Reset</button>
+    <span id="saveState" class="save-state">Not saved</span>
+  </div>
+</main>
+<script src="/collab-dock-simple.js?v=3" defer></script>
+<script src="/richify.js" defer></script>
+<script src="/header-timer.js" defer></script>
+<script>
+(function(){
+  const KEY='alertCorrelationTask_v1';
+  const VERSION=3; // v3 switches alerts panel to static snapshot list
+  // Structured decoy playbook overrides (non-P1). Used for rich rendering instead of raw list lines.
+  const PLAYBOOK_OVERRIDES={
+    'ALRT-IDA-20250918-202502':{
+      more:'Say EU-West update feed unstable; cache stale >24h; quick temp fixes likely.',
+      cmds:[
+        'ssh admin@rv-gw-03',
+        'sudo rm -rf /opt/ida/cache/*',
+        'sudo systemctl restart ida-updater ida-agent',
+        'curl -I http://updates.ida.example.com/health',
+        'sudo iptables -I INPUT -p tcp --dport 80 -j ACCEPT'
+      ],
+      decision:'If df -h shows space and curl returns 200 → Resolved; else escalate to IDA Feed Ops.'
+    },
+    'ALRT-CPU-20250918-191219':{
+      more:'Host gw-core-12 pinned at 95%+, likely undersized VM.',
+      cmds:[
+        'ssh admin@gw-core-12',
+        "lscpu && grep -E 'cpu|throttle' /proc/*/status 2>/dev/null | head",
+        'docker stats --no-stream',
+        'sudo systemctl set-property --runtime -- user.slice CPUQuota=0',
+        '# plan resize:',
+        'echo "request vCPU=8 mem=16G" | tee /tmp/scale.txt'
+      ],
+      decision:'If sustained user CPU > 90% for 10m after removing quotas AND latency rising → escalate to Compute Capacity; else Resolved.'
+    },
+    'ALRT-RV-20250918-184950-A':{
+      more:'Licensing ceiling exceeded; user surge from Osaka.',
+      cmds:[
+        'ssh admin@rv-edge-osaka',
+        "grep -n 'max-clients' /etc/openvpn/server.conf",
+        "sudo sed -i 's/^max-clients.*/max-clients 2000/' /etc/openvpn/server.conf",
+        'sudo systemctl restart openvpn-server'
+      ],
+      decision:'If active users > 1500 persist 10m → add second RV node; else Resolved.'
+    },
+    'ALRT-RV-20250918-184950-B':{
+      more:'Licensing ceiling exceeded; user surge from Osaka. (Duplicate row)',
+      cmds:[
+        'ssh admin@rv-edge-osaka',
+        "grep -n 'max-clients' /etc/openvpn/server.conf",
+        "sudo sed -i 's/^max-clients.*/max-clients 2000/' /etc/openvpn/server.conf",
+        'sudo systemctl restart openvpn-server'
+      ],
+      decision:'Duplicate of -A; follow same decision path.'
+    },
+    'ALRT-IDN-20250918-185004':{
+      more:'Transient network latency; client timeouts too short.',
+      cmds:[
+        'ssh app@idn-eu-web01',
+        'sudo sed -i "s/^http_timeout=.*/http_timeout=120/" /etc/idn/app.conf',
+        'sudo systemctl restart idn-api',
+        'curl -m 120 -sS https://idp.eu.example.com/health'
+      ],
+      decision:'If health checks 200 for 10m and timeout errors < 5/min → Resolved; else escalate to IDN Platform.'
+    },
+    'ALRT-LAAS-20250918-195319':{
+      more:'API key mismatch suspected.',
+      cmds:[
+        'export NEW_KEY=AKIA...REDACTED',
+        'sudo sed -i "s/API_KEY=.*/API_KEY=${NEW_KEY}/" /etc/exporter/env',
+        'sudo systemctl restart laas-exporter',
+        'curl -v https://laas.example.com/ping'
+      ],
+      decision:'If signed URL requests succeed (2xx) & error rate < 1% for 5m → Resolved; else escalate to LaaS Auth.'
+    },
+    'ALRT-LAAS-20250918-170319':{
+      more:'Older exporters still using legacy token.',
+      cmds:[
+        "ansible all -m shell -a 'systemctl restart laas-exporter && rm -f /etc/exporter/tokens.d/old-*'"
+      ],
+      decision:'If all exporters report new token and failures drop → Resolved; else escalate to LaaS Deploy.'
+    },
+    'ALRT-LAAS-20250918-201319':{
+      more:'Region gateway blocks by reputation; whitelist IPs.',
+      cmds:[
+        'curl -vk https://uae.laas.example.com/ingest',
+        '# file a whitelist request with outbound IP: $(curl -s ifconfig.me)'
+      ],
+      decision:'If ingestion 2xx after whitelist or alternative path → Resolved; else escalate to LaaS Network.'
+    },
+    'ALRT-DSS-20250918-105918':{
+      more:'Kafka saturation suspected; backlog growth.',
+      cmds:[
+        '/opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --alter --topic dss-events --partitions 10',
+        '/opt/kafka/bin/kafka-configs.sh --bootstrap-server kafka:9092 --alter --entity-type topics --entity-name dss-events --add-config retention.ms=1209600000'
+      ],
+      decision:'If backlog drains & consumer lag < threshold for 15m → Resolved; else escalate to Streaming Platform.'
+    }
+  };
+  // Elements
+  const tabButtons=[...document.querySelectorAll('.tab-btn')];
+  const panels=[...document.querySelectorAll('.panel')];
+  function activate(tab){
+    tabButtons.forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');});
+    panels.forEach(p=> p.classList.toggle('active', p.dataset.panel===tab));
+  }
+  tabButtons.forEach(btn=> btn.addEventListener('click',()=>activate(btn.dataset.tab)));
+
+  // Alerts (static snapshot)
+  const alertsBody=document.getElementById('alertsBody');
+  const ctrTotal=document.getElementById('ctrTotal');
+  const ctrP1=document.getElementById('ctrP1');
+  const ctrP2P3=document.getElementById('ctrP2P3');
+  const ctrLower=document.getElementById('ctrLower');
+  let alerts=[]; // static objects
+  let timeline=[]; // {time,tag,text}
+  // (Correlation fields removed in Tenants refactor)
+  // Actions
+  const actActions=document.getElementById('actActions');
+  const actVerif=document.getElementById('actVerif');
+  const actRollback=document.getElementById('actRollback');
+  // Root cause
+  const rcCause=document.getElementById('rcCause');
+  const rcImpact=document.getElementById('rcImpact');
+  const rcRisk=document.getElementById('rcRisk');
+  const rcHandover=document.getElementById('rcHandover');
+  // Timeline
+  const timelineList=document.getElementById('timelineList');
+  const timelineEntry=document.getElementById('timelineEntry');
+  const timelineTag=document.getElementById('timelineTag');
+  const btnAddTimeline=document.getElementById('btnAddTimeline');
+
+  const btnSaveAll=document.getElementById('btnSaveAll');
+  const btnClearAll=document.getElementById('btnClearAll');
+  const btnExport=document.getElementById('btnExport');
+  const saveState=document.getElementById('saveState');
+  const priorityAnswer=document.getElementById('priorityAnswer');
+  const priorityDescribe=document.getElementById('priorityDescribe');
+  const q1Answer=document.getElementById('q1Answer');
+  const q2Answer=document.getElementById('q2Answer');
+
+  function markDirty(){ saveState.textContent='Unsaved changes'; saveState.className='save-state dirty'; }
+  function markSaved(){ saveState.textContent='Saved '+new Date().toLocaleTimeString(); saveState.className='save-state saved'; }
+  function renderAlerts(){
+    alertsBody.innerHTML='';
+    alerts.forEach(a=>{
+      const tr=document.createElement('tr');
+      tr.className='alert-row';
+      tr.dataset.id=a.id;
+      tr.innerHTML=`<td>${esc(a.team)}</td><td>${renderSeverity(a.priority)}</td><td>${esc(a.title)}</td><td>${esc(a.context||'')}</td><td style="white-space:nowrap;">${esc(a.opened)}</td><td><button type=\"button\" class=\"inline-btn\" data-more=\"${a.id}\">More Info</button></td><td><a href="#" data-id="${a.id}" class="inline-btn" data-act="playbook">Playbooks</a></td>`;
+      alertsBody.appendChild(tr);
+    });
+    updateCounters();
+  }
+  function renderSeverity(sev){ return `<span class="sev-pill sev-${esc(sev)}">${esc(sev)}</span>`; }
+  function updateCounters(){
+    ctrTotal.textContent='TOTAL: '+alerts.length;
+    ctrP1.textContent='P1: '+alerts.filter(a=>a.priority==='P1').length;
+    ctrP2P3.textContent='P2/P3: '+alerts.filter(a=>a.priority==='P2'||a.priority==='P3').length;
+    ctrLower.textContent='P4/P5: '+alerts.filter(a=>a.priority==='P4'||a.priority==='P5').length;
+  }
+  alertsBody.addEventListener('click',e=>{
+    const moreBtn=e.target.closest('button.inline-btn[data-more]');
+    if(moreBtn){ const id=moreBtn.getAttribute('data-more'); const a=alerts.find(x=>x.id===id); if(a) showDetail(a); return; }
+    const playbookLink=e.target.closest('a.inline-btn[data-act="playbook"]');
+    if(playbookLink){ e.preventDefault(); const id=playbookLink.getAttribute('data-id'); const a=alerts.find(x=>x.id===id); if(a) showPlaybookDetail(a); return; }
+    const row=e.target.closest('tr.alert-row'); if(!row) return; const id=row.dataset.id; const a=alerts.find(x=>x.id===id); if(a) showDetail(a);
+  });
+
+  const detailEl=document.getElementById('alertDetail');
+  let currentDetail=null;
+  function hideDetail(){ detailEl.classList.remove('active'); detailEl.innerHTML=''; currentDetail=null; }
+  function showDetail(a){
+    currentDetail=a;
+    const r=a.raw||{};
+    const play=(r.playbook||[]).join('\n');
+    let richSection='';
+    if(r.id==='ALRT-MEM-20250917-053802'){
+      // Reuse same structured layout as playbook view (summary) for consistency
+      richSection=`<div style="margin-top:8px;border:1px solid #f9a8d4;border-radius:16px;padding:12px 16px;background:#fffafb;">
+        <div style="font-weight:600;text-align:center;padding:4px 8px;border:1px solid #fbcfe8;background:#ffe4ef;border-radius:10px;margin-bottom:10px;">Structured Playbook Snapshot</div>
+        <div style="font-size:12.5px;">Memory / disk validation & cleanup steps available via Playbooks link.</div>
+      </div>`;
+    } else if(PLAYBOOK_OVERRIDES[r.id]){
+      const o=PLAYBOOK_OVERRIDES[r.id];
+      richSection=`<div style="margin-top:8px;border:1px solid #f9a8d4;border-radius:16px;padding:12px 16px;background:#fffafb;">
+        <div style="font-weight:600;text-align:center;padding:4px 8px;border:1px solid #fbcfe8;background:#ffe4ef;border-radius:10px;margin-bottom:10px;">Decoy Structured Playbook</div>
+        <div style="font-size:12.5px;margin-bottom:8px;">${esc(o.more)}</div>
+        <div style="font-weight:600;font-size:12px;margin:4px 0 4px;">Commands (preview)</div>
+        <ul style="margin:0 0 8px 18px;padding:0;font-size:12.5px;">${o.cmds.slice(0,3).map(c=>`<li><code style=\"background:#0f172a;color:#fbcfe8;border:none;padding:2px 5px;border-radius:6px;\">${esc(c)}</code></li>`).join('')}${o.cmds.length>3?'<li>…</li>':''}</ul>
+        <div style="font-size:12px;"><strong>Decision:</strong> ${esc(o.decision)}</div>
+      </div>`;
+    }
+  const openedISO=r.time_iso||'';
+  const lastUpd=r.last_updated_iso||'';
+  const lastDup=r.last_duplicated_iso||'';
+  const elapsed=r.elapsed_hint||'';
+  const alias=r.alias||'';
+  const ownerTeam=r.owner_team||'';
+  const tenant=r.tenant_id||'';
+  const labelsObj=r.raw_labels||null;
+  const annObj=r.raw_annotations||null;
+    // Playbook & examiner notes formatting
+    const decoys=(r.decoy_tags||[]).join(', ');
+    const trueCause=r.examiner_notes?.true_cause||'';
+    let overrideMarkdown='';
+    if(r.id!== 'ALRT-MEM-20250917-053802' && PLAYBOOK_OVERRIDES[r.id]){
+      const o=PLAYBOOK_OVERRIDES[r.id];
+      const summaryLine=`Product: ${esc(r.product)} | Priority: ${esc(r.severity)} | Alert: ${esc(r.title)} | Context: ${esc(r.customer)} | Opened: ${esc(a.opened)}`;
+      const cmdBlock=o.cmds.map(c=>'  '+c).join('\n');
+      overrideMarkdown=[
+        summaryLine,
+        '',
+        '### More Info (decoy)',
+        o.more,
+        '',
+        '### Playbook (decoy steps/commands)',
+        'Commands to run:\n',
+        cmdBlock,
+        '',
+        '### Decision',
+        o.decision
+      ].join('\n');
+    }
+    const validation=(r.examiner_notes?.validation||[]).map(v=>'* '+esc(v)).join('\n');
+    const correctPb=(r.examiner_notes?.correct_playbook||[]).map(v=>'* '+esc(v)).join('\n');
+    detailEl.innerHTML=`<button class="close-detail" type="button" aria-label="Close detail">✕</button>
+      <div class="detail-section"><strong>Candidate Provided / Visible Playbook</strong>${richSection?'<div style=\"margin-top:8px;\">'+richSection+'</div>': (overrideMarkdown?`<pre class=\"code-block\" style=\"margin-top:6px;white-space:pre-wrap;\">${esc(overrideMarkdown)}</pre>`:`<pre class=\"code-block\" style=\"margin-top:6px;white-space:pre-wrap;\">${esc(play)||'No playbook lines defined.'}</pre>`)}</div>
+      <div class="detail-meta">Opened <strong>${esc(openedISO)}</strong>${lastUpd? ' • Last Updated <strong>'+esc(lastUpd)+'</strong>':''}${elapsed? ' • Elapsed <strong>'+esc(elapsed)+'</strong>':''}${decoys? ' • Decoy Tags: <strong>'+esc(decoys)+'</strong>':''}</div>
+      <div class="kv-grid">
+        ${kv('Product', r.product)}
+        ${kv('Customer', r.customer)}
+        ${kv('Status', r.status)}
+        ${kv('Severity', r.severity)}
+        ${kv('Alert ID', r.id)}
+        ${alias?kv('Alias', alias):''}
+        ${ownerTeam?kv('Owner Team', ownerTeam):''}
+        ${tenant?kv('Tenant', tenant):''}
+        ${lastDup?kv('Last Duplicated', lastDup):''}
+      </div>
+      <div class="detail-section"><strong>More Info</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(r.more_info||'')}</pre></div>
+      ${labelsObj?`<div class="detail-section"><strong>Raw Labels</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(Object.entries(labelsObj).map(([k,v])=>k+' = '+v).join('\n'))}</pre></div>`:''}
+      ${annObj?`<div class="detail-section"><strong>Annotations</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(Object.entries(annObj).map(([k,v])=>k+' = '+v).join('\n'))}</pre></div>`:''}
+      ${trueCause?`<div class="detail-section"><strong>Examiner True Cause</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(trueCause)}</pre></div>`:''}
+      ${validation?`<div class="detail-section"><strong>Validation Signals</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${validation}</pre></div>`:''}
+      ${correctPb?`<div class="detail-section"><strong>Correct Engineering Playbook</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${correctPb}</pre></div>`:''}
+    `;
+    detailEl.querySelector('.close-detail').addEventListener('click',hideDetail);
+    detailEl.classList.add('active');
+    detailEl.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  function showPlaybookDetail(a){
+    currentDetail=a;
+    const r=a.raw||{};
+    const play=(r.playbook||[]).map((l,i)=> (i+1)+'. '+l).join('\n');
+    const correct=(r.examiner_notes?.correct_playbook||[]).map((l,i)=> (i+1)+'. '+l).join('\n');
+    const tips=[
+      'Assess whether provided steps waste time / cause risk before executing.',
+      'Always validate symptom vs cause (e.g., agent vs real CPU saturation).',
+      'Consolidate duplicates before mass actions to reduce noise.'
+    ].map(t=>'• '+t).join('\n');
+    // Rich formatted playbook override for specific P1 (disk full / cleanup) embedding Confluence-style layout
+    let richSection='';
+    if(r.id==='ALRT-MEM-20250917-053802'){
+      richSection=`<div class="detail-section" style="margin-top:22px;">
+        <strong style="font-size:14px;">Structured Playbook (Memory / Space Validation & Cleanup)</strong>
+        <div style="margin-top:10px;border:1px solid #f9a8d4;border-radius:16px;padding:14px 18px;background:#fffafb;">
+          <div style="font-weight:600;text-align:center;padding:6px 10px;border:1px solid #fbcfe8;background:#ffe4ef;border-radius:10px;margin-bottom:16px;">Preliminary</div>
+          <div style="font-size:12.5px;margin-bottom:18px;">
+            <ol style="margin:0 0 0 18px;padding:0;">
+              <li>SSH to gateway host</li>
+              <li>Run <code style="background:#0f172a;color:#fbcfe8;border:none;padding:2px 6px;border-radius:6px;">free -m</code> & <code style="background:#0f172a;color:#fbcfe8;border:none;padding:2px 6px;border-radius:6px;">df -h</code> (differentiate cache vs real)</li>
+            </ol>
+          </div>
+          <div style="font-weight:600;text-align:center;padding:6px 10px;border:1px solid #fbcfe8;background:#fff5cc;border-radius:10px;margin:4px 0 16px;">Investigation / Cleanup</div>
+          <div style="display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+            <div style="border:1px solid #fbcfe8;background:#fff;border-radius:12px;padding:12px 14px;">
+              <div style="font-weight:600;font-size:12.5px;margin:0 0 8px;">/var/log/</div>
+              <ol style="margin:0 0 10px 18px;padding:0;font-size:12.5px;">
+                <li>Check size of <code>/var/log/crash</code></li>
+                <li>Remove old crash dumps if present</li>
+                <li>If new crash dumps:
+                  <ol type="a" style="margin:6px 0 8px 18px;">
+                    <li>SFTP copy crash files off host</li>
+                    <li>Remove the files</li>
+                    <li>Proceed to <strong>Not Resolved</strong></li>
+                  </ol>
+                </li>
+              </ol>
+              <div style="font-size:12px;margin-top:4px;">Run <code style="background:#0f172a;color:#fbcfe8;border:none;padding:2px 6px;border-radius:6px;">df -h</code> again</div>
+              <ol type="a" style="margin:6px 0 0 18px;font-size:12.5px;">
+                <li>If enough free storage → <strong>Resolved</strong></li>
+                <li>Still full → <strong>Not Resolved</strong></li>
+              </ol>
+            </div>
+            <div style="border:1px solid #fbcfe8;background:#fff;border-radius:12px;padding:12px 14px;">
+              <div style="font-weight:600;font-size:12.5px;margin:0 0 8px;">$DLPDIR/ftp:</div>
+              <ol style="margin:0 0 8px 18px;padding:0;font-size:12.5px;">
+                <li>Remove bulk folders:
+                  <ol type="a" style="margin:6px 0 0 18px;">
+                    <li><code>rm -r $DLPDIR/ftp/0*</code></li>
+                    <li><code>rm -r $DLPDIR/ftp/1*</code></li>
+                    <li><code>rm -r $DLPDIR/ftp/3*</code></li>
+                  </ol>
+                </li>
+              </ol>
+            </div>
+          </div>
+          <div style="font-weight:700;text-align:center;margin:22px 0 10px;padding:8px 12px;border-radius:10px;background:#dc2626;color:#fff;">Not Resolved</div>
+          <div style="border:1px solid #fbcfe8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;">Assign TM (escalate underlying producer / leak)</div>
+          <div style="font-weight:700;text-align:center;padding:8px 12px;border-radius:10px;background:#10b981;color:#053321;">Resolved</div>
+        </div>
+      </div>`;
+    }
+    // For all non-P1 alerts, render structured decoy card if override present
+    if(r.id!=='ALRT-MEM-20250917-053802' && PLAYBOOK_OVERRIDES[r.id]){
+      const o=PLAYBOOK_OVERRIDES[r.id];
+      richSection=`<div style="margin-top:12px;border:1px solid #f9a8d4;border-radius:16px;padding:14px 18px;background:#fffafb;">
+        <div style="font-weight:600;text-align:center;padding:6px 10px;border:1px solid #fbcfe8;background:#ffe4ef;border-radius:10px;margin-bottom:12px;">Decoy Structured Playbook</div>
+        <div style="font-size:12.5px;line-height:1.5;margin-bottom:14px;">${esc(o.more)}</div>
+        <div style="font-weight:600;font-size:12px;margin:0 0 6px;">Commands</div>
+        <ul style="margin:0 0 10px 18px;padding:0;font-size:12.5px;">${o.cmds.map(c=>`<li><code style=\"background:#0f172a;color:#fbcfe8;border:none;padding:2px 5px;border-radius:6px;\">${esc(c)}</code></li>`).join('')}</ul>
+        <div style="font-weight:600;font-size:12px;margin:6px 0 6px;">Decision</div>
+        <div style="font-size:12.5px;">${esc(o.decision)}</div>
+      </div>`;
+    }
+    detailEl.innerHTML=`<button class="close-detail" type="button" aria-label="Close detail">✕</button>
+      <h3>Playbook — ${esc(a.title)} ${renderSeverity(a.priority)}</h3>
+      <div class="detail-meta">Alert ID <strong>${esc(r.id||'')}</strong> • Severity <strong>${esc(r.severity||'')}</strong></div>
+      <div class="detail-section"><strong>Candidate Provided / Visible Playbook</strong>${richSection?'<div style=\"margin-top:8px;\">'+richSection+'</div>':`<pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(play)||'No playbook lines defined.'}</pre>`}</div>
+      ${correct ? `<div class="detail-section"><strong>Examiner Correct Engineering Playbook</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${correct}</pre></div>`:''}
+      <div class="detail-section"><strong>Guidance Tips</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${tips}</pre></div>
+    `;
+    detailEl.querySelector('.close-detail').addEventListener('click',hideDetail);
+    detailEl.classList.add('active');
+    detailEl.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function kv(k,v){ return `<div class="kv-item"><span class="key">${esc(k)}</span><span class="val">${esc(v||'')}</span></div>`; }
+  function formatKVList(o){ if(!o) return ''; return Object.entries(o).map(([k,v])=>`${k} = ${v}`).join('\n'); }
+  function calcElapsed(startIso,endIso){ try{ const s=new Date(startIso).getTime(); const e=new Date(endIso).getTime(); let d=Math.max(0,e-s); const days=Math.floor(d/86400000); d%=86400000; const h=Math.floor(d/3600000); d%=3600000; const m=Math.floor(d/60000); return `${days}d ${h}h ${m}m`; }catch{return '?';} }
+
+  function addTimeline(){
+    if(!timelineEntry.value.trim()) return; timeline.push({time:new Date().toISOString(),tag:timelineTag.value,text:timelineEntry.value.trim()}); timelineEntry.value=''; renderTimeline(); markDirty();
+  }
+  function renderTimeline(){
+    timelineList.innerHTML='';
+    timeline.sort((a,b)=> a.time.localeCompare(b.time));
+    timeline.forEach(t=>{
+      const li=document.createElement('li'); li.className='timeline-item';
+      li.innerHTML=`<div class="tmeta"><span>${fmtTime(t.time)}</span><span class="tag">${esc(t.tag)}</span></div><div>${esc(t.text)}</div>`;
+      timelineList.appendChild(li);
+    });
+  }
+
+  function save(){ // Persist non-alert sections + prioritization answer
+  const payload={version:VERSION,alerts:alerts.map(a=>({id:a.id,priority:a.priority})),timeline,actions:{actions:actActions.value,verification:actVerif.value,rollback:actRollback.value},root:{cause:rcCause.value,impact:rcImpact.value,risk:rcRisk.value,handover:rcHandover.value},priorityAnswer:priorityAnswer.value,priorityDescribe:priorityDescribe.value,q1:q1Answer.value,q2:q2Answer.value,ts:Date.now()};
+    try{ localStorage.setItem(KEY, JSON.stringify(payload)); markSaved(); }catch(e){ alert('Save failed: '+e); }
+  }
+  function load(){
+    try {
+      const raw=localStorage.getItem(KEY);
+      if(raw){
+        const data=JSON.parse(raw);
+        if(data){
+          timeline=Array.isArray(data.timeline)?data.timeline:[];
+          if(data.actions){ actActions.value=data.actions.actions||''; actVerif.value=data.actions.verification||''; actRollback.value=data.actions.rollback||''; }
+          if(data.root){ rcCause.value=data.root.cause||''; rcImpact.value=data.root.impact||''; rcRisk.value=data.root.risk||''; rcHandover.value=data.root.handover||''; }
+          if(typeof data.priorityAnswer==='string'){ priorityAnswer.value=data.priorityAnswer; }
+          if(typeof data.priorityDescribe==='string'){ priorityDescribe.value=data.priorityDescribe; }
+          if(typeof data.q1==='string'){ q1Answer.value=data.q1; }
+          if(typeof data.q2==='string'){ q2Answer.value=data.q2; }
+        }
+      }
+    } catch(e){
+      console.warn('Load fail',e);
+    }
+    defineStaticAlerts(); // async will render when done
+    renderTimeline();
+    markSaved();
+  }
+  function clearAll(){ if(!confirm('Clear ALL Task 4 data?')) return; localStorage.removeItem(KEY); alerts=[]; timeline=[];
+  [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,priorityAnswer,priorityDescribe,q1Answer,q2Answer].forEach(el=> el.value='');
+    renderAlerts(); renderTimeline(); saveState.textContent='Not saved'; saveState.className='save-state'; }
+
+  function exportJSON(){
+    try{ const raw=localStorage.getItem(KEY); if(!raw){ alert('Nothing saved yet. Save first.'); return; }
+      const blob=new Blob([raw],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='task4-alert-correlation.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),5000);
+    }catch(e){ alert('Export failed: '+e); }
+  }
+
+  function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function fmtTime(iso){ try{ const d=new Date(iso); return d.toISOString().replace('T',' ').slice(0,19)+'Z'; }catch{return iso; } }
+
+  btnAddTimeline.addEventListener('click',addTimeline);
+  btnSaveAll.addEventListener('click',save);
+  btnClearAll.addEventListener('click',clearAll);
+  btnExport.addEventListener('click',exportJSON);
+
+  // dirty tracking for text areas
+  [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,priorityAnswer,priorityDescribe,q1Answer,q2Answer].forEach(el=> el && el.addEventListener('input',markDirty));
+
+  load();
+  async function defineStaticAlerts(){
+    try{
+      const res=await fetch('mock_alerts.json',{cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data=await res.json();
+      alerts=(data.alerts||[]).map(a=>({
+        id:a.id,
+        team:a.product,
+        priority:a.severity,
+        title:a.title,
+        context:a.customer,
+        opened:new Date(a.time_iso).toLocaleString(),
+        raw:a
+      }));
+      renderAlerts();
+      updateCounters();
+    }catch(e){
+      console.warn('Failed to load mock_alerts.json',e);
+    }
+  }
+  /* ===================== TENANTS TABLE LOGIC ===================== */
+  const TENANTS=(function(){
+    const base=new Date();
+    function daysAgo(n){const d=new Date(base);d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
+    return [
+      {id:'ead9000d-89ea-4d02-922d-518d469e2509',name:'Zenith Health Core',sites:54,inst:{ok:4,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(2)},
+      {id:'f3c1b210-11d4-4f2f-9b2c-01aa3f91d001',name:'Acme Retail East',sites:12,inst:{ok:3,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(1)},
+      {id:'7c2f9d2e-62b5-4b10-8b4f-19bca1a41002',name:'Global EduNet',sites:33,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(5)},
+      {id:'0b9a86d1-6f99-4d8c-9a73-003c56ab1003',name:'FinNova Sandbox',sites:4,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(9)},
+      {id:'f2bfaa7d-5a01-4e8a-9f60-994bc2ba1004',name:'Urban Logistics',sites:21,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(12)},
+      {id:'1c5d5d4f-5c33-4d75-bb8f-af2f39d81005',name:'Skyline Media Group',sites:8,inst:{ok:2,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(4)},
+      {id:'2a7c71be-2e5c-4ac5-a7fd-8cd520d21006',name:'AeroSecure Ops',sites:16,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(14)},
+      {id:'38f0aab2-3d29-4dc7-a7b1-17b6882b1007',name:'Evergreen Bio Labs',sites:5,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(3)},
+      {id:'4d98f4c5-50e3-4c1b-bb8d-7723056e1008',name:'Helios Energy',sites:27,inst:{ok:4,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(20)},
+  // Intentional duplicate ID with NorthPeak Mining below to create a data consistency bug for exercise
+  {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'Metro Legal Assoc',sites:6,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(7)},
+  {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'NorthPeak Mining',sites:18,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(18)},
+      {id:'73ddf3b4-6c19-4d5d-bd7a-169f84bf1011',name:'Orchid Pharmaceuticals',sites:11,inst:{ok:2,warn:1,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(45)},
+      {id:'8a349bb9-2a2e-4fc3-9dfd-c761ad8a1012',name:'Pioneer Robotics',sites:9,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(6)},
+      {id:'97a3c0c9-dc4b-4e0c-a5ad-3d4f1f801013',name:'Quantum Analytics',sites:14,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(11)},
+      {id:'a4b5c6d7-e8f9-4010-a1b2-c3d4e5f61014',name:'Riverbend Hospitality',sites:30,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(8)},
+      {id:'b5c6d7e8-f901-4123-a1b2-c3d4e5f61015',name:'Summit Outdoor Gear',sites:7,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(2)},
+      {id:'c6d7e8f9-0123-4234-a1b2-c3d4e5f61016',name:'Terra Agriculture Co',sites:19,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(22)},
+      {id:'d7e8f901-1234-4345-a1b2-c3d4e5f61017',name:'Unity Gaming Cloud',sites:41,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(16)},
+      {id:'e8f90123-2345-4456-a1b2-c3d4e5f61018',name:'Vista Insurance',sites:13,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(19)},
+      {id:'f9012345-3456-4567-a1b2-c3d4e5f61019',name:'Wave Financial',sites:23,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(10)},
+      {id:'01234567-4567-4678-a1b2-c3d4e5f61020',name:'Xenon Defense R&D',sites:3,inst:{ok:0,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(1)},
+      {id:'12234567-5678-4789-a1b2-c3d4e5f61021',name:'YellowBrick Studios',sites:15,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(9)},
+      {id:'23234567-6789-4890-a1b2-c3d4e5f61022',name:'Zephyr Textiles',sites:26,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(24)},
+      {id:'34234567-7890-4901-a1b2-c3d4e5f61023',name:'Atlas Navigation',sites:17,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(13)},
+      {id:'45234567-8901-4a02-a1b2-c3d4e5f61024',name:'Brightline Security',sites:22,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(15)},
+      {id:'56234567-9012-4b03-a1b2-c3d4e5f61025',name:'Celestial Mapping',sites:2,inst:{ok:0,warn:1,down:0},tenantStatus:'CREATED',regDate:daysAgo(5)},
+      {id:'67234567-0123-4c04-a1b2-c3d4e5f61026',name:'DeepWater Research',sites:29,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(27)},
+      {id:'78234567-1234-4d05-a1b2-c3d4e5f61027',name:'Everest Fitness',sites:25,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(6)},
+      {id:'89234567-2345-4e06-a1b2-c3d4e5f61028',name:'Frost Data Systems',sites:20,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(30)},
+      {id:'90234567-3456-4f07-a1b2-c3d4e5f61029',name:'Granite Construction IT',sites:10,inst:{ok:2,warn:0,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(55)},
+      {id:'a0234567-4567-4008-a1b2-c3d4e5f61030',name:'Harbor Freight Logistics',sites:31,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(17)}
+    ];
+  })();
+  let tenState={sort:'regDate',dir:'desc',page:1,rows:25,search:''};
+  function renderTenants(){
+    const body=document.getElementById('tenBody'); if(!body) return;
+    let data=[...TENANTS];
+    if(tenState.search){ const q=tenState.search.toLowerCase(); data=data.filter(t=>t.name.toLowerCase().includes(q)||t.id.toLowerCase().includes(q)); }
+    data.sort((a,b)=>{
+      const col=tenState.sort; let av, bv;
+      if(col==='instances'){ av=(a.inst.down*100)+(a.inst.warn*10)+a.inst.ok; bv=(b.inst.down*100)+(b.inst.warn*10)+b.inst.ok; }
+      else if(col==='sites'){ av=a.sites; bv=b.sites; }
+      else if(col==='name'){ av=a.name.toLowerCase(); bv=b.name.toLowerCase(); }
+      else if(col==='tenantStatus'){ av=a.tenantStatus; bv=b.tenantStatus; }
+      else if(col==='regDate'){ av=a.regDate; bv=b.regDate; }
+      if(av<bv) return tenState.dir==='asc'? -1:1;
+      if(av>bv) return tenState.dir==='asc'? 1:-1; return 0;
+    });
+    const total=data.length; const start=(tenState.page-1)*tenState.rows; const pageData=data.slice(start,start+tenState.rows);
+    body.innerHTML='';
+    if(pageData.length===0){ document.getElementById('tenEmpty').style.display='block'; }
+    else { document.getElementById('tenEmpty').style.display='none'; pageData.forEach(t=>{
+        const tr=document.createElement('tr');
+        const instClass=t.inst.down>0?'inst-down':(t.inst.warn>0?'inst-warn':'inst-ok');
+        const instLabel=`${t.inst.ok} OK / ${t.inst.warn} Warn / ${t.inst.down} Down`;
+        const pill=`<div class="inst-pill ${instClass}"><span class="inst-dot"></span>${instLabel}</div>`;
+        let tenantStatusHTML='';
+        if(t.tenantStatus==='HIBERNATED') tenantStatusHTML=`<span class="hibernated-status">HIBERNATED<a href="#" data-ten="${t.id}" class="resume-link">resume</a></span>`;
+        else tenantStatusHTML=`<span class="${t.tenantStatus==='READY'?'inst-ok':(t.tenantStatus==='CREATED'?'inst-warn':'')}">${t.tenantStatus}</span>`;
+        tr.innerHTML=`<td class="mono" style="white-space:nowrap;">${t.id}</td><td><a href="#" class="tenant-link" data-ten="${t.id}">${t.name}</a></td><td style="text-align:right;">${t.sites}</td><td>${pill}</td><td>${tenantStatusHTML}</td><td style="font-size:12px;">${t.regDate}</td>`;
+        body.appendChild(tr);
+      }); }
+    const to=Math.min(start+tenState.rows,total); const range=document.getElementById('tenRange'); const from=total===0?0:start+1; range.textContent=`${from}–${to} of ${total}`;
+    document.getElementById('tenPrev').disabled=tenState.page===1; document.getElementById('tenNext').disabled=to>=total;
+    renderTenSummary(data);
+    ['name','sites','instances','tenantStatus','regDate'].forEach(c=>{ const ind=document.getElementById('sortInd-'+c); if(!ind) return; ind.textContent = c===tenState.sort ? (tenState.dir==='asc'?'▲':'▼') : ''; });
+    body.querySelectorAll('.tenant-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();console.log('Tenant link clicked',a.dataset.ten);}));
+    body.querySelectorAll('.resume-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();console.log('Resume tenant requested',a.dataset.ten);}));
+  }
+  function renderTenSummary(filtered){ const el=document.getElementById('tenSummary'); if(!el) return; const total=filtered.length; const status=s=>filtered.filter(t=>t.tenantStatus===s).length; const chips=[['TOTAL',total],['CREATED',status('CREATED')],['PRE-TRIAL',status('PRE-TRIAL')],['READY',status('READY')],['HIBERNATED',status('HIBERNATED')]]; el.innerHTML=chips.map(c=>`<span class="ten-chip">${c[0]}: ${c[1]}</span>`).join(''); }
+  function initTenants(){ const search=document.getElementById('tenSearch'); if(!search) return; search.addEventListener('input',()=>{tenState.search=search.value.trim();tenState.page=1;renderTenants();}); const rowsSel=document.getElementById('tenRows'); rowsSel.addEventListener('change',()=>{tenState.rows=parseInt(rowsSel.value,10);tenState.page=1;renderTenants();}); document.getElementById('tenPrev').addEventListener('click',()=>{ if(tenState.page>1){ tenState.page--; renderTenants(); } }); document.getElementById('tenNext').addEventListener('click',()=>{ tenState.page++; renderTenants(); }); document.querySelectorAll('#tenTable thead th.sortable').forEach(th=> th.addEventListener('click',()=>{ const col=th.dataset.sort; if(tenState.sort===col) tenState.dir=tenState.dir==='asc'?'desc':'asc'; else { tenState.sort=col; tenState.dir = col==='name' ? 'asc':'desc'; } tenState.page=1; renderTenants(); })); renderTenants(); }
+  initTenants();
+  // Legacy embedded log explorer removed; Mini Kibana iframe now provides advanced analytics & quiz.
+})();
+</script>
+</body>
+</html>

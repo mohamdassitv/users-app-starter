@@ -13,12 +13,17 @@
 </div>
 <script>
 async function count(){
-  const res = await fetch('/cloud/logs');
-  if (!res.ok){ document.getElementById('out').textContent = '403 – assign LogReader first (Task 2)'; return; }
-  const text = await res.text();
-  const n = (text.match(/\bERROR\b/g)||[]).length;
-  document.getElementById('out').textContent = 'ERROR count: ' + n;
+  try {
+    const res = await fetch('/cloud/logs');
+    if(!res.ok){ document.getElementById('out').textContent='Fetch failed'; return; }
+    const text = await res.text();
+    const n = (text.match(/\bERROR\b/g)||[]).length;
+    document.getElementById('out').textContent = 'ERROR count: ' + n;
+  } catch(e){
+    document.getElementById('out').textContent='Error';
+  }
 }
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </div>
 </body></html>

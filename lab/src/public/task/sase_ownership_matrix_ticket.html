@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SASE Ownership Matrix & Ticket Intake</title>
+<style>
+  :root{
+    --bg:#fff5fa; /* light pink background */
+    --card:#ffffff;
+    --ink:#3a0f24;
+    --muted:#8b4d68;
+    --accent:#ec4899;
+    --accent-soft:#f472b6;
+    --accent-bg:#ffe4ef;
+    --good:#059669;
+    --warn:#d97706;
+    --ring:#ec4899;
+    --border:#f9a8d4;
+    --border-strong:#f472b6;
+    --shadow:0 6px 22px -10px rgba(219,39,119,.35),0 2px 6px -2px rgba(0,0,0,.06);
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
+  header{padding:24px 28px;background:linear-gradient(135deg,#f472b6,#ec4899,#db2777);color:#fff;border-bottom:1px solid var(--border-strong);box-shadow:0 10px 30px -14px rgba(236,72,153,.55)}
+  header h1{margin:0;font-size:22px;letter-spacing:.05em;text-shadow:0 2px 4px rgba(0,0,0,.18);}
+  header p{margin:10px 0 0;color:#ffe4ef;font-weight:500}
+  main{max-width:1200px;margin:28px auto;padding:0 24px 70px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:34px;position:relative;transition:.25s;}
+  .card:hover{box-shadow:0 10px 30px -14px rgba(219,39,119,.4),0 4px 10px -4px rgba(0,0,0,.12);}
+  .card h2{margin:0;padding:16px 20px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#ffe4ef,#fff);font-size:17px;letter-spacing:.04em;color:#831843;}
+  .pad{padding:16px}
+  input[type="text"],input[type="datetime-local"],input[type="email"],input[type="file"],select,textarea{
+    background:#fff;border:1px solid var(--border);color:var(--ink);border-radius:14px;padding:11px 14px;outline:none;width:100%;font-size:13px;box-shadow:0 1px 2px rgba(236,72,153,.08) inset;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(236,72,153,.35);background:#fffafb}
+  textarea{min-height:120px;resize:vertical}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
+  .span-3{grid-column:span 3}
+  .span-8{grid-column:span 8}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);color:#831843;padding:11px 16px 10px;border-radius:14px;cursor:pointer;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.4px;transition:.22s;box-shadow:0 2px 6px -2px rgba(219,39,119,.25)}
+  .btn:hover{background:#fff0f7;border-color:var(--accent-soft);}
+  .btn:active{transform:translateY(1px);}
+  .btn.accent{background:linear-gradient(135deg,var(--accent-soft),var(--accent),#db2777);border-color:var(--accent);color:#fff;box-shadow:0 6px 18px -6px rgba(236,72,153,.55)}
+  .btn.accent:hover{filter:brightness(1.05);}
+  .btn.ghost{background:#fffafb;border-color:var(--border);}
+  .hint{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px solid #f1d1e6;padding:10px 10px;vertical-align:top;font-size:13px;color:#3a0f24}
+  th{color:#831843;text-align:left;font-weight:700;background:#ffe4ef;position:sticky;top:0;z-index:1;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;}
+  .group{white-space:nowrap;color:#be185d;font-weight:600}
+  .owner{white-space:nowrap}
+  .chip{display:inline-block;padding:3px 10px 2px;border:1px solid var(--border-strong);border-radius:9999px;color:#831843;background:var(--accent-bg);font-size:11px;font-weight:600;letter-spacing:.05em}
+  .ok{color:#22c55e}
+  .warn{color:#f59e0b}
+  .fail{color:#ef4444}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .footer-note{color:#8b4d68;font-size:12px;margin-top:6px}
+  .right{float:right}
+  .success{border-left:5px solid var(--good);background:#eefcf7;padding:10px 14px;border-radius:12px;margin-top:12px;color:#065f46;font-weight:500}
+  .grid-auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .sr{position:absolute;left:-10000px}
+</style>
+</head>
+<body>
+<header>
+  <h1>SASE Ownership Matrix & Ticket Intake</h1>
+  <p>Single-file, offline page. Filter the ownership matrix, choose the best assignee for a tenant incident, and generate a clean ticket.</p>
+</header>
+
+<main>
+
+  <!-- Ownership Matrix -->
+  <section class="card" id="matrix">
+    <h2>Ownership Matrix</h2>
+    <div class="pad">
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Filter by group, owner, feature or comment…" style="flex:1 1 320px">
+        <button class="btn ghost" id="resetFilter">Reset</button>
+        <span class="hint">Tip: try terms like <b>proxy</b>, <b>log</b>, <b>tenant</b>, <b>client</b>, <b>SSL</b>.</span>
+      </div>
+
+  <div style="max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:16px;background:#fff">
+        <table id="matrixTable">
+          <thead>
+            <tr>
+              <th style="width:210px">Group</th>
+              <th style="width:200px">Owner</th>
+              <th>Feature</th>
+              <th style="width:28%">Comments</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">All names Americanized. Content is mock data for training.</div>
+    </div>
+  </section>
+
+  <!-- Assignment Quiz -->
+  <section class="card">
+    <h2>Quick Assignment Quiz — “Who should own this tenant error?”</h2>
+    <div class="pad">
+      <p class="hint">Scenario: A tenant reports repeated <b>HTTP 500</b> during <b>Application Access (Web Proxy)</b> at <b>2025‑09‑19 03:05–03:15 UTC</b>. Identify the best team to triage and provide a one‑liner why.</p>
+      <div class="row">
+        <div class="span-4">
+          <label class="hint">Pick the module</label>
+          <select id="quizModule">
+            <option value="">— choose —</option>
+          </select>
+        </div>
+        <div class="span-4">
+          <label class="hint">Suggested owner (auto)</label>
+          <input id="quizOwner" type="text" placeholder="Auto-selects from module" readonly>
+        </div>
+        <div class="span-4">
+          <label class="hint">Why this owner?</label>
+          <input id="quizWhy" type="text" placeholder="e.g., owns Proxy dataplane and error window matches">
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="prefillQuiz">Prefill</button>
+        <button class="btn accent" id="lockQuiz">Lock Answer</button>
+        <div id="quizStatus" class="success" style="display:none">Saved. Your selection is recorded below.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ticket Intake -->
+  <section class="card">
+    <h2>Incident Ticket — Intake</h2>
+    <div class="pad">
+      <div class="row">
+        <div class="span-3">
+          <label class="hint">Tenant ID</label>
+          <input id="t_tenant" type="text" placeholder="ead9000d-89ea-4d02-922d-518d469e2509">
+        </div>
+        <div class="span-3">
+          <label class="hint">Severity</label>
+          <select id="t_sev">
+            <option>P1</option><option selected>P2</option><option>P3</option><option>P4</option>
+          </select>
+        </div>
+        <div class="span-3">
+          <label class="hint">Product</label>
+          <select id="t_product">
+            <option value="">— choose —</option>
+          </select>
+        </div>
+        <div class="span-3">
+          <label class="hint">Service/Feature</label>
+          <select id="t_feature">
+            <option value="">— choose —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="span-4">
+          <label class="hint">Opened (UTC)</label>
+          <input id="t_opened" type="datetime-local">
+        </div>
+        <div class="span-4">
+          <label class="hint">Region</label>
+          <select id="t_region">
+            <option>eu-west-1</option><option>us-east-1</option><option>us-west-2</option>
+            <option>ap-southeast-1</option><option>ap-northeast-1</option>
+          </select>
+        </div>
+        <div class="span-4">
+          <label class="hint">Customer Contact (email)</label>
+          <input id="t_contact" type="email" placeholder="ops@customer.com">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="span-6">
+          <label class="hint">Impact Summary</label>
+          <textarea id="t_impact" placeholder="What broke, who was affected, and observable symptoms."></textarea>
+        </div>
+        <div class="span-6">
+          <label class="hint">Troubleshooting Done</label>
+          <textarea id="t_steps" placeholder="Steps already taken, findings, and any logs or correlations."></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="span-4">
+          <label class="hint">Assign to (auto)</label>
+          <input id="t_assign" type="text" placeholder="Auto-selected from feature" readonly>
+        </div>
+        <div class="span-4">
+          <label class="hint">CC (comma-separated)</label>
+          <input id="t_cc" type="text" placeholder="noc@company.com, tm@company.com">
+        </div>
+        <div class="span-4">
+          <label class="hint">Attach (optional)</label>
+          <input id="t_file" type="file">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="prefill">Prefill Example</button>
+        <button class="btn accent" id="generate">Generate Ticket Markdown</button>
+        <a id="downloadLink" class="btn ghost" href="#" download="ticket.md" style="display:none">Download ticket.md</a>
+      </div>
+
+      <div id="out" class="card" style="margin-top:14px;display:none;border:1px solid var(--border-strong);">
+        <h2 style="border-bottom:1px solid var(--border);background:var(--accent-bg);color:#831843;">Rendered Preview</h2>
+        <pre class="pad" id="preview" style="white-space:pre-wrap"></pre>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// --- Data ---
+const rows = [
+  // Group, Owner, Feature, Comments
+  ['SASE Management','Taylor Reed','Capsule Cloud',''],
+  ['SASE Management','Sam Young','Clean Pipe',''],
+  ['UI / Frontend','Eli Ross','Portal UI',''],
+  ['UI / Frontend','Eli Ross','API Gateway','GraphQL, REST (SwaggerHub)'],
+  ['Identity Awareness (IDA)','Eli Ross','Identity Awareness (IDA)',''],
+  ['Harmony Connect Core','Morgan Blake','Policy','portal, on‑premise, SmartConsole Direct Access'],
+  ['Harmony Connect Core','Morgan Blake','Site‑monitoring (log‑exporter), DPD','Traffic monitoring, DPD'],
+  ['Harmony Connect Core','Morgan Blake','Sites management',''],
+  ['Harmony Connect Core','Morgan Blake','SSL Certificates',''],
+  ['SASE Management','Taylor Reed','Weekly Reports',''],
+  ['SASE Management','Taylor Reed','Logs – SmartView',''],
+  ['Cloudinfra Integrations','Taylor Reed','Tenant creation / audits / notifications / APIs','App & proxy configs, networking'],
+  ['Cloudinfra Integrations','Taylor Reed','Tenant create/delete',''],
+  ['Application Access','Kerry Green','Application Access policy','Infinity Portal → Policy → Application Access'],
+  ['Application Access','Kerry Green','User Portal (login & app load)','Auth flow + app catalog'],
+  ['Assets','Kerry Green','Application Sites','Infinity Portal → Assets → Application Sites'],
+  ['Application Access','Kerry Green','Local users for App Access','Settings'],
+  ['Application Access','Kerry Green','Connector Monitoring','Monitoring surface only'],
+  ['SQS / Async Infra','Kerry Green','SQS library & infra','Code infra of SQS'],
+  ['Forward Proxy','Riley Cohen','Web/SSH/DB/RDP (web+native/tunnel)','Proxy dataplane'],
+  ['SASE Client & Compliance','Jordan Hale','DNS Guard',''],
+  ['SASE Client & Compliance','Jordan Hale','Roaming Users Client (Win+Mac)',''],
+  ['SASE Client & Compliance','Jordan Hale','Compliance',''],
+  ['Architecture 2.0','Ryan Copeland','Architecture 2.0',''],
+  ['Mgmt Control Plane','Ryan Copeland','Management create/delete','State‑machine, pools'],
+  ['Mgmt Control Plane','Ryan Copeland','Subnet manager',''],
+  ['MAAS & LAAS Integration','Ryan Copeland','MAAS/LAAS Integration',''],
+  ['Mgmt Sessions','Ryan Copeland','MGMT session I/S',''],
+  ['Data Plane Group','Owen Segal','Roaming VPN Servers',''],
+  ['Data Plane Group','Owen Segal','SSM/SSH/Bastions',''],
+  ['Data Plane Group','Owen Segal','Logger / Log‑exporter',''],
+  ['Data Plane Group','Owen Segal','Roaming Users – users, devices',''],
+  ['Data Plane Group','Owen Segal','Performance – backend',''],
+  ['Data Plane Group','Owen Segal','Harmony Mobile – VPNaaS',''],
+  ['Data Plane Group','Owen Segal','Support portal',''],
+  ['Data Plane Group','Owen Segal','SQS queue (aws)','SQS alerts'],
+  ['Automation','Oz Knight','Automation tests',''],
+  ['Automation','Oz Knight','Azure/AWS/Multi‑cloud as an Infra','Farm, Route53, Lambdas'],
+  ['Automation','Oz Knight','Gateway create/delete',''],
+  ['Automation','Oz Knight','VPN Site create/update/delete','vpn‑router, vpn‑diff'],
+  ['Automation','Oz Knight','GRE Site create/update/delete','vpn‑router, vpn‑diff'],
+  ['Automation','Oz Knight','vWAN',''],
+  ['Automation','Oz Knight','Replace GW',''],
+  ['Automation','Oz Knight','Branch Office',''],
+  ['Application Access – GW','Merritt Shore','Application Access – GW',''],
+  ['Application Access – Connector','Ben Avery','Application Access – Connector',''],
+  ['Operations','Shay Nave','Operations',''],
+  ['DevOps','Boris Gray','DevOps','CI/CD, onboarding, monitoring (Prom/Graf/OpsGenie)'],
+  ['Customer Success Team','Support Team','R&D 1st tier to Task Manager tickets','Escalations, on‑boarding, POCs'],
+  ['Customer Success Tech Lead','Owen Michaels','Tech Lead','Leads onboarding, weekly customer status, mentoring NOC'],
+  ['NOC','Nastasya North','NOC','24×7 monitor, mitigations, focal point'],
+];
+
+// Map Feature → Owner for ticket auto-assignment
+const ownerMap = new Map();
+rows.forEach(r => ownerMap.set(r[2].toLowerCase(), r[1]));
+
+// Unique module list for quiz & product/feature selectors
+const moduleSet = new Set(rows.map(r => r[0]));
+const featureSet = new Set(rows.map(r => r[2]));
+const productSelect = document.getElementById('t_product');
+[...moduleSet].sort().forEach(m => {
+  const opt = document.createElement('option'); opt.value = m; opt.textContent = m; productSelect.appendChild(opt);
+});
+
+const featureSelect = document.getElementById('t_feature');
+function refreshFeatures(product){
+  featureSelect.innerHTML = '<option value="">— choose —</option>';
+  [...featureSet].filter(f => {
+    if(!product) return true;
+    // keep features that belong to the chosen product
+    return rows.some(r => r[0]===product && r[2]===f);
+  }).sort().forEach(f => {
+    const opt = document.createElement('option'); opt.value = f; opt.textContent = f; featureSelect.appendChild(opt);
+  });
+}
+refreshFeatures('');
+
+// Quiz modules
+const quizModule = document.getElementById('quizModule');
+[...moduleSet].sort().forEach(m => {
+  const opt = document.createElement('option'); opt.value = m; opt.textContent = m; quizModule.appendChild(opt);
+});
+
+// Build table
+const body = document.getElementById('matrixBody');
+function renderTable(filter=''){
+  body.innerHTML = '';
+  const q = filter.trim().toLowerCase();
+  rows.forEach(([g,o,f,c]) => {
+    const blob = (g+' '+o+' '+f+' '+c).toLowerCase();
+    if(q && !blob.includes(q)) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="group"><span class="chip">${g}</span></td>
+      <td class="owner">${o}</td>
+      <td>${f}</td>
+      <td>${c||''}</td>`;
+    body.appendChild(tr);
+  });
+}
+renderTable();
+
+// Filter logic
+const search = document.getElementById('search');
+search.addEventListener('input', e => renderTable(e.target.value));
+document.getElementById('resetFilter').onclick = () => { search.value=''; renderTable(''); };
+
+// Quiz behavior
+const quizOwner = document.getElementById('quizOwner');
+quizModule.addEventListener('change', e => {
+  const m = e.target.value;
+  // choose the first owner for that module
+  const owner = rows.find(r => r[0]===m)?.[1] || '';
+  quizOwner.value = owner;
+});
+document.getElementById('prefillQuiz').onclick = () => {
+  quizModule.value = 'Application Access'; quizModule.dispatchEvent(new Event('change'));
+  document.getElementById('quizWhy').value = 'Owns Web Proxy dataplane that surfaced HTTP 500 in window.';
+};
+document.getElementById('lockQuiz').onclick = () => {
+  const status = document.getElementById('quizStatus');
+  if(!quizModule.value || !quizOwner.value){
+    status.textContent = 'Please choose a module — owner will auto-populate.';
+    status.style.borderLeftColor = '#ef4444';
+  } else {
+    status.textContent = `Saved: ${quizOwner.value} (${quizModule.value}) selected.`;
+    status.style.borderLeftColor = '#10b981';
+  }
+  status.style.display = 'block';
+};
+
+// Ticket form behavior
+productSelect.addEventListener('change', e => {
+  refreshFeatures(e.target.value);
+  // clear assignment if product changes
+  document.getElementById('t_assign').value = '';
+});
+
+featureSelect.addEventListener('change', e => {
+  const feat = e.target.value.toLowerCase();
+  const owner = ownerMap.get(feat) || '';
+  document.getElementById('t_assign').value = owner;
+});
+
+document.getElementById('prefill').onclick = () => {
+  document.getElementById('t_tenant').value = 'ead9000d-89ea-4d02-922d-518d469e2509';
+  document.getElementById('t_sev').value = 'P2';
+  document.getElementById('t_product').value = 'Application Access'; document.getElementById('t_product').dispatchEvent(new Event('change'));
+  document.getElementById('t_feature').value = 'Web/SSH/DB/RDP (web+native/tunnel)'; document.getElementById('t_feature').dispatchEvent(new Event('change'));
+  document.getElementById('t_opened').value = '2025-09-19T03:05';
+  document.getElementById('t_region').value = 'eu-west-1';
+  document.getElementById('t_contact').value = 'ops@zenithhealth.example';
+  document.getElementById('t_impact').value = 'Users saw 500 errors via Application Access Web Proxy. Impacted EU workforce SSO flows; approx. 30% requests failed.';
+  document.getElementById('t_steps').value = '- Checked Kibana: spikes in 5xx, proxy pod restarts.\n- Confirmed no upstream outage; errors before upstream call.\n- Mitigation: restarted one proxy pod; errors dropped partially.';
+  document.getElementById('t_cc').value = 'noc@example.com, tm@example.com';
+};
+
+document.getElementById('generate').onclick = () => {
+  const v = id=>document.getElementById(id).value;
+  const md = `# Incident Ticket
+
+**Tenant ID:** ${v('t_tenant')}
+**Severity:** ${v('t_sev')}
+**Product:** ${v('t_product')}
+**Feature:** ${v('t_feature')}
+**Opened (UTC):** ${v('t_opened')}
+**Region:** ${v('t_region')}
+**Assign To:** ${v('t_assign') || '_TBD_'}  
+**CC:** ${v('t_cc') || '-'}
+
+## Impact Summary
+${v('t_impact') || '-'}
+
+## Troubleshooting Done
+${v('t_steps') || '-'}
+
+---
+_This ticket was generated from the training intake page._`;
+
+  const out = document.getElementById('out');
+  const prev = document.getElementById('preview');
+  prev.textContent = md;
+  out.style.display = 'block';
+
+  const blob = new Blob([md], {type:'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const link = document.getElementById('downloadLink');
+  link.href = url;
+  link.style.display = 'inline-flex';
+};
+</script>
+</body>
+</html>

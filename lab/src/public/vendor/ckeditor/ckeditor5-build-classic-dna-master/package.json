@@ -1,0 +1,87 @@
+{
+  "name": "ckeditor5-build-classic-dna",
+  "version": "1.3.5",
+  "description": "The DNA classic editor build of CKEditor 5 with Code Block and Unsplash – the best browser-based rich text editor",
+  "keywords": [
+    "ckeditor5-build",
+    "ckeditor",
+    "ckeditor5",
+    "ckeditor 5",
+    "wysiwyg",
+    "rich text",
+    "editor",
+    "html",
+    "contentEditable",
+    "editing",
+    "operational transformation",
+    "ot",
+    "collaboration",
+    "collaborative",
+    "real-time",
+    "framework",
+    "code block",
+    "unsplash",
+    "insert image by url"
+  ],
+  "main": "./build/ckeditor.js",
+  "files": [
+    "build"
+  ],
+  "devDependencies": {
+    "@babel/cli": "^7.22.9",
+    "@babel/core": "^7.22.9",
+    "@babel/preset-react": "^7.22.5",
+    "@ckeditor/ckeditor5-adapter-ckfinder": "^38.1.1",
+    "@ckeditor/ckeditor5-autoformat": "^38.1.1",
+    "@ckeditor/ckeditor5-basic-styles": "^38.1.1",
+    "@ckeditor/ckeditor5-block-quote": "^38.1.1",
+    "@ckeditor/ckeditor5-code-block": "^38.1.1",
+    "@ckeditor/ckeditor5-core": "^38.1.1",
+    "@ckeditor/ckeditor5-dev-utils": "^38.1.2",
+    "@ckeditor/ckeditor5-dev-webpack-plugin": "^31.1.3",
+    "@ckeditor/ckeditor5-editor-classic": "^38.1.1",
+    "@ckeditor/ckeditor5-essentials": "^38.1.1",
+    "@ckeditor/ckeditor5-heading": "^38.1.1",
+    "@ckeditor/ckeditor5-image": "^38.1.1",
+    "@ckeditor/ckeditor5-indent": "^38.1.1",
+    "@ckeditor/ckeditor5-link": "^38.1.1",
+    "@ckeditor/ckeditor5-list": "^38.1.1",
+    "@ckeditor/ckeditor5-media-embed": "^38.1.1",
+    "@ckeditor/ckeditor5-paragraph": "^38.1.1",
+    "@ckeditor/ckeditor5-table": "^38.1.1",
+    "@ckeditor/ckeditor5-theme-lark": "^38.1.1",
+    "@ckeditor/ckeditor5-typing": "^38.1.1",
+    "babel-loader": "^9.1.3",
+    "css-loader": "^6.8.1",
+    "postcss-loader": "^7.3.3",
+    "raw-loader": "^4.0.2",
+    "style-loader": "^3.3.3",
+    "terser-webpack-plugin": "^5.3.9",
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "engines": {
+    "node": ">=12.0.0",
+    "npm": ">=5.7.1"
+  },
+  "author": "DeNiApps (http://deniapps.com/)",
+  "license": "GPL-2.0-or-later",
+  "homepage": "http://deniapps.com",
+  "bugs": "https://github.com/deniapps/ckeditor5-build-classic-dna/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deniapps/ckeditor5-build-classic-dna"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "preversion": "npm run build"
+  },
+  "peerDependencies": {
+    "react": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0"
+  },
+  "dependencies": {
+    "shortid": "^2.2.16",
+    "superagent": "^8.0.9"
+  }
+}

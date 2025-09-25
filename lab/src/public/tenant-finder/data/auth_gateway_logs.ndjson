@@ -1,0 +1,9 @@
+{"ts":"2025-09-18T19:20:01.100Z","req_id":"REQ-1001","phase":"ingress.accept","path":"/login","tenant_alias":"zenith-core","status":202}
+{"ts":"2025-09-18T19:20:01.340Z","req_id":"REQ-1001","phase":"upstream.call","service":"directory","header_tid_prefix":"ead9000d","latency_ms":180}
+{"ts":"2025-09-18T19:20:02.010Z","req_id":"REQ-1001","phase":"authz.decision","decision":"deny","status":401,"tenant_alias":"zenith-core","tenant_id":"ead9000d-89ea-4d02-922d-518d469e2509"}
+{"ts":"2025-09-18T19:22:11.050Z","req_id":"REQ-1002","phase":"ingress.accept","path":"/login","tenant_alias":"zenith-core","status":202}
+{"ts":"2025-09-18T19:22:11.300Z","req_id":"REQ-1002","phase":"upstream.call","service":"directory","header_tid_prefix":"ead9000d","latency_ms":172}
+{"ts":"2025-09-18T19:22:12.005Z","req_id":"REQ-1002","phase":"authz.decision","decision":"deny","status":401,"tenant_alias":"zenith-core","tenant_id":"ead9000d-89ea-4d02-922d-518d469e2509"}
+{"ts":"2025-09-18T19:25:44.400Z","req_id":"REQ-1003","phase":"ingress.accept","path":"/health","tenant_alias":"public","status":202}
+{"ts":"2025-09-18T19:25:44.650Z","req_id":"REQ-1003","phase":"upstream.call","service":"directory","header_tid_prefix":"publicxxx","latency_ms":90}
+{"ts":"2025-09-18T19:25:45.010Z","req_id":"REQ-1003","phase":"authz.decision","decision":"allow","status":200}

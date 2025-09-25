@@ -7,16 +7,24 @@
   <li>A clear <strong>next update time</strong> (e.g., "next update in 20 minutes")</li>
   <li><strong>Ownership</strong> ("I'm taking ownership", "I will update you", etc.)</li>
 </ul>
-<textarea id="txt" rows="6" placeholder="Type your update here..."></textarea>
-<button onclick="submit()">Submit</button>
+<textarea id="txt" rows="6" data-rich="1" placeholder="Type your update here..."></textarea>
+<button onclick="submitUpdate()">Submit</button>
 <pre id="out"></pre>
 </div>
 <script>
-async function submit(){
-  const text = document.getElementById('txt').value;
-  const res = await fetch('/check/incident',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
-  const data = await res.json();
-  document.getElementById('out').textContent = JSON.stringify(data,null,2);
+async function submitUpdate(){
+  const text = document.getElementById('txt').value.trim();
+  if(!text){ document.getElementById('out').textContent='Enter update text'; return; }
+  try {
+    const res = await fetch('/incident/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ text })});
+    if(!res.ok){ document.getElementById('out').textContent='Submit failed'; return; }
+    const data = await res.json();
+    document.getElementById('out').textContent = JSON.stringify(data,null,2);
+  } catch(e){
+    document.getElementById('out').textContent='Error';
+  }
 }
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
+<script src="/richify.js" defer></script>
 </body></html>

@@ -17,9 +17,15 @@
 </div>
 <script>
 async function check(){
-  const res = await fetch('/check/health');
-  const data = await res.json();
-  document.getElementById('out').textContent = JSON.stringify(data,null,2);
+  try {
+    const res = await fetch('/check/health');
+    if(!res.ok){ document.getElementById('out').textContent='Fetch failed'; return; }
+    const data = await res.json();
+    document.getElementById('out').textContent = JSON.stringify(data,null,2);
+  } catch(e){
+    document.getElementById('out').textContent='Error';
+  }
 }
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </body></html>

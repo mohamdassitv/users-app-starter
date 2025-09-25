@@ -3,7 +3,7 @@
 <main class="page fade-in">
   <div class="card" style="max-width:480px">
     <h2>One-Time Phone Registration</h2>
-    <p class="muted">Enter a phone number (include country code, e.g. +15551234567). This cannot be changed after you submit and is required to start the 6‑hour exam timer.</p>
+  <p class="muted">Enter a phone number (include country code, e.g. +15551234567). This cannot be changed after you submit and is required to start the 4‑hour exam timer.</p>
     <form id="phoneForm">
       <label style="display:block;margin-bottom:12px">Phone Number<br><input id="phone" type="text" placeholder="+15551234567" required></label>
       <button type="submit" class="btn-primary">Save</button>
@@ -33,4 +33,5 @@ document.getElementById('phoneForm').addEventListener('submit', async (e)=>{
   }
 });
 </script>
+<script src="/header-timer.js" defer></script>
 </body></html>

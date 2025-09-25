@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Task 1 — High-Volume User Cleanup & On-Shift Automation</title>
+<title>Task 3 — High-Volume User Cleanup & On-Shift Automation</title>
 <link rel="stylesheet" href="/styles.css">
 <style>
   table{border-collapse:collapse;width:100%;font-size:0.9rem}
@@ -19,21 +19,15 @@
 </head>
 <body>
   <header class="site-header" id="siteHeader">
-    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
       <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
       <span class="brand-hacker">CHECK POINT</span>
     </div>
   </header>
   <main class="page fade-in">
-    <div class="exam-bar">
-      <div class="exam-progress-wrap"><div class="exam-progress" id="examProgress"></div></div>
-      <div id="examTimer" class="exam-timer" aria-live="polite">Timer: --:--:--</div>
-      <div class="exam-actions">
-        <button id="btnStart" type="button">Start 6h</button>
-      </div>
-    </div>
+    <!-- exam bar removed; header timer globally -->
   <div class="card" id="story">
-  <h2>Task 1 — High-Volume User Cleanup (Shift Escalation)</h2>
+  <h2>Task 3 — High-Volume User Cleanup (Shift Escalation)</h2>
     <p><strong>Scenario.</strong> 02:10 UTC — A SaaS customer (enterprise plan) opens a P1 chat: they accidentally bulk‑provisioned thousands of duplicate placeholder accounts during a failed HR import. Their compliance team insists the extras must be purged before 03:00 UTC to avoid license overage penalties. Engineering’s bulk tooling is offline (maintenance window overran) and you are the only on‑call operations engineer with console access.</p>
     <p><strong>Your Mission.</strong> Provide a rapid, manual-but-efficient remediation path: list the 5,000 user entries, surgically delete selected rows (simulating the cleanup decisions), and optionally add corrected user records. This UI emulates a thin emergency console you might spin up to unblock a customer while awaiting a permanent batch job fix.</p>
     <p><strong>Objectives.</strong></p>
@@ -81,9 +75,7 @@ const header=document.getElementById('siteHeader');window.addEventListener('scro
 async function examStatus(){ const r = await fetch('/api/exam/status'); return r.ok? r.json():{}; }
 function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
 function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){ bar.style.width='0%'; return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
-async function tick(){ const st=await examStatus(); const el=document.getElementById('examTimer'); if(!el) return; if(st.running){ el.textContent='Remaining: '+fmt(st.remainingMs); updateProgress(st.startTime, st.duration);} else if(st.startTime){ el.textContent='Expired'; updateProgress(st.startTime, st.duration);} else { el.textContent='Ready (6h)'; updateProgress(null,null);} }
-setInterval(tick,1000); tick();
-document.getElementById('btnStart').addEventListener('click', async ()=>{ const st = await examStatus(); if(!st.phone){ alert('Register phone first via logo.'); return;} if(!st.startTime){ await fetch('/api/exam/start',{method:'POST'});} });
+// old exam timer removed
 document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
 let offset=0, total=0;
 function qs(id){return document.getElementById(id);} 
@@ -148,5 +140,6 @@ qs('limit').addEventListener('change', ()=>{ offset=0; load(); });
 // default to 100; leave selection if user chooses 5000
 load();
 </script>
+<script src="/collab-dock-simple.js?v=2" defer></script>
 </body>
 </html>

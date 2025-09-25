@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Admin Login</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/styles.css"><style>
+.admin-login-wrap{min-height:100vh;display:flex;flex-direction:column;}
+.admin-login-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+.admin-card{background:#0d1422;border:1px solid #1f2735;padding:46px 54px;max-width:520px;width:100%;border-radius:30px;box-shadow:0 16px 50px -18px rgba(0,0,0,.6),0 0 0 1px rgba(255,10,108,.25);}
+.admin-card h1{margin:0 0 24px;font-size:40px;letter-spacing:.05em;color:#fff;font-family:'JetBrains Mono','Courier New',monospace;text-shadow:0 0 10px rgba(255,10,108,.8);} 
+.admin-card label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;margin:0 0 6px;color:#ffd0e5;text-transform:uppercase;}
+.admin-card input{width:100%;background:#131b2a;border:1px solid #263245;color:#fff;padding:14px 16px;font-size:15px;border-radius:14px;}
+.admin-card button{margin-top:14px;width:100%;background:linear-gradient(135deg,#ff0a6c,#ff4aa0);border:none;color:#fff;font-size:15px;font-weight:700;padding:16px 24px;border-radius:18px;cursor:pointer;box-shadow:0 0 0 2px rgba(255,10,108,.4),0 12px 40px -12px rgba(255,10,108,.6);} 
+.admin-card button:hover{filter:brightness(1.08);} 
+.status{margin-top:16px;font-size:13px;font-weight:600;min-height:18px;color:#ffd4e8;}
+.back-link{margin-top:20px;text-align:center;font-size:13px;}
+</style></head><body>
+<header class="site-header"><div class="brand" onclick="location.href='/'"><img src="/logo.svg" alt="logo"><span class="brand-hacker">CHECK POINT</span></div></header>
+<div class="admin-login-wrap"><div class="admin-login-body"><div class="admin-card fade-in"><h1>Admin Access</h1>
+<form id="adminLoginForm"><label for="adminPwd">Password</label><input id="adminPwd" type="password" required autofocus placeholder="Enter admin password"><button type="submit">Login →</button><div class="status" id="adminStatus"></div></form>
+<div class="back-link"><a href="/login.html">Back to candidate login</a></div>
+</div></div></div>
+<script>
+(function(){
+  const form=document.getElementById('adminLoginForm');
+  const status=document.getElementById('adminStatus');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    status.textContent='Authenticating…';
+    const pwd=document.getElementById('adminPwd').value.trim();
+    try {
+      const r=await fetch('/api/auth/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+      if(r.ok){ status.textContent='Success. Redirecting…'; setTimeout(()=>location.href='/admin.html',400); }
+      else { status.textContent='Invalid password'; }
+    } catch(err){ status.textContent='Network error'; }
+  });
+})();
+</script>
+</body></html>

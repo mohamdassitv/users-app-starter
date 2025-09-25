@@ -1,0 +1,282 @@
+{
+  "alerts": [
+    {
+      "id": "ALRT-IDA-20250918-202502",
+      "product": "Harmony Connect",
+      "severity": "P2",
+      "title": "Identity Awareness | IDA Update Failed",
+      "customer": "Americold - VPN",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T20:25:02+03:00",
+      "more_info": "Gateway rv-gw-03 shows IDA definitions are outdated (>24h). Likely the update feed is down in EU-West. Temporary workaround: reboot the gateway to refresh the cache.",
+      "playbook": [
+        "1) Clear local cache: rm -rf /opt/ida/cache/* (may require root)",
+        "2) Reboot the gateway to trigger a fresh lookup",
+        "3) If persists, open port 80 on the firewall to allow updates over HTTP"
+      ],
+      "decoy_tags": ["cache", "eu-west", "port-80"],
+      "examiner_notes": {
+        "true_cause": "NTP clock skew on rv-gw-03 causes signature validation to fail; the feed is fine.",
+        "validation": [
+          "ntpstat or chronyc sources shows unsynchronized; time offset > 300s",
+          "curl -I https://updates.ida.example.com returns 200 from other nodes"
+        ],
+        "correct_playbook": [
+          "1) Fix NTP on rv-gw-03 (force sync / restart time service)",
+          "2) Retry IDA signature update; verify with ida-cli status",
+          "3) Add alert for time drift > 2 minutes"
+        ]
+      }
+    },
+    {
+      "id": "ALRT-CPU-20250918-191219",
+      "product": "Harmony Connect",
+      "severity": "P3",
+      "title": "[FIRING:1] Instance | High CPU Usage",
+      "customer": "High CPU Usage (warning)",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T19:12:19+03:00",
+      "more_info": "Host gw-core-12 CPU at 95%+ for 10m. Recommendation: scale out by adding a larger VM size to prevent throttling.",
+      "playbook": [
+        "1) Increase vCPU to 8 cores",
+        "2) Set CPU quota to unlimited for container gw-core",
+        "3) Disable any CPU pinning to improve throughput"
+      ],
+      "decoy_tags": ["scale-out", "quota"],
+      "examiner_notes": {
+        "true_cause": "Agent metrics loop hung; top shows low CPU. Exporter reported stale 95%.",
+        "validation": [
+          "top/htop: idle ~85%",
+          "systemctl restart metrics-agent resolves alert within 2m"
+        ],
+        "correct_playbook": [
+          "1) Restart metrics-agent and check logs",
+          "2) Add watchdog/healthcheck for agent process",
+          "3) Correlate with real load (requests/s) before scaling"
+        ]
+      }
+    },
+    {
+      "id": "ALRT-RV-20250918-184950-A",
+      "product": "Harmony Connect",
+      "severity": "P3",
+      "title": "[FIRING:1] RV | Maximum Connected Users Alert - high severity",
+      "customer": "openvpn_count_users_high_severity",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T18:49:50+03:00",
+      "more_info": "RV-Edge-Osaka exceeded license (users>1000). Immediate action: bump license cap and raise max-clients.",
+      "playbook": [
+        "1) Edit openvpn.conf: max-clients 2000",
+        "2) Request emergency license increase",
+        "3) Recycle RV service to apply changes"
+      ],
+      "decoy_tags": ["license", "max-clients"],
+      "examiner_notes": {
+        "true_cause": "Accounting-stop events missing; stale sessions never cleared. Real active users ~420.",
+        "validation": [
+          "Compare openvpn-status.log vs RADIUS active sessions",
+          "Check radius acct logs for stop packets"
+        ],
+        "correct_playbook": [
+          "1) Fix RADIUS accounting (ensure acct-stop on disconnect)",
+          "2) Clear stale sessions safely",
+          "3) Add session-staleness check/alert"
+        ]
+      }
+    },
+    {
+      "id": "ALRT-RV-20250918-184950-B",
+      "product": "Harmony Connect",
+      "severity": "P3",
+      "title": "[FIRING:1] RV | Maximum Connected Users Alert - high severity",
+      "customer": "openvpn_count_users_high_severity",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T18:49:50+03:00",
+      "more_info": "Duplicate alert copy: raise license now to avoid service denial.",
+      "playbook": [
+        "1) Immediately increase licensing tier",
+        "2) Add second RV node to split users"
+      ],
+      "decoy_tags": ["duplicate"],
+      "examiner_notes": {
+        "true_cause": "Duplicate page due to rule change; test candidate's deduplication.",
+        "validation": ["Same fingerprint as -A"],
+        "correct_playbook": ["Deduplicate/ack as duplicate; follow -A root cause."]
+      }
+    },
+    {
+      "id": "ALRT-IDN-20250918-185004",
+      "product": "Infinity Identity",
+      "severity": "P3",
+      "title": "[IDN][Prod][Infinity Next] | 29 timeout errors last 15m",
+      "customer": "IDA Next Prod EU",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T18:50:04+03:00",
+      "more_info": "Likely transient network. Quick fix: raise HTTP client timeout to 120s and retry.",
+      "playbook": [
+        "1) Increase axios timeout to 120s",
+        "2) Disable retry jitter to speed recovery"
+      ],
+      "decoy_tags": ["timeouts"],
+      "examiner_notes": {
+        "true_cause": "DNS for idp.eu.example.com intermittently resolves to a dead VIP (split-brain after change).",
+        "validation": [
+          "dig +short idp.eu.example.com shows multiple A records; curl --connect-to to each",
+          "Failures correlate to one IP"
+        ],
+        "correct_playbook": [
+          "1) Remove bad IP from DNS/LB rotation",
+          "2) Add health-checked LB instead of plain RR DNS",
+          "3) Reduce client DNS TTL to speed correction"
+        ]
+      }
+    },
+    {
+      "id": "ALRT-LAAS-20250918-195319",
+      "product": "LaaS",
+      "severity": "P3",
+      "title": "Exporter Configuration | Invalid Signed URL",
+      "customer": "DOCLOG-311 / UAE",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T19:53:19+03:00",
+      "more_info": "The access key may be wrong. Rotate keys and redeploy exporters.",
+      "playbook": [
+        "1) Recreate API keys",
+        "2) Reconfigure all exporters with new keys"
+      ],
+      "decoy_tags": ["keys"],
+      "examiner_notes": {
+        "true_cause": "Clock drift: URL signatures computed in future/past window. Time sync failure on exporters.",
+        "validation": ["Compare Date header vs system time; check NTP"],
+        "correct_playbook": ["Fix NTP on exporters; avoid unnecessary key rotation"]
+      }
+    },
+    {
+      "id": "ALRT-LAAS-20250918-170319",
+      "product": "LaaS",
+      "severity": "P3",
+      "title": "Exporter Configuration | Invalid Signed URL",
+      "customer": "DOCLOG-311 / UAE",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T17:03:19+03:00",
+      "more_info": "Key rotated earlier; some exporters not updated. Action: force redeploy all exporters.",
+      "playbook": [
+        "1) Restart exporter daemon everywhere",
+        "2) Purge old tokens"
+      ],
+      "decoy_tags": ["redeploy"],
+      "examiner_notes": {
+        "true_cause": "Same as 19:53:19; earlier occurrence to test correlation.",
+        "validation": ["Look for identical error pattern across times"],
+        "correct_playbook": ["Tie both to time drift; one fix"]
+      }
+    },
+    {
+      "id": "ALRT-LAAS-20250918-201319",
+      "product": "LaaS",
+      "severity": "P3",
+      "title": "Exporter Configuration | Invalid Signed URL",
+      "customer": "DOCLOG-311 / UAE",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T20:13:19+03:00",
+      "more_info": "Region UAE endpoint may be rejecting requests due to IP reputation. Whitelist exporter IPs.",
+      "playbook": [
+        "1) Ask provider to whitelist outbound IPs",
+        "2) Disable TLS verification to test quickly"
+      ],
+      "decoy_tags": ["whitelist", "tls-off"],
+      "examiner_notes": {
+        "true_cause": "Same NTP drift pattern; included as third data point (noise).",
+        "validation": ["Signed URL expires/not yet valid when sent"],
+        "correct_playbook": ["Fix NTP; do not disable TLS"]
+      }
+    },
+    {
+      "id": "ALRT-DSS-20250918-105918",
+      "product": "Infinity Identity",
+      "severity": "P2",
+      "title": "[IDN] [eu-west-1-ida-prod] [FIRING:1] Dss | DSS failures",
+      "customer": "Ask Maayan About it",
+      "status": "FIRING",
+      "time_iso": "2025-09-18T10:59:18+03:00",
+      "more_info": "Kafka overload suspected. Quick fix: increase topic partitions and bump retention to 14 days.",
+      "playbook": [
+        "1) kafka-topics --alter --partitions 10",
+        "2) kafka-configs --alter --add-config retention.ms=1209600000"
+      ],
+      "decoy_tags": ["kafka"],
+      "examiner_notes": {
+        "true_cause": "Downstream storage permissions (S3 403) causing DSS retries to pile up.",
+        "validation": ["Check DSS connector errors; look for 403 AccessDenied"],
+        "correct_playbook": [
+          "1) Fix IAM policy on destination bucket",
+          "2) Reprocess backlog after permissions corrected"
+        ]
+      }
+    },
+    {
+      "id": "ALRT-MEM-20250917-053802",
+      "product": "Harmony Connect",
+      "severity": "P1",
+      "title": "[FIRING:1] Instance | High Memory Usage",
+      "customer": "memory usage alertwarning",
+      "status": "FIRING",
+      "time_iso": "2025-09-17T05:38:00+03:00",
+      "last_updated_iso": "2025-09-17T07:41:00+03:00",
+      "last_duplicated_iso": "2025-09-17T07:15:00+03:00",
+      "elapsed_hint": "2h 2m 43s",
+      "source": "https://grafana.odo.io/d/facf5084-ae94-4ba7-8c3f-5235b9e9681d/alerting?orgId=1",
+      "integration": "NEW-GRAFANA-ODO (GrafanaV2)",
+      "responders": ["Harmony Connect"],
+      "owner_team": "Harmony Connect",
+      "alias": "d359ba53bebf71d15e75caffad5b6a3fc16f40a532ed731750bd338aebd202f8",
+      "tenant_id": "8ab93415-5bb1-4fdf-b1dc-2d1174626109",
+      "priority_text": "Priority", 
+      "more_info": "Host g-c4f9dec4c7634988a8dcb029c76437bc has high memory usage (>90%). Candidate should validate REAL memory pressure vs cache/buffers and correlate with application RSS before remediation.",
+      "raw_labels": {
+        "alertgroup": "amp-defaultAMP",
+        "alertname": "memory usage alert",
+        "host": "g-c4f9dec4c7634988a8dcb029c76437bc",
+        "notifications": "cloudia-opsgenie",
+        "severity": "warning",
+        "tenantid": "8ab93415-5bb1-4fdf-b1dc-2d1174626109"
+      },
+      "raw_annotations": {
+        "description": "Host g-c4f9dec4c7634988a8dcb029c76437bc has high memory usage under tenant 8ab93415-5bb1-4fdf-b1dc-2d1174626109! VALUE=90.3167",
+        "grafana": "https://grafana.odo.io/d/f7f8a33d-7711-4550-9816-d64d00dfc229/alerting?orgId=1",
+        "summary": "Instance | High Memory Usage",
+        "source_list": "https://grafana.odo.io/alerting/list?queryString=alertname%3Dmemory%20usage%20alert"
+      },
+      "playbook": [
+        "un: # df -h",
+        "Clean Up folders accordingly",
+        "If the following directories are full, run the below steps.",
+        "",
+        "/var/log/: \t$DLPDIR/ftp:",
+        "Check the following folder \"/var/log/crash\" size",
+        "Verify if there are old crash dumps and remove them if there are any",
+        "if there are new crash dumps",
+        "Copy the crash files out from the machine (via SFTP)",
+        "Remove the files",
+        "Go to Not Resolved",
+        "remove all folders with the following commands:",
+        "# rm -r $DLPDIR/ftp/0*",
+        "# rm -r $DLPDIR/ftp/1*",
+        "# rm -r $DLPDIR/ftp/3*",
+        "Run: # df -h",
+        "",
+        "if there is enough free storage, go to Resolved",
+        "If the disk is still not free - go to Not Resolved"
+      ],
+      "decoy_tags": ["drop-caches", "restart"],
+      "examiner_notes": {
+        "true_cause": "Memory spike due to runaway log aggregation process leaking mmap segments (rss stable; shm usage high).",
+        "validation": [
+          "Compare free -m vs /proc/meminfo (Cached/Buffers high?)",
+          "smem or pmap to confirm real RSS vs cache",
+          "Check lsof for deleted large mmap'd files"
+        ]
+      }
+    }
+  ]
+}

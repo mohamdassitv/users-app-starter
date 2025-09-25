@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Candidate Login – Ops 101 Lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.login-hero{min-height:100vh;display:flex;flex-direction:column;}
+.login-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+.login-card{max-width:820px;margin:0 auto;background:#0b1020;border:1px solid #1c2435;border-radius:34px;padding:54px 60px;position:relative;box-shadow:0 18px 60px -18px rgba(0,0,0,.65),0 0 0 1px rgba(255,10,108,.25);}
+.login-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,10,108,.25),transparent 70%);pointer-events:none;filter:blur(4px);}
+.login-card h1{margin:0 0 26px;font-size:46px;letter-spacing:.08em;font-weight:900;text-transform:uppercase;font-family:'JetBrains Mono','Fira Code','SFMono-Regular',Menlo,Consolas,monospace;color:#fff;text-shadow:0 0 10px rgba(255,10,108,.9),0 0 26px rgba(255,10,108,.45);} 
+.login-card p.brief{margin:0 0 34px;font-size:18px;line-height:1.55;font-weight:600;color:#ffe4ef;text-shadow:0 0 4px #ec4899,0 0 14px rgba(236,72,153,.65);} 
+.login-form{display:flex;flex-direction:column;gap:16px;margin-top:10px;}
+.login-form label{font-size:13px;font-weight:600;letter-spacing:.5px;color:#ffd3e6;text-transform:uppercase;}
+.login-form input{background:#141c2c;border:1px solid #2a3344;color:#fff;padding:14px 16px;border-radius:14px;font-size:15px;}
+.login-form input:focus{outline:2px solid #ff0a6c;}
+.login-form button{background:linear-gradient(135deg,#ff0a6c,#ff4aa0);border:none;color:#fff;padding:16px 26px;border-radius:18px;font-size:15px;font-weight:700;letter-spacing:.8px;cursor:pointer;box-shadow:0 0 0 2px rgba(255,10,108,.4),0 10px 40px -10px rgba(255,10,108,.55);} 
+.login-form button:hover{filter:brightness(1.08);} 
+.switch-hint{margin-top:26px;font-size:13px;color:#cfd6e2;}
+.switch-hint a{color:#ff4aa0;font-weight:600;}
+@media (max-width:880px){.login-card{padding:46px 34px;border-radius:30px;} .login-card h1{font-size:40px;} .login-card p.brief{font-size:17px;} }
+@media (max-width:620px){.login-card{padding:40px 26px;} .login-card h1{font-size:36px;} }
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand" onclick="location.href='login.html'">
+      <img src="/logo.svg" alt="logo" />
+      <span class="brand-hacker">CHECK POINT</span>
+    </div>
+  </header>
+  <div class="login-hero">
+    <div class="login-body">
+      <div class="login-card fade-in" role="main">
+        <h1>NOC Simulation Access</h1>
+        <p class="brief">You’re about to enter a condensed, high‑NOC simulation. Treat it like a real on‑shift scenario: you’ll work through day‑to‑day tasks you might face during shifts. Your goal is to capture clear, verifiable evidence at every step. Explain what you’re doing and why, and document every step with commands, outputs, screenshots.</p>
+        <form class="login-form" id="loginForm" autocomplete="off">
+          <div>
+            <label for="candName">Full Name</label>
+            <input id="candName" name="candName" required placeholder="Jane Analyst" maxlength="80" />
+          </div>
+          <div>
+            <label for="candEmail">Email (login)</label>
+            <input id="candEmail" name="candEmail" type="email" required placeholder="you@example.com" maxlength="120" />
+          </div>
+          <button type="submit">Enter Simulation →</button>
+          <div id="loginMsg" aria-live="polite" style="font-size:13px;font-weight:600;color:#ffd1e6;"></div>
+        </form>
+  <div class="switch-hint">Already inside? <a href="/tasks.html">Go to Tasks</a></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const form=document.getElementById('loginForm');
+      const msg=document.getElementById('loginMsg');
+      // Prefill from query params if provided (?email=&name=)
+      try {
+        const qs=new URLSearchParams(window.location.search);
+        const qEmail=qs.get('email');
+        const qName=qs.get('name');
+        if(qEmail) document.getElementById('candEmail').value=qEmail;
+        if(qName) document.getElementById('candName').value=qName;
+      } catch(_e){}
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        msg.textContent='Signing in…';
+        const name=document.getElementById('candName').value.trim();
+        const email=document.getElementById('candEmail').value.trim();
+        try {
+          const r = await fetch('/api/candidate/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+          if(!r.ok){ msg.textContent='Login failed'; return; }
+          const data = await r.json();
+          if(data && data.candidate){
+            localStorage.setItem('candidateEmail', data.candidate.email);
+            localStorage.setItem('candidateName', data.candidate.name||'');
+            // NEW: store start time and admin flag (minimal addition)
+            if(data.candidate.startTime) localStorage.setItem('candidateStartTime', data.candidate.startTime);
+            localStorage.setItem('isAdmin','1');
+            msg.textContent='Success. Redirecting…';
+            setTimeout(()=>{ window.location='/tasks.html'; }, 500);
+          } else {
+            msg.textContent='Unexpected response';
+          }
+        } catch(err){ msg.textContent='Network error'; }
+      });
+      // If already logged in show quick continue
+      const existing = localStorage.getItem('candidateEmail');
+      if(existing){ msg.textContent='Resume session: '+existing; }
+    })();
+  </script>
+</body></html>

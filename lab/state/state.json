@@ -1,11 +1,11 @@
 {
   "token": "LAB-QGZK7V",
   "scenario": {
-    "pk": "PK-N0B86Q",
-    "createdAt": "2025-09-15T12:08:38.518Z",
-    "okLabelNumber": 318,
-    "forbiddenLabelNumber": 662,
-    "badLabelNumber": 613
+    "pk": "PK-9YYLSF",
+    "createdAt": "2025-09-25T14:46:10.200Z",
+    "okLabelNumber": 549,
+    "forbiddenLabelNumber": 645,
+    "badLabelNumber": 544
   },
   "users": [
     {
@@ -25010,9 +25010,39 @@
     }
   ],
   "exam": {
-    "phone": "+972556658395",
-    "startTime": "2025-09-15T12:09:01.569Z",
-    "durationMs": 21600000
+    "phone": null,
+    "startTime": null,
+    "durationMs": 14400000
   },
-  "contacts": []
+  "contacts": [],
+  "caseStudy": {
+    "submitted": false,
+    "html": null,
+    "images": [],
+    "submittedAt": null
+  },
+  "examConfig": {
+    "recipients": "mohamdassitv@gmail.com",
+    "onCall": "+972556658395"
+  },
+  "candidates": [
+    {
+      "email": "aaa@gmail.com",
+      "name": "aaaa",
+      "startTime": 1758816742469,
+      "durationMs": 14400000,
+      "running": true
+    },
+    {
+      "name": "aaa",
+      "email": "aaaa@ef.com",
+      "startTime": 1758817773821,
+      "running": true
+    }
+  ],
+  "adminConfig": {
+    "recipients": "",
+    "onCall": ""
+  },
+  "submissionsByCandidate": {}
 }
