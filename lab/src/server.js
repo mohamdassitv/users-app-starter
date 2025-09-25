@@ -9,95 +9,9 @@ const PORT = process.env.PORT || 8081;
 const STATE_PATH = path.join(__dirname, '..', 'state', 'state.json');
 function readState(){return JSON.parse(fs.readFileSync(STATE_PATH,'utf8'));}
 function writeState(s){fs.writeFileSync(STATE_PATH, JSON.stringify(s, null, 2));}
-function ensureShape(st){
-  if(!st.candidates) st.candidates=[];
-  if(!st.adminConfig) st.adminConfig={recipients:'',onCall:''};
-  if(!st.submissionsByCandidate) st.submissionsByCandidate={};
-  return st;
-}
 
 app.use(bodyParser.json({limit:'2mb'}));
 app.use(express.static(path.join(__dirname,'public')));
-
-// ---- Simple helper to safely load state with required collections ----
-function load(){ return ensureShape(readState()); }
-
-// ---- Admin utilities (no authentication layer here - assumed upstream protection) ----
-app.get('/api/admin/candidates',(req,res)=>{
-  const st=load();
-  res.json({total: st.candidates.length, candidates: st.candidates});
-});
-
-app.post('/api/admin/candidate',(req,res)=>{
-  const {name,email}=req.body||{};
-  if(!name||!email) return res.status(400).json({error:'name and email required'});
-  const st=load();
-  const em=email.trim().toLowerCase();
-  let c=st.candidates.find(x=>x.email===em);
-  if(!c){
-    c={name:name.trim(),email:em,startTime:null,running:false};
-    st.candidates.push(c);
-  } else {
-    // Update name & reset candidate (clean slate on re-add) per requirement
-    c.name=name.trim();
-    c.startTime=null; c.running=false; 
-  }
-  // Drop any previous submissions for that candidate
-  if(st.submissionsByCandidate[em]) delete st.submissionsByCandidate[em];
-  writeState(st);
-  res.json({ok:true,candidate:c});
-});
-
-app.post('/api/candidate/:email/start',(req,res)=>{
-  const st=load();
-  const em=(req.params.email||'').toLowerCase();
-  const c=st.candidates.find(x=>x.email===em);
-  if(!c) return res.status(404).json({error:'candidate not found'});
-  if(!c.startTime){ c.startTime=Date.now(); c.running=true; }
-  writeState(st);
-  res.json({ok:true,candidate:c});
-});
-
-app.post('/api/admin/candidate/:email/reset',(req,res)=>{
-  const st=load();
-  const em=(req.params.email||'').toLowerCase();
-  const c=st.candidates.find(x=>x.email===em);
-  if(!c) return res.status(404).json({error:'candidate not found'});
-  c.startTime=null; c.running=false;
-  if(st.submissionsByCandidate[em]) delete st.submissionsByCandidate[em];
-  writeState(st);
-  res.json({ok:true,candidate:c});
-});
-
-app.post('/api/admin/reset-all',(req,res)=>{
-  const st=load();
-  st.candidates=[];
-  st.submissionsByCandidate={};
-  writeState(st);
-  res.json({ok:true});
-});
-
-// Admin config (recipient distribution list)
-app.get('/api/admin/config',(req,res)=>{
-  const st=load();
-  res.json(st.adminConfig);
-});
-app.post('/api/admin/config',(req,res)=>{
-  const st=load();
-  const {recipients,onCall}=req.body||{};
-  st.adminConfig.recipients=recipients||'';
-  st.adminConfig.onCall=onCall||'';
-  writeState(st);
-  res.json({ok:true, config: st.adminConfig});
-});
-
-// Case study submission stub (global for now). Real impl would be per candidate
-app.get('/api/case-study/submission',(req,res)=>{
-  // Provide minimal shape expected by admin UI
-  const st=load();
-  // Not storing actual html; return default not submitted
-  res.json({submitted:false});
-});
 
 // ---- Gateway simulation ----
 function headerToken(res){ res.set('X-Lab-Trace','LAB-QGZK7V'); }
@@ -194,6 +108,10 @@ app.get('/api/token', (req,res)=> res.json({token: 'LAB-QGZK7V'}));
 app.get('/api/state', (req,res)=> res.json(readState()));
 
 // ---- Static pages ----
+// Redirect root path to the existing login page as requested (do not remove any files)
+app.get('/', (req,res)=> res.redirect('/login.html'));
+
+// Fallback: keep existing single-page style catch-all for other deep links
 app.get('*', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
 
 app.listen(PORT, ()=> console.log('Ops 101 Exam Lab on http://localhost:'+PORT));
