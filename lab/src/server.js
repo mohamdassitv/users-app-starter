@@ -108,8 +108,8 @@ app.get('/api/token', (req,res)=> res.json({token: 'LAB-QGZK7V'}));
 app.get('/api/state', (req,res)=> res.json(readState()));
 
 // ---- Static pages ----
-// Redirect root path to the existing login page as requested (do not remove any files)
-app.get('/', (req,res)=> res.redirect('/login.html'));
+// Serve login page directly at root (no redirect)
+app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','login.html')));
 
 // Fallback: keep existing single-page style catch-all for other deep links
 app.get('*', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
