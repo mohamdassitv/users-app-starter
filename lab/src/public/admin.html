@@ -218,11 +218,10 @@ async function loadCandidates(){
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;" data-rem="'+c.email+'">'+formatRemaining(c)+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
-  ''+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" /></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button></td>';
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button></td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button></td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.submittedAt? '<button data-view="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button> <button data-open="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">Open</button>' : '<span style="font-size:10px;color:#b2497a;">—</span>')+'</td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
@@ -254,6 +253,10 @@ async function loadCandidates(){
   tbody.querySelectorAll('[data-view]').forEach(btn=> btn.addEventListener('click', e=>{
     const email=e.target.getAttribute('data-view');
     openAnswersModal(email);
+  }));
+  tbody.querySelectorAll('[data-open]').forEach(btn=> btn.addEventListener('click', e=>{
+    const email=e.target.getAttribute('data-open');
+    window.open('/candidate-view.html?email='+encodeURIComponent(email),'_blank');
   }));
   startTimerUpdates();
   buildFinalWork(j.candidates);
@@ -359,12 +362,16 @@ function buildFinalWork(candidates){
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+ new Date(c.submittedAt).toLocaleString() +'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+h+'h '+m+'m '+s+'s</td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view-final="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button></td>';
+  '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view-final="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button> <button data-open-final="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">Open</button></td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('[data-view-final]').forEach(btn=> btn.addEventListener('click', e=>{
     const email=e.target.getAttribute('data-view-final');
     openAnswersModal(email);
+  }));
+  tbody.querySelectorAll('[data-open-final]').forEach(btn=> btn.addEventListener('click', e=>{
+    const email=e.target.getAttribute('data-open-final');
+    window.open('/candidate-view.html?email='+encodeURIComponent(email),'_blank');
   }));
 }
 document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loadCandidates());

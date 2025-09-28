@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Candidate Final Work</title><meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#f8f0f6;margin:0;color:#222;}
+header{background:#fff;border-bottom:1px solid #ffd3e8;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px -6px rgba(255,92,168,.25);} 
+.h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.5px;color:#c91863;}
+.wrap{max-width:1200px;margin:24px auto 80px;padding:0 26px;}
+.card{background:#fff;border:1px solid #ffc2e3;border-radius:24px;padding:26px 30px;margin-bottom:30px;box-shadow:0 10px 32px -10px rgba(255,92,168,.25);} 
+pre.answer-block{background:#fff;border:1px solid #ffd3e8;padding:14px 16px;border-radius:14px;white-space:pre-wrap;font-size:12px;line-height:1.5;color:#6b1d46;max-height:320px;overflow:auto;margin:8px 0 18px;}
+.badge{display:inline-block;background:#ff5ca8;color:#fff;font-size:10px;padding:4px 10px;border-radius:999px;font-weight:700;letter-spacing:.6px;margin-left:8px;}
+.task-title{font-size:15px;font-weight:700;color:#a10d55;margin:22px 0 4px;}
+.meta{font-size:12px;color:#7a1e52;margin:0 0 14px;}
+.notice{background:#fff4fa;border:1px solid #ffc2e3;color:#680f37;padding:12px 16px;border-radius:14px;font-size:12px;margin:0 0 18px;}
+.back-btn{background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:8px 16px;border-radius:22px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px -8px rgba(147,51,234,.5);} 
+.back-btn:hover{filter:brightness(1.08);} 
+</style>
+</head><body>
+<header>
+  <button class="back-btn" onclick="location.href='/admin.html'">← Back</button>
+  <h1 class="h1">Candidate Final Work <span id="headerEmail" class="badge"></span></h1>
+</header>
+<div class="wrap" id="root">
+  <p class="notice" id="statusMsg">Loading snapshot…</p>
+  <div id="content" style="display:none;"></div>
+</div>
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  const email = params.get('email')||'';
+  if(!email){ document.getElementById('statusMsg').textContent='Missing email parameter.'; return; }
+  document.getElementById('headerEmail').textContent=email;
+  async function fetchSnapshot(){
+    let snap=null; let submittedAt=null; let live=null;
+    try{
+      const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email)+'/final-work');
+      if(r.ok){ const j=await r.json(); snap=j.snapshot && j.snapshot.answers; submittedAt=j.submittedAt; }
+    }catch(e){ console.warn('snapshot fetch error', e); }
+    if(!snap){
+      try{ const r2=await fetch('/api/admin/candidate/'+encodeURIComponent(email)+'/answers'); if(r2.ok){ const j2=await r2.json(); live=j2.answers; } }catch(e){}
+    }
+    const answers = snap || live;
+    if(!answers || !Object.keys(answers).length){ document.getElementById('statusMsg').textContent='No answers found.'; return; }
+    const root=document.getElementById('content'); root.innerHTML='';
+    if(submittedAt){
+      const p=document.createElement('p'); p.className='meta'; p.textContent='Final submission at '+new Date(submittedAt).toLocaleString()+(snap? ' (snapshot)':' (live view)'); root.appendChild(p);
+    }
+    Object.entries(answers).forEach(([taskId,obj])=>{
+      const t=document.createElement('div');
+      const title=document.createElement('div'); title.className='task-title'; title.textContent=taskId;
+      const meta=document.createElement('div'); meta.className='meta'; meta.textContent='Updated '+ new Date((obj && obj.updatedAt)||0).toLocaleString();
+      const pre=document.createElement('pre'); pre.className='answer-block';
+      const fields=(obj && obj.fields)||{}; const parts=[];
+      Object.entries(fields).forEach(([k,v])=>{ let val=typeof v==='string'? v: JSON.stringify(v); val=val.replace(/<[^>]+>/g,''); parts.push(k+':\n'+(val.trim()||'(empty)')); });
+      pre.textContent=parts.join('\n\n');
+      t.appendChild(title); t.appendChild(meta); t.appendChild(pre); root.appendChild(t);
+    });
+    document.getElementById('statusMsg').style.display='none';
+    root.style.display='block';
+  }
+  fetchSnapshot();
+})();
+</script>
+</body></html>
