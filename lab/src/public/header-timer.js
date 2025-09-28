@@ -18,7 +18,7 @@
 
   function getCandidateEmail(){ return localStorage.getItem('candidateEmail') || null; }
   async function candidateStatus(email){ try { const r=await fetch('/api/candidate/'+encodeURIComponent(email)); return r.ok? r.json():null; } catch(e){ return null; } }
-  async function examStatus(){ try { const r=await fetch('/api/exam/status'); return r.ok? r.json():{}; } catch(e){ return {}; } }
+  // examStatus removed - focusing only on candidate timer
   function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
   function updateBar(){ /* removed progress bar */ }
 
@@ -29,9 +29,8 @@
         localStorage.removeItem('candidateEmail');
         localStorage.removeItem('candidateName');
         mode='exam';
-        st = await examStatus();
       }}
-    if(!st){ st = await examStatus(); mode='exam'; }
+    if(!st){ return; }
     const hEl=el('#digitHours');
     const mEl=el('#digitMinutes');
     const sEl=el('#digitSeconds');
@@ -85,7 +84,7 @@
     if(!email) return; // only auto-start for candidate mode
     const st = await candidateStatus(email);
     if(!st || st.startTime) return; // already started or cannot fetch
-    await fetch('/api/candidate/'+encodeURIComponent(email)+'/start',{method:'POST'});
+    await fetch('/api/candidate/'+encodeURIComponent(email)+'/start?self=1',{method:'POST'});
   }
   // Kick off auto-start early
   autoStartIfNeeded();

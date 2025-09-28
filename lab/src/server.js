@@ -119,6 +119,13 @@ app.get('/api/state', (req,res)=> res.json(readState()));
 function saveStateMut(fn){ const st=readState(); fn(st); writeState(st); return st; }
 function ensureCandidatesArray(st){ if(!Array.isArray(st.candidates)) st.candidates=[]; }
 function findCandidate(st,email){ return (st.candidates||[]).find(c=> c.email.toLowerCase()===email.toLowerCase()); }
+function computeRemaining(candidate){
+  if(!candidate.startTime) return { running:false, remainingMs:4*60*60*1000 };
+  const DURATION = 4*60*60*1000; // 4h
+  const elapsed = Date.now() - candidate.startTime;
+  const remaining = Math.max(0, DURATION - elapsed);
+  return { running: remaining>0, remainingMs: remaining };
+}
 
 // Candidate login (create if not exists). Body: {name, email}
 app.post('/api/candidate/login',(req,res)=>{
@@ -133,20 +140,36 @@ app.post('/api/candidate/login',(req,res)=>{
     else if(safeName && !c.name) c.name=safeName; // backfill name if missing
   });
   const c=findCandidate(st,email);
-  res.json({candidate:{email:c.email,name:c.name,startTime:c.startTime}});
+  const rem = computeRemaining(c);
+  res.json({candidate:{email:c.email,name:c.name,startTime:c.startTime,remainingMs:rem.remainingMs,running:rem.running}});
+});
+
+// Fetch candidate status
+app.get('/api/candidate/:email',(req,res)=>{
+  const email=req.params.email||''; const st=readState(); ensureCandidatesArray(st);
+  const c=findCandidate(st,email); if(!c) return res.status(404).json({error:'not found'});
+  const rem=computeRemaining(c);
+  res.json({email:c.email,name:c.name,startTime:c.startTime,remainingMs:rem.remainingMs,running:rem.running});
 });
 
 // Start candidate timer (admin only)
 app.post('/api/candidate/:email/start',(req,res)=>{
-  // simple admin guard: require admin cookie
-  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
   const email=req.params.email||'';
+  const selfStart = req.query.self==='1';
+  // Admin can always start; self-start allowed if candidate exists and not started yet
+  if(req.cookies.admin!=='1' && !selfStart){
+    return res.status(401).json({error:'admin or self start required'});
+  }
+  let updatedCandidate=null; let notFound=false; let already=false;
   const st=saveStateMut(s=>{
     ensureCandidatesArray(s);
-    const c=findCandidate(s,email); if(c && !c.startTime){ c.startTime=Date.now(); c.running=true; }
+    const c=findCandidate(s,email); if(!c){ notFound=true; return; }
+    if(c.startTime){ already=true; updatedCandidate=c; return; }
+    c.startTime=Date.now(); c.running=true; updatedCandidate=c;
   });
-  const c=findCandidate(st,email); if(!c) return res.status(404).json({error:'not found'});
-  res.json({ok:true,candidate:c});
+  if(notFound) return res.status(404).json({error:'not found'});
+  if(already) return res.json({ok:true,candidate:updatedCandidate,already:true});
+  res.json({ok:true,candidate:updatedCandidate});
 });
 
 // Reset candidate (admin only)
