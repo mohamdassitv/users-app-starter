@@ -38,6 +38,8 @@ function computeRemaining(c){
   return {remainingMs: totalDurationMs - elapsed, totalDurationMs, running:true, endTime: c.startTime + totalDurationMs};
 }
 function candidateLocked(c){ if(!c) return false; return !!c.submittedAt || computeRemaining(c).remainingMs<=0; }
+function ensureFinalSnapshots(s){ ensureAnswersRoot(s); if(!s.answers.finalSnapshots) s.answers.finalSnapshots={}; }
+function getFinalSnapshot(s,email){ ensureFinalSnapshots(s); return s.answers.finalSnapshots[(email||'').toLowerCase()]; }
 
 app.use(bodyParser.json({limit:'2mb'}));
 app.use(cookieParser());
@@ -293,8 +295,8 @@ app.post('/api/candidate/answers',(req,res)=>{
   const st=saveStateMut(s=>{
     ensureCandidatesArray(s);
     ensureAnswersRoot(s);
-    const cand=findCandidate(s,email); if(!cand) return; // silent; will handle below
-    if(cand.submittedAt){ return; }
+  const cand=findCandidate(s,email); if(!cand) return; // silent; will handle below
+  if(candidateLocked(cand)){ return; }
     const answers=getCandidateAnswers(s,email);
     const existing = answers[taskId];
     answers[taskId]=mergeAnswerSet(existing, fields);
@@ -315,7 +317,14 @@ app.post('/api/candidate/submit',(req,res)=>{
   const st=saveStateMut(s=>{
     ensureCandidatesArray(s);
     const c=findCandidate(s,email); if(!c) return; candRef=c;
-    if(!c.submittedAt) c.submittedAt=Date.now();
+    if(!c.submittedAt) {
+      c.submittedAt=Date.now();
+      ensureFinalSnapshots(s);
+      ensureAnswersRoot(s);
+      const answers = getCandidateAnswers(s,email);
+      const clone = JSON.parse(JSON.stringify(answers));
+      s.answers.finalSnapshots[email.toLowerCase()] = { createdAt: Date.now(), answers: clone };
+    }
   });
   if(!candRef) return res.status(404).json({error:'candidate not found'});
   res.json({ok:true, submittedAt: candRef.submittedAt});
@@ -331,8 +340,8 @@ app.post('/api/candidate/task1/save',(req,res)=>{
   let updated=null; let candidateRef=null;
   const st=saveStateMut(s=>{
     ensureCandidatesArray(s); ensureAnswersRoot(s);
-    const c=findCandidate(s,email); if(!c) return; candidateRef=c;
-    if(c.task1SubmittedAt) return; // locked
+  const c=findCandidate(s,email); if(!c) return; candidateRef=c;
+  if(candidateLocked(c) || c.task1SubmittedAt) return; // locked
     const answers=getCandidateAnswers(s,email);
     const existing=answers['task1'];
     answers['task1']=mergeAnswerSet(existing, fields);
@@ -374,6 +383,17 @@ app.get('/api/admin/candidate/:email/answers',(req,res)=>{
   const cand=findCandidate(st,email); if(!cand) return res.status(404).json({error:'candidate not found'});
   const answers=getCandidateAnswers(st,email);
   res.json({ok:true,email,answers});
+});
+
+// Admin fetch candidate final immutable snapshot (if submitted)
+app.get('/api/admin/candidate/:email/final-work',(req,res)=>{
+  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
+  const email=req.params.email||'';
+  const st=readState(); ensureFinalSnapshots(st); ensureAnswersRoot(st);
+  const cand=findCandidate(st,email); if(!cand) return res.status(404).json({error:'candidate not found'});
+  const snap=getFinalSnapshot(st,email);
+  if(!snap) return res.status(404).json({error:'no final submission'});
+  res.json({ok:true,email,submittedAt:cand.submittedAt,snapshot:snap});
 });
 
 // (Removed candidate docx download endpoint)

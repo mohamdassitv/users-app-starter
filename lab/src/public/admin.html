@@ -289,19 +289,26 @@ async function openAnswersModal(email){
   answersModalBody.textContent='Loading…';
   answersModalMeta.textContent='Candidate: '+email;
   try{
-    const r = await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/answers');
-    if(!r.ok){ answersModalBody.textContent='No data or fetch error.'; return; }
-    const j = await r.json();
-    const ans = j.answers || {};
-    if(!Object.keys(ans).length){ answersModalBody.textContent='No answers yet.'; return; }
+    // Try final snapshot first
+    let ans = null; let submittedAt=null; let usedSnapshot=false;
+    const rs = await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/final-work');
+    if(rs.ok){
+      const snap = await rs.json();
+      if(snap && snap.snapshot){ ans = snap.snapshot.answers || {}; submittedAt=snap.submittedAt; usedSnapshot=true; }
+    }
+    if(!ans){
+      const r = await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/answers');
+      if(r.ok){ const j = await r.json(); ans = j.answers || {}; }
+    }
+    if(!ans || !Object.keys(ans).length){ answersModalBody.textContent='No answers yet.'; return; }
     const parts=[];
+    if(submittedAt) parts.push('FINAL SUBMISSION at '+ new Date(submittedAt).toLocaleString() + (usedSnapshot? ' (snapshot)':'')+'\n');
     Object.entries(ans).forEach(([taskId,obj])=>{
-      parts.push('### '+taskId+' (updated '+ new Date(obj.updatedAt||0).toLocaleString()+')');
-      const fields=obj.fields||{};
+      parts.push('### '+taskId+' (updated '+ new Date((obj && obj.updatedAt)||0).toLocaleString()+')');
+      const fields=(obj && obj.fields)||{};
       Object.entries(fields).forEach(([k,v])=>{
         parts.push('\n'+k+':');
         let val = typeof v==='string'? v: JSON.stringify(v);
-        // strip HTML tags if any
         val = val.replace(/<[^>]+>/g,'');
         parts.push(val.trim()? '  '+val.trim(): '  (empty)');
       });
