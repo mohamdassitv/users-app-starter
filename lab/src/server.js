@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -11,6 +12,7 @@ function readState(){return JSON.parse(fs.readFileSync(STATE_PATH,'utf8'));}
 function writeState(s){fs.writeFileSync(STATE_PATH, JSON.stringify(s, null, 2));}
 
 app.use(bodyParser.json({limit:'2mb'}));
+app.use(cookieParser());
 
 // Serve login page directly at root BEFORE static so it always wins
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','login.html')));
@@ -111,6 +113,82 @@ app.post('/check/incident', (req,res)=>{
 // ---- Utility endpoints for the portal ----
 app.get('/api/token', (req,res)=> res.json({token: 'LAB-QGZK7V'}));
 app.get('/api/state', (req,res)=> res.json(readState()));
+
+// ---- Candidate & Admin Auth / Tracking ----
+// Helpers
+function saveStateMut(fn){ const st=readState(); fn(st); writeState(st); return st; }
+function ensureCandidatesArray(st){ if(!Array.isArray(st.candidates)) st.candidates=[]; }
+function findCandidate(st,email){ return (st.candidates||[]).find(c=> c.email.toLowerCase()===email.toLowerCase()); }
+
+// Candidate login (create if not exists). Body: {name, email}
+app.post('/api/candidate/login',(req,res)=>{
+  const {name,email}=req.body||{};
+  if(!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) return res.status(400).json({error:'invalid email'});
+  const safeName=(name||'').trim().slice(0,120);
+  const st=saveStateMut(s=>{
+    ensureCandidatesArray(s);
+    let c=findCandidate(s,email);
+    const now=Date.now();
+    if(!c){ c={email,name:safeName,startTime:null,endTime:null,createdAt:now}; s.candidates.push(c); }
+    else if(safeName && !c.name) c.name=safeName; // backfill name if missing
+  });
+  const c=findCandidate(st,email);
+  res.json({candidate:{email:c.email,name:c.name,startTime:c.startTime}});
+});
+
+// Start candidate timer (admin only)
+app.post('/api/candidate/:email/start',(req,res)=>{
+  // simple admin guard: require admin cookie
+  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
+  const email=req.params.email||'';
+  const st=saveStateMut(s=>{
+    ensureCandidatesArray(s);
+    const c=findCandidate(s,email); if(c && !c.startTime){ c.startTime=Date.now(); c.running=true; }
+  });
+  const c=findCandidate(st,email); if(!c) return res.status(404).json({error:'not found'});
+  res.json({ok:true,candidate:c});
+});
+
+// Reset candidate (admin only)
+app.post('/api/admin/candidate/:email/reset',(req,res)=>{
+  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
+  const email=req.params.email||'';
+  const st=saveStateMut(s=>{
+    ensureCandidatesArray(s);
+    const c=findCandidate(s,email); if(c){ c.startTime=null; c.endTime=null; c.running=false; }
+  });
+  res.json({ok:true});
+});
+
+// Create candidate (admin)
+app.post('/api/admin/candidate',(req,res)=>{
+  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
+  const {name,email}=req.body||{}; if(!email) return res.status(400).json({error:'email required'});
+  saveStateMut(s=>{ ensureCandidatesArray(s); if(!findCandidate(s,email)) s.candidates.push({email,name:(name||'').trim(),startTime:null,endTime:null,createdAt:Date.now()}); });
+  res.json({ok:true});
+});
+
+// List candidates (admin)
+app.get('/api/admin/candidates',(req,res)=>{
+  if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'});
+  const st=readState(); ensureCandidatesArray(st);
+  res.json({total:st.candidates.length,candidates:st.candidates});
+});
+
+// Admin login (simple password; DO NOT use in production)
+app.post('/api/auth/admin-login',(req,res)=>{
+  const {password}=req.body||{}; if(password!=='2025') return res.status(401).json({error:'bad password'});
+  res.cookie('admin','1',{httpOnly:false,sameSite:'lax'}); res.json({ok:true});
+});
+app.post('/api/auth/admin-logout',(req,res)=>{ res.clearCookie('admin'); res.json({ok:true}); });
+
+// Admin config endpoints (guarded)
+app.get('/api/admin/config',(req,res)=>{ if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'}); const st=readState(); res.json({recipients:st.recipients||'',onCall:st.onCall||''}); });
+app.post('/api/admin/config',(req,res)=>{ if(req.cookies.admin!=='1') return res.status(401).json({error:'admin required'}); const {recipients,onCall}=req.body||{}; saveStateMut(s=>{ s.recipients=recipients||''; s.onCall=onCall||''; }); res.json({ok:true}); });
+
+// Case study submission placeholder
+app.get('/api/case-study/submission',(req,res)=>{ const st=readState(); res.json(st.caseStudySubmission||{submitted:false}); });
+app.post('/api/case-study/submission',(req,res)=>{ const {html,meta}=req.body||{}; saveStateMut(s=>{ s.caseStudySubmission={submitted:true,submittedAt:Date.now(),html:html||'',meta:meta||{}}; }); res.json({ok:true}); });
 
 // ---- Static pages catch-all (excluding root which is handled above)
 app.get(/^\/(?!$).*/, (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
