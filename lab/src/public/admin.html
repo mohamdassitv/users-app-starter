@@ -98,6 +98,28 @@ table tbody tr:nth-child(even){background:#fff7fb;}
 
   <!-- Global maintenance panel removed per new per-candidate reset requirement -->
   <button type="button" class="floating-refresh" id="floatingRefresh" title="Refresh Candidates">⟳ Refresh</button>
+
+  <div class="panel card" id="finalWorkPanel" style="display:none;">
+    <h2>Final Work Review <span class="badge" id="finalWorkCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
+    <p class="muted" style="font-size:12px;margin-top:0;margin-bottom:10px;">Only candidates who submitted (final submit) appear here. Click View to inspect immutable snapshot.</p>
+    <div style="overflow:auto;max-height:260px;border:1px solid #1e2533;border-radius:14px;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead style="background:#132033;position:sticky;top:0;">
+          <tr>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Name</th>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Submitted At</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Duration Used</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">View</th>
+          </tr>
+        </thead>
+        <tbody id="finalWorkRows"></tbody>
+      </table>
+    </div>
+    <div class="actions-line" style="margin-top:14px;">
+      <button class="btn btn-ghost" id="btnReloadFinalWork" type="button">Refresh</button>
+    </div>
+  </div>
 </main>
 <!-- Modal for viewing candidate final work (answers) -->
 <div id="answersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;align-items:flex-start;justify-content:center;padding:60px 20px;overflow:auto;">
@@ -123,6 +145,7 @@ function gateFetch(url,opts={}){
 function showPanels(){
   document.getElementById('configPanel').style.display='block';
   document.getElementById('candidatesPanel').style.display='block';
+  document.getElementById('finalWorkPanel').style.display='block';
 }
 async function verifySession(){
   // Try a cheap call that requires admin; use config endpoint
@@ -233,6 +256,7 @@ async function loadCandidates(){
     openAnswersModal(email);
   }));
   startTimerUpdates();
+  buildFinalWork(j.candidates);
 }
 function formatRemaining(c){
   if(!c.startTime) return 'Not started';
@@ -317,6 +341,33 @@ async function openAnswersModal(email){
     answersModalBody.textContent=parts.join('\n');
   }catch(e){ answersModalBody.textContent='Error: '+e.message; }
 }
+
+// ---- Final Work Panel Logic ----
+function buildFinalWork(candidates){
+  const submitted = candidates.filter(c=> c.submittedAt);
+  const tbody = document.getElementById('finalWorkRows');
+  const countEl = document.getElementById('finalWorkCount');
+  countEl.textContent=submitted.length;
+  tbody.innerHTML='';
+  submitted.sort((a,b)=> a.submittedAt - b.submittedAt);
+  submitted.forEach(c=>{
+    const usedMs = c.submittedAt - (c.startTime||c.submittedAt);
+    const h=Math.floor(usedMs/3600000); const m=Math.floor((usedMs%3600000)/60000); const s=Math.floor((usedMs%60000)/1000);
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+ new Date(c.submittedAt).toLocaleString() +'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+h+'h '+m+'m '+s+'s</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view-final="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button></td>';
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-view-final]').forEach(btn=> btn.addEventListener('click', e=>{
+    const email=e.target.getAttribute('data-view-final');
+    openAnswersModal(email);
+  }));
+}
+document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loadCandidates());
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
 </body>
