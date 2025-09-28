@@ -205,7 +205,7 @@ body.high-contrast .pill-btn{box-shadow:none;}
 <script>
 // --- Data Keys ---
 const STORAGE_KEY='task1_state_v1';
-let state={chat:[],uploads:[],rte:'',rte2:''};
+let state={chat:[],uploads:[],rte:''};
 // --- Seeded Conversation (trimmed) ---
 function candidateName(){return localStorage.getItem('candidateName')||'Candidate';}
 function managerMessageText(){return 'Add a quick topology sketch (ASCII or screenshot) and a short note describing the flow. Please draw a topology diagram.';}
@@ -291,13 +291,6 @@ function escapeHtml(str){return str.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;'
 // --- CKEditor5 initialization ---
 let ckEditorInstance = null;
 function initializeCKEditor() {
-  // Check if ClassicEditor is available
-  if (typeof ClassicEditor === 'undefined') {
-    console.error('ClassicEditor not loaded. Falling back to simple textarea.');
-    createFallbackEditor('ckEditor');
-    return;
-  }
-  
   ClassicEditor.create(document.querySelector('#ckEditor'), {
     toolbar: {
       items: [
@@ -339,48 +332,7 @@ function initializeCKEditor() {
   })
   .catch(error => {
     console.error('CKEditor initialization failed:', error);
-    createFallbackEditor('ckEditor');
   });
-}
-
-// Fallback editor function
-function createFallbackEditor(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  container.innerHTML = `
-    <div style="background:#fff;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;">
-      <div style="background:linear-gradient(90deg,var(--pink-100),rgba(255,255,255,0.9));padding:12px 16px;border-bottom:1px solid var(--pink-200);font-size:14px;font-weight:600;color:var(--ink-700);">
-        Rich Text Editor
-      </div>
-      <textarea 
-        id="${containerId}TextArea" 
-        style="width:100%;min-height:300px;border:none;padding:20px;font-family:var(--font-stack);font-size:16px;line-height:1.6;resize:vertical;outline:none;"
-        placeholder="${containerId === 'ckEditor' ? 'Add your topology diagram, investigation notes, and analysis here...' : 'Submit your analysis here:\n\n• What did you find in each terminal?\n• Which branch is experiencing the slowdown?\n• What is the most likely cause?\n• Provide your one-sentence conclusion...'}"
-      ></textarea>
-    </div>
-  `;
-  
-  const textarea = document.getElementById(containerId + 'TextArea');
-  
-  // Load saved content
-  const stateKey = containerId === 'ckEditor' ? 'rte' : 'rte2';
-  if (state[stateKey]) {
-    textarea.value = state[stateKey].replace(/<[^>]*>/g, ''); // Strip HTML tags
-  }
-  
-  // Auto-save on input
-  textarea.addEventListener('input', () => {
-    state[stateKey] = textarea.value;
-    save();
-  });
-  
-  // Update editor instance reference
-  if (containerId === 'ckEditor') {
-    ckEditorInstance = { getData: () => textarea.value, setData: (data) => { textarea.value = data; } };
-  } else {
-    ckEditorInstance2 = { getData: () => textarea.value, setData: (data) => { textarea.value = data; } };
-  }
 }
 
 // --- Uploads / Dropzone ---
@@ -460,6 +412,21 @@ const terminalSection=document.createElement('section');terminalSection.id='bran
     </div>
   </div>`;
 document.querySelector('main').appendChild(terminalSection);
+// After terminal, append analysis section (must be last)
+const analysisSection=document.createElement('section');
+analysisSection.id='analysisSection';
+analysisSection.className='task-shell';
+analysisSection.style.marginTop='40px';
+analysisSection.innerHTML=`<h3 style="margin-top:0;font-size:20px;color:var(--ink-900);" id="analysisHeader">📝 Submit Your Analysis</h3>
+    <p style="margin:4px 0 16px;font-size:14px;line-height:1.5;color:var(--ink-500);" id="analysisInstructions">Based on your terminal investigations, provide your findings and conclusion about the network slowdown:</p>
+    <div id="analysisEditor" class="ckeditor-container" style="min-height:260px;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;background:#fff;"></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;">
+      <button id="saveAnalysisBtn" type="button" class="pill-btn ghost-btn" title="Save analysis locally">Save Analysis</button>
+      <small id="analysisSaveStatus" style="font-size:11px;letter-spacing:.06em;color:var(--ink-500);"></small>
+    </div>`;
+document.querySelector('main').appendChild(analysisSection);
+// Delay init a bit to ensure ClassicEditor loaded
+setTimeout(()=>{ initAnalysisEditor(); }, 400);
 
 // Add NOC conversation to terminal section
 const nocMessages = [
@@ -565,95 +532,30 @@ function simulateIP(){const b=SCENARIO.branches[activeBranch]; print(`lo: inet $
 function simulateRoute(){const b=SCENARIO.branches[activeBranch]; b.routes.forEach(r=>print(r)); }
 // Buttons
 
-// --- Add Answer Submission Editor Section ---
-const secondEditorSection = document.createElement('section');
-secondEditorSection.innerHTML = `
-  <div style="margin-top:50px;padding-top:30px;border-top:2px solid var(--pink-200);">
-    <h3 style="margin:0 0 20px;font-size:clamp(1.4rem,2vw,1.8rem);font-weight:700;color:var(--ink-900);">📝 Submit Your Analysis</h3>
-    <p style="margin:0 0 16px;font-size:15px;color:var(--ink-500);line-height:1.5;">Based on your terminal investigations, provide your findings and conclusion about the network slowdown:</p>
-    <div id="ckEditor2" class="ckeditor-container" style="min-height:350px;border:1px solid var(--pink-200);border-radius:16px;overflow:hidden;"></div>
-  </div>
-`;
-document.querySelector('main').appendChild(secondEditorSection);
-
-// Initialize second CKEditor instance
-let ckEditorInstance2 = null;
-function initializeSecondCKEditor() {
-  // Check if ClassicEditor is available
-  if (typeof ClassicEditor === 'undefined') {
-    console.error('ClassicEditor not loaded. Falling back to simple textarea.');
-    createFallbackEditor('ckEditor2');
-    return;
-  }
-  
-  ClassicEditor.create(document.querySelector('#ckEditor2'), {
-    toolbar: {
-      items: [
-        'heading', '|',
-        'bold', 'italic', 'underline', '|',
-        'bulletedList', 'numberedList', '|',
-        'code', 'codeBlock', '|',
-        'insertTable', 'link', '|',
-        'imageUpload', 'blockQuote', '|',
-        'undo', 'redo'
-      ]
-    },
-    heading: {
-      options: [
-        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-      ]
-    },
-    placeholder: 'Submit your analysis here:\n\n• What did you find in each terminal?\n• Which branch is experiencing the slowdown?\n• What is the most likely cause?\n• Provide your one-sentence conclusion...',
-    image: {
-      toolbar: ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
-    }
-  })
-  .then(editor => {
-    ckEditorInstance2 = editor;
-    
-    // Load saved content for second editor
-    if (state.rte2) {
-      editor.setData(state.rte2);
-    }
-    
-    // Auto-save on content change
-    editor.model.document.on('change:data', () => {
-      state.rte2 = editor.getData();
-      save();
-    });
-  })
-  .catch(error => {
-    console.error('Second CKEditor initialization failed:', error);
-  });
-}
-
-// Update the restore function to include second editor
-const originalRestore = restore;
-restore = function() {
-  originalRestore();
-  
-  // Initialize second CKEditor after DOM is ready
-  setTimeout(() => {
-    initializeSecondCKEditor();
-  }, 200);
-};
-
-// Update save button to save both editors
-const originalBtnSave = document.getElementById('btnSaveManual');
-if (originalBtnSave) {
-  originalBtnSave.addEventListener('click', () => {
-    if (ckEditorInstance2) {
-      state.rte2 = ckEditorInstance2.getData();
-      save();
-    }
-  });
-}
-
 // Ensure transcript persists
 window.addEventListener('beforeunload',saveTermState);
+
+// ---------------- Analysis CKEditor (second instance) ----------------
+const ANALYSIS_KEY='task1_analysis_v1';
+let analysisEditorInstance=null;
+function initAnalysisEditor(){
+  const el=document.querySelector('#analysisEditor');
+  if(!el || typeof ClassicEditor==='undefined') return;
+  ClassicEditor.create(el,{
+    placeholder:'Write your analysis here (root cause, evidence, affected scope, recommended next steps)...',
+    toolbar:{ items:['heading','|','bold','italic','underline','|','bulletedList','numberedList','|','code','codeBlock','|','insertTable','link','blockQuote','|','undo','redo'] }
+  }).then(editor=>{
+    analysisEditorInstance=editor;
+    const saved=localStorage.getItem(ANALYSIS_KEY);
+    if(saved){ editor.setData(saved); }
+    editor.model.document.on('change:data',()=>{
+      try{ localStorage.setItem(ANALYSIS_KEY, editor.getData()); setAnalysisStatus('Auto-saved'); }catch(e){}
+    });
+  }).catch(err=>{ console.warn('Analysis editor init failed',err); });
+  const btn=document.getElementById('saveAnalysisBtn');
+  if(btn){ btn.addEventListener('click',()=>{ if(analysisEditorInstance){ try{ localStorage.setItem(ANALYSIS_KEY, analysisEditorInstance.getData()); setAnalysisStatus('Saved'); }catch(e){} } }); }
+}
+function setAnalysisStatus(msg){ const s=document.getElementById('analysisSaveStatus'); if(s){ s.textContent= msg+' • '+new Date().toLocaleTimeString(); } }
 </script>
 <script src="/header-timer.js" defer></script>
 </body></html>
