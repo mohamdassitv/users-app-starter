@@ -52,7 +52,17 @@ table tbody tr:nth-child(even){background:#fff7fb;}
     <div style="overflow:auto;max-height:260px;border:1px solid #1e2533;border-radius:14px;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead style="background:#132033;position:sticky;top:0;">
-          <tr><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Name</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th><th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Status</th><th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th></tr>
+          <tr>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Name</th>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Status / Remaining</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Reset</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Delete</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">+Min</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Extend</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Final Work</th>
+          </tr>
         </thead>
         <tbody id="candRows"></tbody>
       </table>
@@ -74,45 +84,44 @@ table tbody tr:nth-child(even){background:#fff7fb;}
     <small class="desc">Starts are idempotent; if a candidate already began their 4h window it will not reset.</small>
   </div>
 
+  <!-- Config panel trimmed: only on-call contact retained -->
   <div class="panel card" id="configPanel" style="display:none;">
-    <h2>Case Study Distribution <span class="badge" id="configDirty" style="display:none;background:#b45309;border:1px solid #f59e0b;">UNSAVED</span></h2>
-    <label for="recipients">Recipient Emails (comma separated)</label>
-  <textarea id="recipients" class="input" placeholder="a@example.com, b@example.com"></textarea>
+    <h2>Exam Config <span class="badge" id="configDirty" style="display:none;background:#b45309;border:1px solid #f59e0b;">UNSAVED</span></h2>
     <label for="onCall">On-Call Contact (phone or alias)</label>
-  <input type="text" id="onCall" class="input" placeholder="+81-xxx-xxxx" />
+    <input type="text" id="onCall" class="input" placeholder="+81-xxx-xxxx" />
     <div class="actions-line">
-  <button class="btn btn-primary" id="btnSaveConfig">Save Config</button>
-  <button class="btn btn-ghost" id="btnShowConfig">Reload</button>
+      <button class="btn btn-primary" id="btnSaveConfig">Save</button>
+      <button class="btn btn-ghost" id="btnShowConfig">Reload</button>
     </div>
-    <small class="desc">List stored in state file. Used for simulated email log when candidate submits case study.</small>
-  </div>
-
-  <div class="panel card" id="submissionPanel" style="display:none;">
-    <h2>Candidate Submission</h2>
-    <div id="submissionStatus" class="notice">No submission yet.</div>
-    <div id="submissionContent" style="margin-top:16px;display:none;">
-      <h3 style="margin:0 0 8px;font-size:16px;">Rendered HTML</h3>
-      <div class="readout" id="submissionHtml"></div>
-      <h3 style="margin:26px 0 8px;font-size:16px;">Metadata</h3>
-      <div class="readout" id="submissionMeta"></div>
-    </div>
+    <small class="desc">Used for internal reference only.</small>
   </div>
 
   <!-- Global maintenance panel removed per new per-candidate reset requirement -->
   <button type="button" class="floating-refresh" id="floatingRefresh" title="Refresh Candidates">⟳ Refresh</button>
 </main>
+<!-- Modal for viewing candidate final work (answers) -->
+<div id="answersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;align-items:flex-start;justify-content:center;padding:60px 20px;overflow:auto;">
+  <div style="background:#ffffff;border:2px solid #ffb6dc;box-shadow:0 10px 40px -10px rgba(0,0,0,.35);border-radius:28px;max-width:860px;width:100%;padding:30px 34px;position:relative;">
+    <button id="closeAnswersModal" style="position:absolute;top:12px;right:12px;background:#ffe3f1;border:1px solid #ffadd7;color:#a10d55;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;">Close</button>
+    <h2 style="margin:0 0 14px;font-size:22px;color:#c91863;">Candidate Final Work</h2>
+    <div id="answersModalMeta" style="font-size:12px;color:#7a1e52;margin-bottom:14px;font-family:ui-monospace,monospace;"></div>
+    <div id="answersModalBody" class="readout" style="max-height:500px;overflow:auto;background:#fff;border:1px solid #ffd3e8;">Loading…</div>
+  </div>
+</div>
 <script>
 // Admin page now expects cookie-based session established via /admin-login.html
 // Still supports header fallback if needed (not used when cookie present)
 let authToken=null;
+// Minimal HTML escaper (was missing and caused candidate table to stay empty due to ReferenceError)
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+}
 function gateFetch(url,opts={}){
   opts.headers = Object.assign(authToken? {'X-Admin-Password':authToken}: {}, opts.headers||{});
   return fetch(url, opts);
 }
 function showPanels(){
   document.getElementById('configPanel').style.display='block';
-  document.getElementById('submissionPanel').style.display='block';
-  // maintenance panel removed
   document.getElementById('candidatesPanel').style.display='block';
 }
 async function verifySession(){
@@ -129,10 +138,9 @@ async function verifySession(){
     msgEl.textContent='Session authenticated via cookie.';
     actions.style.display='flex';
     btnLogin.style.display='none';
-    showPanels();
-    loadConfig();
-    loadSubmission();
-    loadCandidates();
+  showPanels();
+  loadConfig();
+  loadCandidates();
   } else {
     stateEl.textContent='NONE';
     stateEl.style.background='#7f1d1d';
@@ -153,12 +161,11 @@ document.getElementById('btnGoLogin').addEventListener('click', ()=> location.hr
 verifySession();
 
 // Config save
-const recipientsEl=document.getElementById('recipients');
 const onCallEl=document.getElementById('onCall');
-[recipientsEl,onCallEl].forEach(el=> el.addEventListener('input',()=> document.getElementById('configDirty').style.display='inline-block'));
+onCallEl.addEventListener('input',()=> document.getElementById('configDirty').style.display='inline-block');
 
 document.getElementById('btnSaveConfig').addEventListener('click', async ()=>{
-  const body={recipients: recipientsEl.value, onCall: onCallEl.value};
+  const body={recipients: '', onCall: onCallEl.value};
   const r= await gateFetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.ok){ document.getElementById('configDirty').style.display='none'; }
 });
@@ -166,17 +173,7 @@ document.getElementById('btnSaveConfig').addEventListener('click', async ()=>{
 document.getElementById('btnShowConfig').addEventListener('click', loadConfig);
 async function loadConfig(){
   const r= await gateFetch('/api/admin/config');
-  if(r.ok){ const j=await r.json(); recipientsEl.value=j.recipients||''; onCallEl.value=j.onCall||''; document.getElementById('configDirty').style.display='none'; }
-}
-
-async function loadSubmission(){
-  const r=await gateFetch('/api/case-study/submission');
-  if(r.ok){ const j=await r.json(); if(j && j.submitted){
-    document.getElementById('submissionStatus').textContent='Submitted '+ new Date(j.submittedAt).toLocaleString();
-    document.getElementById('submissionContent').style.display='block';
-    document.getElementById('submissionHtml').innerHTML=j.html;
-    document.getElementById('submissionMeta').textContent=JSON.stringify(j, null, 2);
-  } }
+  if(r.ok){ const j=await r.json(); onCallEl.value=j.onCall||''; document.getElementById('configDirty').style.display='none'; }
 }
 
 // Removed global reset logic
@@ -188,16 +185,21 @@ async function loadCandidates(){
   document.getElementById('candCount').textContent=j.total;
   const tbody=document.getElementById('candRows');
   tbody.innerHTML='';
-  j.candidates.sort((a,b)=> (a.startTime?1:0)-(b.startTime?1:0) || a.name.localeCompare(b.name));
+  j.candidates.sort((a,b)=> (a.startTime?1:0)-(b.startTime?1:0) || (a.name||'').localeCompare(b.name||''));
+  loadCandidatesWrapperData(j.candidates);
   j.candidates.forEach(c=>{
     const tr=document.createElement('tr');
-    tr.innerHTML='<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
+    tr.innerHTML=
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+(c.startTime? ('Started '+ new Date(c.startTime).toLocaleTimeString()+ (c.running? ' (running)':' (ended)')):'Not started')+'</td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;display:flex;gap:6px;justify-content:center;">'+
-        (c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+
-        '<button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#ff5ca8,#ff8fc4);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button>'+
-      '</td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;" data-rem="'+c.email+'">'+formatRemaining(c)+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
+  ''+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" /></td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button></td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button></td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
@@ -211,39 +213,104 @@ async function loadCandidates(){
     const r3=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/reset',{method:'POST'});
     if(r3.ok) loadCandidates();
   }));
+  // (Docx download buttons removed)
+  tbody.querySelectorAll('.delBtn').forEach(btn=> btn.addEventListener('click', async e=>{
+    const email=e.target.getAttribute('data-delete');
+    if(!confirm('Delete candidate '+email+' and all their data?')) return;
+    const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email),{method:'DELETE'});
+    if(r.ok) loadCandidates();
+  }));
+  tbody.querySelectorAll('[data-extend]').forEach(btn=> btn.addEventListener('click', async e=>{
+    const email=e.target.getAttribute('data-extend');
+    const inp=tbody.querySelector('[data-extend-input="'+CSS.escape(email)+'"]');
+    const val=parseInt(inp && inp.value,10);
+    if(!val || val<1) { alert('Enter minutes > 0'); return; }
+    const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes:val})});
+    if(r.ok){ inp.value=''; loadCandidates(); }
+  }));
+  tbody.querySelectorAll('[data-view]').forEach(btn=> btn.addEventListener('click', e=>{
+    const email=e.target.getAttribute('data-view');
+    openAnswersModal(email);
+  }));
+  startTimerUpdates();
 }
-document.getElementById('btnReloadCandidates').addEventListener('click', loadCandidates);
-document.getElementById('floatingRefresh').addEventListener('click', loadCandidates);
-
-// Create candidate UI logic
-const showCreateBtn=document.getElementById('btnShowCreate');
-const createForm=document.getElementById('createCandidateForm');
-const createMsg=document.getElementById('createCandMsg');
-const cancelCreate=document.getElementById('btnCancelCreate');
-const btnCreateAndOpen=document.getElementById('btnCreateAndOpen');
-showCreateBtn.addEventListener('click',()=>{ createForm.style.display='block'; showCreateBtn.style.display='none'; createMsg.textContent=''; });
-cancelCreate.addEventListener('click',()=>{ createForm.reset(); createForm.style.display='none'; showCreateBtn.style.display='inline-block'; });
-createForm.addEventListener('submit', async (e)=>{
-  e.preventDefault(); await submitCreate(false); });
-btnCreateAndOpen.addEventListener('click', async ()=>{ await submitCreate(true); });
-async function submitCreate(openLogin){
-  createMsg.textContent='Saving…';
-  const name=document.getElementById('newCandName').value.trim();
-  const email=document.getElementById('newCandEmail').value.trim();
-  if(!name||!email){ createMsg.textContent='Name & email required'; return; }
-  try {
-    const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
-    if(!r.ok){ createMsg.textContent='Save failed'; return; }
-    createMsg.textContent='Saved.';
-    loadCandidates();
-    if(openLogin){
-      window.open('/login.html?email='+encodeURIComponent(email)+'&name='+encodeURIComponent(name),'_blank');
-    }
-  } catch(err){ createMsg.textContent='Error'; }
+function formatRemaining(c){
+  if(!c.startTime) return 'Not started';
+  const ms=c.remainingMs; const h=Math.floor(ms/3600000); const m=Math.floor((ms%3600000)/60000); const s=Math.floor((ms%60000)/1000);
+  return `${h}h ${m}m ${s}s` + (c.extraTimeMs? ' (+extra)': '');
 }
+let timerInterval=null;
+function startTimerUpdates(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    document.querySelectorAll('[data-rem]').forEach(cell=>{
+      const email=cell.getAttribute('data-rem');
+      const rowData = currentCandidates[email.toLowerCase()];
+      if(!rowData) return;
+      if(!rowData.startTime) return; // not started
+      const rem=computeRemainingLocal(rowData);
+      rowData.remainingMs=rem.remainingMs;
+      cell.textContent=formatRemaining(rowData);
+    });
+  },1000);
+}
+// Lightweight compute on client mirroring server logic
+function computeRemainingLocal(c){
+  const base=4*60*60*1000;
+  const extra=c.extraTimeMs||0;
+  const total=base+extra;
+  if(!c.startTime) return {remainingMs: total};
+  const elapsed=Date.now()-c.startTime;
+  return {remainingMs: Math.max(0,total-elapsed)};
+}
+let currentCandidates={};
+function loadCandidatesWrapperData(list){
+  currentCandidates={};
+  list.forEach(c=> currentCandidates[c.email.toLowerCase()]=c);
+}
+let candidatePollInterval=null;
+function startCandidatePolling(){
+  if(candidatePollInterval) clearInterval(candidatePollInterval);
+  candidatePollInterval = setInterval(()=>{ loadCandidates(); }, 15000); // 15s
+}
+// Hook start after verification success (showPanels call)
+const _origShowPanels = showPanels;
+showPanels = function(){ _origShowPanels(); startCandidatePolling(); };
 
-function escapeHtml(str){ return (str||'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s])); }
- </script>
+// ---- View-only answers modal ----
+const answersModal = document.getElementById('answersModal');
+const answersModalBody = document.getElementById('answersModalBody');
+const answersModalMeta = document.getElementById('answersModalMeta');
+document.getElementById('closeAnswersModal').addEventListener('click', ()=>{ answersModal.style.display='none'; });
+answersModal.addEventListener('click', e=>{ if(e.target===answersModal) answersModal.style.display='none'; });
+
+async function openAnswersModal(email){
+  answersModal.style.display='flex';
+  answersModalBody.textContent='Loading…';
+  answersModalMeta.textContent='Candidate: '+email;
+  try{
+    const r = await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/answers');
+    if(!r.ok){ answersModalBody.textContent='No data or fetch error.'; return; }
+    const j = await r.json();
+    const ans = j.answers || {};
+    if(!Object.keys(ans).length){ answersModalBody.textContent='No answers yet.'; return; }
+    const parts=[];
+    Object.entries(ans).forEach(([taskId,obj])=>{
+      parts.push('### '+taskId+' (updated '+ new Date(obj.updatedAt||0).toLocaleString()+')');
+      const fields=obj.fields||{};
+      Object.entries(fields).forEach(([k,v])=>{
+        parts.push('\n'+k+':');
+        let val = typeof v==='string'? v: JSON.stringify(v);
+        // strip HTML tags if any
+        val = val.replace(/<[^>]+>/g,'');
+        parts.push(val.trim()? '  '+val.trim(): '  (empty)');
+      });
+      parts.push('\n');
+    });
+    answersModalBody.textContent=parts.join('\n');
+  }catch(e){ answersModalBody.textContent='Error: '+e.message; }
+}
+</script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
 </body>
 </html>

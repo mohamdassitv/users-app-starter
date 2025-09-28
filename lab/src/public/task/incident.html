@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 6 – Incident Update</title>
-<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<link rel="stylesheet" href="/styles.css"></head><body data-task-id="incident"><div class="container">
 <div class="card"><h2>Task 6 – Incident Handling & Escalation</h2>
 <p>Write a short customer-facing update (3–5 sentences) that includes:</p>
 <ul>
@@ -7,7 +7,7 @@
   <li>A clear <strong>next update time</strong> (e.g., "next update in 20 minutes")</li>
   <li><strong>Ownership</strong> ("I'm taking ownership", "I will update you", etc.)</li>
 </ul>
-<textarea id="txt" rows="6" data-rich="1" placeholder="Type your update here..."></textarea>
+<textarea id="txt" rows="6" data-rich="1" data-answer name="incident_update" placeholder="Type your update here..."></textarea>
 <button onclick="submitUpdate()">Submit</button>
 <pre id="out"></pre>
 </div>
@@ -26,5 +26,6 @@ async function submitUpdate(){
 }
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
-<script src="/richify.js" defer></script>
+<script src="/ckeditor-init.js" defer></script>
+<script src="/answer-save.js" data-task-id="incident" defer></script>
 </body></html>

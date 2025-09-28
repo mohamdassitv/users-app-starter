@@ -42,6 +42,13 @@
       </div>
     </section>
   </main>
+  <div style="max-width:980px;margin:30px auto 80px;padding:0 40px;">
+    <div id="finalSubmitBox" style="background:#132033;border:1px solid #1f2d3d;padding:20px 24px;border-radius:18px;">
+      <h2 style="margin:0 0 8px;font-size:18px;">Finalize & Submit</h2>
+  <p id="finalStatus" style="margin:0 0 14px;font-size:13px;color:#cbd5e1;">When you are completely done with all tasks, click Submit. This will lock your answers. After submitting you will be redirected to a finish page.</p>
+      <button id="btnFinalSubmit" class="btn" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:600;">Submit All Answers</button>
+    </div>
+  </div>
   <a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
     <img src="/help-contact.svg" alt="Help" width="38" height="38">
     <span class="help-label">Need help? Contact on-call.</span>
@@ -58,6 +65,32 @@
         if(greet) greet.textContent=(name? name+' – ':'')+'Select a task to begin or continue.';
         if(wrap){wrap.innerHTML='Logged in as <strong>'+(name||email)+'</strong>. <a href="#" id="switchCandidateLink">Switch candidate</a>';wrap.querySelector('#switchCandidateLink').addEventListener('click',ev=>{ev.preventDefault();if(confirm('Switch candidate? Timer persists.')){localStorage.removeItem('candidateEmail');localStorage.removeItem('candidateName');document.cookie='cand=; Max-Age=0; path=/';location.href='/login.html';}});} }
       else { if(greet) greet.textContent='Not logged in'; if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>'; }
+
+      // Final submission logic
+      const btn=document.getElementById('btnFinalSubmit');
+      const statusEl=document.getElementById('finalStatus');
+      const box=document.getElementById('finalSubmitBox');
+      if(btn && email){
+        if(localStorage.getItem('candidateSubmitted')==='1'){
+          btn.disabled=true; btn.textContent='Already Submitted'; box.style.opacity='0.75';
+          statusEl.textContent='You have submitted. Redirecting to finish page...';
+          setTimeout(()=>{ location.href='/finished.html'; },1200);
+        }
+        btn.addEventListener('click', async ()=>{
+          if(!confirm('Submit and lock all answers? You cannot edit after submitting.')) return;
+          btn.disabled=true; btn.textContent='Submitting...';
+          try{
+            const r=await fetch('/api/candidate/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+            if(!r.ok){ btn.disabled=false; btn.textContent='Submit All Answers'; alert('Submission failed'); return; }
+            const j=await r.json();
+            localStorage.setItem('candidateSubmitted','1');
+            statusEl.textContent='Submitted at '+ new Date(j.submittedAt).toLocaleString()+'. Redirecting...';
+            btn.textContent='Submitted';
+            box.style.opacity='0.75';
+            setTimeout(()=>{ location.href='/finished.html'; },1000);
+          }catch(e){ btn.disabled=false; btn.textContent='Submit All Answers'; alert('Network error'); }
+        });
+      }
     })();
   </script>
   <script src="/header-timer.js" defer></script>

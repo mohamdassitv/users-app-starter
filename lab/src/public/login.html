@@ -44,7 +44,7 @@
           <button type="submit">Enter Simulation →</button>
           <div id="loginMsg" aria-live="polite" style="font-size:13px;font-weight:600;color:#ffd1e6;"></div>
         </form>
-  <div class="switch-hint">Already inside? <a href="/tasks.html">Go to Tasks</a></div>
+  <!-- switch-hint removed to enforce gated navigation -->
       </div>
     </div>
   </div>
@@ -67,14 +67,19 @@
         const email=document.getElementById('candEmail').value.trim();
         try {
           const r = await fetch('/api/candidate/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
-          if(!r.ok){ msg.textContent='Login failed'; return; }
+          if(!r.ok){
+            let detail='';
+            try { detail=' ('+ (await r.text()).slice(0,120)+')'; } catch(_e){}
+            msg.textContent='Login failed'+detail;
+            return;
+          }
           const data = await r.json();
           if(data && data.candidate){
             localStorage.setItem('candidateEmail', data.candidate.email);
             localStorage.setItem('candidateName', data.candidate.name||'');
             // NEW: store start time and admin flag (minimal addition)
             if(data.candidate.startTime) localStorage.setItem('candidateStartTime', data.candidate.startTime);
-            localStorage.setItem('isAdmin','1');
+            // Removed accidental isAdmin flag set for candidates
             msg.textContent='Success. Redirecting…';
             setTimeout(()=>{ window.location='/tasks.html'; }, 500);
           } else {

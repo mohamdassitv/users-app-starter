@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 5 – Automation</title>
-<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<link rel="stylesheet" href="/styles.css"></head><body data-task-id="automation"><div class="container">
 <div class="card"><h2>Task 5 – Automation</h2>
 <p>Write a small script (bash or Python) that:</p>
 <ul>
@@ -15,6 +15,7 @@
   <button onclick="check()">Check Submission</button>
   <pre id="out"></pre>
 </div>
+<textarea data-answer name="automation_notes" rows="6" placeholder="Paste your script snippet or notes here..."></textarea>
 <script>
 async function check(){
   try {
@@ -28,4 +29,5 @@ async function check(){
 }
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
+<script src="/answer-save.js" data-task-id="automation" defer></script>
 </body></html>

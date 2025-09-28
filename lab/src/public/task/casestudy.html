@@ -558,4 +558,66 @@ function initAnalysisEditor(){
 function setAnalysisStatus(msg){ const s=document.getElementById('analysisSaveStatus'); if(s){ s.textContent= msg+' • '+new Date().toLocaleTimeString(); } }
 </script>
 <script src="/header-timer.js" defer></script>
+<script>
+// --- Task 1 Dedicated Submission (fields: main editor rte + analysis editor) ---
+(function(){
+  const email = localStorage.getItem('candidateEmail');
+  if(!email){ console.warn('No candidateEmail; task1 submission disabled'); return; }
+  // Insert submission bar
+  const bar=document.createElement('div');
+  bar.style.margin='50px 0 80px';
+  bar.innerHTML=`<div style="background:#fff;border:1px solid var(--pink-200);padding:22px 26px;border-radius:24px;box-shadow:0 6px 20px -8px rgba(255,92,168,.25);">
+    <h3 style="margin:0 0 10px;font-size:18px;color:#c80060;">Task 1 Submission</h3>
+  <p id="t1Status" style="margin:0 0 14px;font-size:13px;color:#555;">Save gathers your current editors into Task 1 draft. Submit locks Task 1 only.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+      <button id="t1SaveBtn" class="pill-btn ghost-btn" type="button">Save Draft</button>
+      <button id="t1SubmitBtn" class="pill-btn" style="background:linear-gradient(135deg,#10b981,#059669);" type="button">Submit Task 1</button>
+  <!-- Docx download removed -->
+    </div>
+  </div>`;
+  document.body.appendChild(bar);
+
+  function collect(){
+    const data={};
+    try{ if(window.ckEditorInstance){ data.main_rte = window.ckEditorInstance.getData(); } }catch(e){}
+    try{ if(window.analysisEditorInstance){ data.analysis = window.analysisEditorInstance.getData(); } }catch(e){}
+    // Add uploads captions list
+    try{ if(Array.isArray(state.uploads)){ data.uploads = state.uploads.map(u=>({cap:u.cap||'', hasImage: !!u.data})); } }catch(e){}
+    return data;
+  }
+  async function saveDraft(){
+    const fields=collect();
+    try{
+      const r=await fetch('/api/candidate/task1/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,fields})});
+      if(!r.ok){ setStatus('Save failed ('+r.status+')'); return; }
+      const j=await r.json(); setStatus('Draft saved at '+ new Date().toLocaleTimeString());
+    }catch(e){ setStatus('Network error saving'); }
+  }
+  async function submit(){
+    if(!confirm('Submit and lock Task 1? You will still be able to work on other tasks.')) return;
+    // Ensure last draft saved
+    await saveDraft();
+    try{
+      const r=await fetch('/api/candidate/task1/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+      if(!r.ok){ setStatus('Submit failed ('+r.status+')'); return; }
+      const j=await r.json();
+      localStorage.setItem('task1Submitted','1');
+      setStatus('Submitted '+ new Date(j.task1SubmittedAt).toLocaleTimeString()+'. Locked.');
+      lock();
+    }catch(e){ setStatus('Network error submitting'); }
+  }
+  function download(){ window.open('/api/candidate/'+encodeURIComponent(email)+'/task1/docx','_blank'); }
+  function setStatus(msg){ const s=document.getElementById('t1Status'); if(s) s.textContent=msg; }
+  function lock(){ const b1=document.getElementById('t1SaveBtn'); const b2=document.getElementById('t1SubmitBtn'); if(b1) b1.disabled=true; if(b2) b2.disabled=true; }
+  document.getElementById('t1SaveBtn').addEventListener('click', saveDraft);
+  document.getElementById('t1SubmitBtn').addEventListener('click', submit);
+  if(localStorage.getItem('task1Submitted')==='1'){ lock(); setStatus('Already submitted previously (locked).'); }
+  // Global lock if full exam submitted
+  if(localStorage.getItem('candidateSubmitted')==='1'){
+    lock(); setStatus('Exam submitted — view only.');
+    try{ if(window.ckEditorInstance){ ckEditorInstance.enableReadOnlyMode('final-lock'); } }catch(_e){}
+    try{ if(window.analysisEditorInstance){ analysisEditorInstance.enableReadOnlyMode('final-lock'); } }catch(_e){}
+  }
+})();
+</script>
 </body></html>

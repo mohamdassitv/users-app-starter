@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Finished</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#ffe9f4;color:#c80060;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:30px;}
+.box{background:#fff;border:3px solid #ffb3d5;max-width:560px;width:100%;padding:60px 50px;border-radius:40px;box-shadow:0 16px 60px -20px rgba(255,0,120,0.35),0 4px 18px -6px rgba(255,0,120,0.25);text-align:center;}
+.box h1{margin:0 0 20px;font-size:40px;letter-spacing:-1px;background:linear-gradient(90deg,#ff2e93,#ff5fb0);-webkit-background-clip:text;color:transparent;}
+.box p{margin:0 0 26px;font-size:18px;line-height:1.45;color:#7a0040;font-weight:500;}
+.small{font-size:12px;opacity:0.65;margin-top:32px;}
+.btn{display:inline-block;background:#ff2e93;color:#fff;font-weight:600;text-decoration:none;padding:14px 30px;border-radius:30px;font-size:15px;box-shadow:0 4px 14px -4px rgba(255,0,120,0.55);transition:.25s;}
+.btn:hover{background:#ff1487;transform:translateY(-2px);} .locked-msg{margin-top:18px;font-size:13px;color:#a00054;}
+</style></head><body>
+  <div class="box">
+    <h1>Thank You!</h1>
+    <p>You have finished. Your answers are locked and saved. You may now close this window.</p>
+    <a class="btn" href="/">Exit</a>
+    <div class="locked-msg" id="lockNote"></div>
+    <div class="small">If you believe you reached this page in error please contact the proctor.</div>
+  </div>
+<script>
+(function(){
+  const submitted=localStorage.getItem('candidateSubmitted')==='1';
+  if(!submitted){ document.getElementById('lockNote').textContent='(Note: system auto-locked due to time expiry)'; }
+})();
+</script>
+</body></html>

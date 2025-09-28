@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 8 – Policy</title>
-<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<link rel="stylesheet" href="/styles.css"></head><body data-task-id="policy"><div class="container">
 <div class="card"><h2>Task 8 – Policy & Rollback</h2>
 <p>Block access to <code>/gateway/admin</code> while keeping <code>/gateway/ok</code> working.</p>
 <ol>
@@ -13,6 +13,7 @@
   <button onclick="check()">Check Policy</button>
   <pre id="out"></pre>
 </div>
+<textarea data-answer name="policy_notes" rows="6" placeholder="Explain how you validated the block and any rollback steps..."></textarea>
 <script>
 async function check(){
   try {
@@ -26,4 +27,5 @@ async function check(){
 }
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
+<script src="/answer-save.js" data-task-id="policy" defer></script>
 </body></html>

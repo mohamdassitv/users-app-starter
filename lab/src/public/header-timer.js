@@ -63,6 +63,11 @@
         document.getElementById('boxHours').classList.add('expired');
         document.getElementById('boxMinutes').classList.add('expired');
         document.getElementById('boxSeconds').classList.add('expired');
+        if(localStorage.getItem('candidateSubmitted')!=='1'){
+          // mark submitted to lock editors locally (server will also auto-lock)
+          localStorage.setItem('candidateSubmitted','1');
+          setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+        }
   // finished
       } else { finale.style.display='none'; }
     } else if(st.startTime){
@@ -71,6 +76,10 @@
       document.getElementById('boxHours').classList.add('expired');
       document.getElementById('boxMinutes').classList.add('expired');
       document.getElementById('boxSeconds').classList.add('expired');
+      if(localStorage.getItem('candidateSubmitted')!=='1'){
+        localStorage.setItem('candidateSubmitted','1');
+        setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+      }
   // finished
     } else {
       setDigits(4*60*60*1000); // full 4h shown before start

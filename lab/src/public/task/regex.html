@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 3 – Regex</title>
-<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<link rel="stylesheet" href="/styles.css"></head><body data-task-id="regex"><div class="container">
 <div class="card"><h2>Task 3 – Regex</h2>
 <p>Write a regex that validates emails with these rules:</p>
 <ul>
@@ -9,7 +9,7 @@
   <li>No special characters like <code>_ . -</code> except the single dot before the TLD</li>
 </ul>
 <p>Enter your regex (no leading/trailing slashes):</p>
-<input id="pat" placeholder="^[A-Za-z0-9]+@[A-Za-z0-9]+\.(com|net)$">
+<input id="pat" data-answer name="regex_pattern" placeholder="^[A-Za-z0-9]+@[A-Za-z0-9]+\.(com|net)$">
 <button onclick="run()">Run</button>
 <pre id="res"></pre>
 </div>
@@ -28,4 +28,5 @@ async function run(){
 }
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
+<script src="/answer-save.js" data-task-id="regex" defer></script>
 </body></html>

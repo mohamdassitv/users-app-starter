@@ -1,5 +1,5 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Task 4 – Logs</title>
-<link rel="stylesheet" href="/styles.css"></head><body><div class="container">
+<link rel="stylesheet" href="/styles.css"></head><body data-task-id="logs"><div class="container">
 <div class="card"><h2>Task 4 – Log Analysis</h2>
 <p>Now that you have <code>LogReader</code>, fetch logs and answer:</p>
 <ol>
@@ -11,6 +11,7 @@
   <button onclick="count()">Count ERROR lines</button>
   <div id="out" class="small"></div>
 </div>
+<textarea data-answer name="logs_analysis" rows="6" placeholder="Write your findings and remediation ideas..."></textarea>
 <script>
 async function count(){
   try {
@@ -25,5 +26,6 @@ async function count(){
 }
 </script>
 <script src="/collab-dock-simple.js?v=2" defer></script>
+<script src="/answer-save.js" data-task-id="logs" defer></script>
 </div>
 </body></html>

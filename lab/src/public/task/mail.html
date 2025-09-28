@@ -13,7 +13,7 @@
 .mail-intro{font-size:15px;line-height:1.55;margin:0;font-weight:500;}
 .qa-area{display:flex;flex-direction:column;gap:40px;}
 .qa-card{background:#fffafb;border:1px solid #fbcfe8;border-radius:26px;padding:30px 34px 40px;position:relative;box-shadow:0 4px 20px -8px rgba(219,39,119,.35),0 1px 3px rgba(0,0,0,.08);}
-.qa-card:before{content:"";position:absolute;inset:0;border-radius:26px;padding:1px;background:linear-gradient(145deg,#fbcfe8,#f472b6,#ec4899,#db2777);background-size:180% 180%;animation:qaGlow 10s ease infinite;-webkit-mask:(linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0));-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9;pointer-events:none;}
+.qa-card:before{content:"";position:absolute;inset:0;border-radius:26px;padding:1px;background:linear-gradient(145deg,#fbcfe8,#f472b6,#ec4899,#db2777);background-size:180% 180%;animation:qaGlow 10s ease infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9;pointer-events:none;}
 .qa-card>*{position:relative;z-index:1;}
 .mail-envelope{margin:8px 0 18px;border:1px solid #fbcfe8;background:linear-gradient(150deg,#fff9fc,#fff5fa,#ffe9f3);border-radius:18px;box-shadow:0 6px 22px -10px rgba(219,39,119,.35),0 2px 6px -2px rgba(0,0,0,.08);overflow:hidden;font-size:13px;}
 .mail-header{background:linear-gradient(120deg,#fce7f3,#fbcfe8,#f9a8d4);padding:14px 18px 12px;display:flex;flex-direction:column;gap:6px;position:relative;}
@@ -82,7 +82,7 @@
   </section>
 </main>
 <script src="/collab-dock-simple.js?v=3" defer></script>
-<script src="/richify.js" defer></script>
+<script src="/ckeditor-init.js" defer></script>
 <script src="/header-timer.js" defer></script>
 <script>
 (function(){

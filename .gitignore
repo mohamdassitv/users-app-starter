@@ -30,3 +30,6 @@ coverage/
 
 # Misc
 *.tgz
+
+# Generated candidate answer documents
+lab/state/docs/

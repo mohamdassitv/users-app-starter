@@ -25027,39 +25027,21 @@
   },
   "candidates": [
     {
-      "email": "aaa@gmail.com",
-      "name": "aaaa",
-      "startTime": 1758816742469,
-      "durationMs": 14400000,
+      "email": "ypu@gm.com",
+      "name": "jane",
+      "startTime": 1759053573338,
+      "endTime": null,
+      "createdAt": 1759053572715,
+      "extraTimeMs": 0,
       "running": true
     },
     {
-      "name": "aaa",
-      "email": "aaaa@ef.com",
-      "startTime": 1758817773821,
-      "running": true
-    },
-    {
-      "email": "wed@rgv.com",
-      "name": "swd",
-      "startTime": null,
+      "email": "qetrgqeth@e3tht.com",
+      "name": "aetehq",
+      "startTime": 1759054389340,
       "endTime": null,
-      "createdAt": 1759048198468
-    },
-    {
-      "email": "mohamdassitv@gmail.com",
-      "name": "mo",
-      "startTime": 1759048944499,
-      "endTime": null,
-      "createdAt": 1759048509499,
-      "running": true
-    },
-    {
-      "email": "no@gmail.com",
-      "name": "mo",
-      "startTime": 1759048972739,
-      "endTime": null,
-      "createdAt": 1759048888837,
+      "createdAt": 1759054388660,
+      "extraTimeMs": 0,
       "running": true
     }
   ],
@@ -25067,5 +25049,8 @@
     "recipients": "",
     "onCall": ""
   },
-  "submissionsByCandidate": {}
+  "submissionsByCandidate": {},
+  "answers": {
+    "candidates": {}
+  }
 }

@@ -338,17 +338,7 @@
       const blob = new Blob([html], { type:'text/html' });
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='collab-notes.html'; a.click();
     });
-    // Export DOCX via server endpoint
-    const btnDocx = document.getElementById('btnExportDOCX');
-    if(btnDocx){
-      btnDocx.addEventListener('click', ()=>{
-        btnDocx.disabled=true; const original=btnDocx.textContent; btnDocx.textContent='Preparing...';
-        fetch('/api/export-docx').then(r=>{ if(!r.ok) throw new Error('export failed'); return r.blob(); })
-          .then(blob=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='collab-notes.docx'; a.click(); })
-          .catch(err=>{ console.error('DOCX export failed', err); alert('DOCX export failed'); })
-          .finally(()=>{ btnDocx.disabled=false; btnDocx.textContent=original; });
-      });
-    }
+    // DOCX export removed
     const wsTestBtn = document.getElementById('btnWsTest');
     if(wsTestBtn){
       wsTestBtn.addEventListener('click', ()=>{
