@@ -173,16 +173,30 @@ Legacy reset `/api/exam/reset-all` still exists (password in body) but admin rou
 ---
 
 ## Run
+### With Docker (new simplified setup)
 ```powershell
-docker compose up --build
-# Then open:
+docker compose build
+docker compose up -d
+Start-Sleep -Seconds 3
+docker compose ps
+# Open in browser:
 http://localhost:8081
 ```
 
-If running without Docker (ensure Node.js installed):
+Environment variables:
+- PORT (default 8081)
+- ADMIN_PASSWORD (default 2025 – override for harder password)
+
+To override admin password at runtime:
+```powershell
+$env:ADMIN_PASSWORD='My$ecret123'; docker compose up --build
+```
+
+### Without Docker (local Node.js)
 ```powershell
 cd lab
 npm install
+$env:ADMIN_PASSWORD='2025'
 npm start
 ```
 

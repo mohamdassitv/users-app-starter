@@ -9,7 +9,7 @@
   <li>No special characters like <code>_ . -</code> except the single dot before the TLD</li>
 </ul>
 <p>Enter your regex (no leading/trailing slashes):</p>
-<input id="pat" data-answer name="regex_pattern" placeholder="^[A-Za-z0-9]+@[A-Za-z0-9]+\.(com|net)$">
+<input id="pat" placeholder="^[A-Za-z0-9]+@[A-Za-z0-9]+\.(com|net)$">
 <button onclick="run()">Run</button>
 <pre id="res"></pre>
 </div>
@@ -27,6 +27,5 @@ async function run(){
   }
 }
 </script>
-<script src="/collab-dock-simple.js?v=2" defer></script>
-<script src="/answer-save.js" data-task-id="regex" defer></script>
+<a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer."><img src="/help-contact.svg" width="38" height="38" alt="Contact"><span class="help-label">Questions? Contact on-call.</span></a>
 </body></html>

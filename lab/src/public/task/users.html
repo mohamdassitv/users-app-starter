@@ -19,7 +19,7 @@
 </head>
 <body>
   <header class="site-header" id="siteHeader">
-  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
       <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
       <span class="brand-hacker">CHECK POINT</span>
     </div>
@@ -65,9 +65,9 @@
 </div>
   </main>
   <!-- Right rail removed per simplification request -->
-<a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
-  <img src="/help-contact.svg" alt="Help" width="38" height="38">
-  <span class="help-label">Need help? Contact on-call.</span>
+<a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+  <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+  <span class="help-label">Questions? Contact on-call.</span>
 </a>
 <script>
 const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16) header.classList.add('shrink'); else header.classList.remove('shrink');});
@@ -140,6 +140,5 @@ qs('limit').addEventListener('change', ()=>{ offset=0; load(); });
 // default to 100; leave selection if user chooses 5000
 load();
 </script>
-<script src="/collab-dock-simple.js?v=2" defer></script>
 </body>
 </html>

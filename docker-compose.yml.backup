@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  lab:
+    build: ./lab
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./lab/state:/app/state
+      - ./lab/logs:/app/logs

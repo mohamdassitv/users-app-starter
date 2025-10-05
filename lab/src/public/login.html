@@ -23,7 +23,7 @@
 <body>
   <header class="site-header">
     <div class="brand" onclick="location.href='login.html'">
-      <img src="/logo.svg" alt="logo" />
+      <img src="/logo.svg" alt="logo" class="logo-img" />
       <span class="brand-hacker">CHECK POINT</span>
     </div>
   </header>
@@ -40,6 +40,10 @@
           <div>
             <label for="candEmail">Email (login)</label>
             <input id="candEmail" name="candEmail" type="email" required placeholder="you@example.com" maxlength="120" />
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;align-items:center;">
+            <button type="button" id="genIdentityBtn" style="background:#1f2a3d;border:1px solid #314159;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;letter-spacing:.5px;font-weight:600;cursor:pointer;">🎲 Random Identity</button>
+            <label style="font-size:11px;color:#b8c1ce;font-weight:500;">Generates a throwaway candidate name + email for quick testing</label>
           </div>
           <button type="submit">Enter Simulation →</button>
           <div id="loginMsg" aria-live="polite" style="font-size:13px;font-weight:600;color:#ffd1e6;"></div>
@@ -81,7 +85,15 @@
             if(data.candidate.startTime) localStorage.setItem('candidateStartTime', data.candidate.startTime);
             // Removed accidental isAdmin flag set for candidates
             msg.textContent='Success. Redirecting…';
-            setTimeout(()=>{ window.location='/tasks.html'; }, 500);
+            // If API returned tokens & slug, jump directly to hub token to avoid flicker
+            if(data.candidate.slug && data.candidate.taskTokens && data.candidate.taskTokens.hub){
+              // Persist for brand-logo quick return
+              localStorage.setItem('candidateSlug', data.candidate.slug);
+              localStorage.setItem('candidateHubToken', data.candidate.taskTokens.hub);
+              setTimeout(()=>{ window.location='/c/'+data.candidate.slug+'/'+data.candidate.taskTokens.hub; },300);
+            } else {
+              setTimeout(()=>{ window.location='/tasks.html'; }, 300);
+            }
           } else {
             msg.textContent='Unexpected response';
           }
@@ -90,6 +102,30 @@
       // If already logged in show quick continue
       const existing = localStorage.getItem('candidateEmail');
       if(existing){ msg.textContent='Resume session: '+existing; }
+
+      // Random identity generator
+      function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+      function genIdentity(){
+        const firstNames=['Nova','Aria','Kai','Milo','Rex','Zara','Luna','Axel','Nyx','Ezra','Veda','Juno','Orin','Lyra','Kato'];
+        const lastNames=['Signal','Vector','Cipher','Nimbus','Falcon','Matrix','Orbit','Pulse','Quantum','Relay','Stratus','Zenith'];
+        const first=randPick(firstNames);
+        const last=randPick(lastNames);
+        const num=Math.floor(100+Math.random()*900); // 3 digits
+        const name=first+" "+last;
+        // Construct an email domain that clearly indicates synthetic user
+        const email=(first+"."+last+num+"@lab.test").toLowerCase();
+        const nameEl=document.getElementById('candName');
+        const emailEl=document.getElementById('candEmail');
+        nameEl.value=name;
+        emailEl.value=email;
+        msg.textContent='Generated '+name+' / '+email;
+      }
+      const genBtn=document.getElementById('genIdentityBtn');
+      if(genBtn){ genBtn.addEventListener('click',()=>{ genIdentity(); }); }
     })();
   </script>
+  <a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer.">
+    <img src="/help-contact.svg" width="38" height="38" alt="Contact">
+    <span class="help-label">Questions? Contact on-call.</span>
+  </a>
 </body></html>

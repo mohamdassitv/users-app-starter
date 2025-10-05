@@ -5,45 +5,34 @@
 
 (function(){
   const taskId = (document.currentScript && document.currentScript.getAttribute('data-task-id')) || document.body.getAttribute('data-task-id') || 'unknown';
-  const email = localStorage.getItem('candidateEmail');
-  if(!email){ console.warn('[answer-save] no candidateEmail in localStorage'); return; }
-
-  function collectFields(){
-    const fields={};
-    if(localStorage.getItem('candidateSubmitted')==='1') return fields; // locked
-    // CKEditor instances (if global ClassicEditor existing)
-    if(window.ClassicEditor && window._ckeditorInstances){
-      Object.entries(window._ckeditorInstances).forEach(([id, inst])=>{
-        try{ fields[id]=inst.getData(); }catch(e){}
-      });
-    }
-    // Fallback: textareas with data-answer
-    document.querySelectorAll('textarea[data-answer]')
-      .forEach(t=>{ fields[t.name||t.id||'field_'+Math.random().toString(36).slice(2)]=t.value; });
-    return fields;
+  let email = localStorage.getItem('candidateEmail');
+  const urlParams = new URLSearchParams(location.search);
+  let viewEmail = urlParams.get('email');
+  // Attempt slug extraction: paths like /generated/<slug>/... or /c/<slug>/<token>
+  if(!email && !viewEmail){
+    try {
+      const parts = location.pathname.split('/').filter(Boolean);
+      // patterns: generated, slug, file  OR  c, slug, token
+      let slugCandidate=null;
+      if(parts[0]==='generated' && parts[1]) slugCandidate=parts[1];
+      else if(parts[0]==='c' && parts[1]) slugCandidate=parts[1];
+      if(slugCandidate){
+        // Try public first, then admin-protected
+        fetch('/public/slug/'+encodeURIComponent(slugCandidate)+'/info')
+          .then(r=> r.ok? r.json():null)
+          .then(info=> info || fetch('/api/admin/slug/'+encodeURIComponent(slugCandidate)+'/info').then(r=> r.ok? r.json():null))
+          .then(info=>{
+          if(info && info.email){
+            viewEmail = info.email;
+            if(!email){ email = viewEmail; initAfterResolve(); }
+          }
+        }).catch(()=>{});
+      }
+    }catch(_e){}
   }
-
-  let pending=false; let lastPayload=null; let timer=null; const INTERVAL=2000;
-  function schedule(){
-    if(timer) clearTimeout(timer);
-    timer=setTimeout(saveNow, INTERVAL);
-  }
-
-  async function saveNow(){
-    timer=null;
-    if(localStorage.getItem('candidateSubmitted')==='1'){ return; }
-    const fields=collectFields();
-    const payload=JSON.stringify(fields);
-    if(lastPayload===payload){ return; } // nothing changed
-    lastPayload=payload;
-    pending=true;
-    try{
-      const res=await fetch('/api/candidate/answers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,taskId,fields})});
-      if(!res.ok){ console.warn('[answer-save] save failed', res.status); }
-      else { const js=await res.json(); console.log('[answer-save] saved', js); markSaved(); }
-    }catch(e){ console.error('[answer-save] error', e); }
-    pending=false;
-  }
+  // Deprecated: all per-task in-browser answer saving removed.
+  // Kept as a harmless stub to avoid 404 for cached pages referencing it.
+  (function(){ /* noop */})();
 
   function markSaved(){
     let badge=document.getElementById('answerSaveStatus');
@@ -65,23 +54,24 @@
   }
 
   // Hook CKEditor change events
-  if(window._ckeditorInstances){
-    Object.values(window._ckeditorInstances).forEach(inst=>{
-      inst.model.document.on('change:data', schedule);
-    });
-  } else {
-    document.addEventListener('ckeditor-ready', (e)=>{
-      try{ const inst=e.detail.instance; inst.model.document.on('change:data', schedule); }catch(_e){}
-    });
+  function attachEditors(){
+    if(window._ckeditorInstances){
+      Object.values(window._ckeditorInstances).forEach(inst=>{ try{ inst.model.document.on('change:data', schedule); }catch(_e){} });
+    } else {
+      document.addEventListener('ckeditor-ready', (e)=>{ try{ const inst=e.detail.instance; inst.model.document.on('change:data', schedule); }catch(_e){} });
+    }
   }
 
+
   // Fallback: listen to textarea changes
-  document.querySelectorAll('textarea[data-answer]').forEach(t=>{
-    t.addEventListener('input', schedule);
-  });
+  function attachTextareaListeners(){
+    if(isReadOnlyView) return;
+    document.querySelectorAll('textarea[data-answer]').forEach(t=>{ t.addEventListener('input', schedule); });
+  }
+
 
   // Manual save button (optional)
-  if(!document.getElementById('answerManualSave')){
+  if(!isReadOnlyView && !document.getElementById('answerManualSave')){
     const btn=document.createElement('button');
     btn.id='answerManualSave';
     btn.textContent='Save Now';
@@ -99,5 +89,11 @@
   }
 
   // Initial save after short delay
-  setTimeout(saveNow, 1000);
+  function primeSave(){ if(!isReadOnlyView) setTimeout(saveNow,1000); }
+
+  // If we already have email now (candidate or ?email), finish setup
+  if(email) { attachEditors(); attachTextareaListeners(); if(!isReadOnlyView) primeSave(); }
+  else { // slug resolution path will call initAfterResolve later
+    attachTextareaListeners();
+  }
 })();

@@ -13,7 +13,7 @@
   <button onclick="check()">Check Policy</button>
   <pre id="out"></pre>
 </div>
-<textarea data-answer name="policy_notes" rows="6" placeholder="Explain how you validated the block and any rollback steps..."></textarea>
+<div style="margin-top:12px;font-size:12px;color:#64748b;font-weight:600;">Explain validation & rollback in final PDF/DOCX submission.</div>
 <script>
 async function check(){
   try {
@@ -26,6 +26,5 @@ async function check(){
   }
 }
 </script>
-<script src="/collab-dock-simple.js?v=2" defer></script>
-<script src="/answer-save.js" data-task-id="policy" defer></script>
+<a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer."><img src="/help-contact.svg" width="38" height="38" alt="Contact"><span class="help-label">Questions? Contact on-call.</span></a>
 </body></html>

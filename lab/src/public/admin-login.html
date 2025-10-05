@@ -10,9 +10,16 @@
 .status{margin-top:16px;font-size:13px;font-weight:600;min-height:18px;color:#ffd4e8;}
 .back-link{margin-top:20px;text-align:center;font-size:13px;}
 </style></head><body>
-<header class="site-header"><div class="brand" onclick="location.href='/'"><img src="/logo.svg" alt="logo"><span class="brand-hacker">CHECK POINT</span></div></header>
+<header class="site-header"><div class="brand" onclick="location.href='/'"><img src="/logo.svg" alt="logo" class="logo-img"><span class="brand-hacker">CHECK POINT</span></div></header>
 <div class="admin-login-wrap"><div class="admin-login-body"><div class="admin-card fade-in"><h1>Admin Access</h1>
-<form id="adminLoginForm"><label for="adminPwd">Password</label><input id="adminPwd" type="password" required autofocus placeholder="Enter admin password"><button type="submit">Login →</button><div class="status" id="adminStatus"></div></form>
+<form id="adminLoginForm">
+  <label for="adminUser">Username</label>
+  <input id="adminUser" type="text" required autofocus placeholder="e.g. mohamadasi">
+  <label for="adminPwd">Password</label>
+  <input id="adminPwd" type="password" required placeholder="Enter admin password">
+  <button type="submit">Login →</button>
+  <div class="status" id="adminStatus"></div>
+</form>
 <div class="back-link"><a href="/login.html">Back to candidate login</a></div>
 </div></div></div>
 <script>
@@ -22,9 +29,10 @@
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     status.textContent='Authenticating…';
-    const pwd=document.getElementById('adminPwd').value.trim();
+  const pwd=document.getElementById('adminPwd').value.trim();
+  const username=document.getElementById('adminUser').value.trim();
     try {
-      const r=await fetch('/api/auth/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+  const r=await fetch('/api/auth/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,username})});
       if(r.ok){ status.textContent='Success. Redirecting…'; setTimeout(()=>location.href='/admin.html',400); }
       else { status.textContent='Invalid password'; }
     } catch(err){ status.textContent='Network error'; }

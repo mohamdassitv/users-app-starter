@@ -293,15 +293,10 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       </div>
     </div>
   </section>
-  <div class="actions">
-    <button type="button" class="btn-primary" id="btnSaveAll">Save All</button>
-    <button type="button" class="btn-ghost" id="btnExport">Export JSON</button>
-    <button type="button" class="btn-ghost" id="btnClearAll">Reset</button>
-    <span id="saveState" class="save-state">Not saved</span>
+  <div class="actions" style="justify-content:flex-start;">
+    <div style="font-size:12px;color:#475569;font-weight:600;">(Record alert correlation & handover in your final PDF/DOCX submission.)</div>
   </div>
 </main>
-<script src="/collab-dock-simple.js?v=3" defer></script>
-<script src="/ckeditor-init.js" defer></script>
 <script src="/header-timer.js" defer></script>
 <script>
 (function(){
@@ -429,17 +424,14 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   const timelineTag=document.getElementById('timelineTag');
   const btnAddTimeline=document.getElementById('btnAddTimeline');
 
-  const btnSaveAll=document.getElementById('btnSaveAll');
-  const btnClearAll=document.getElementById('btnClearAll');
-  const btnExport=document.getElementById('btnExport');
-  const saveState=document.getElementById('saveState');
+  // Save/UI controls removed
   const priorityAnswer=document.getElementById('priorityAnswer');
   const priorityDescribe=document.getElementById('priorityDescribe');
   const q1Answer=document.getElementById('q1Answer');
   const q2Answer=document.getElementById('q2Answer');
 
-  function markDirty(){ saveState.textContent='Unsaved changes'; saveState.className='save-state dirty'; }
-  function markSaved(){ saveState.textContent='Saved '+new Date().toLocaleTimeString(); saveState.className='save-state saved'; }
+  function markDirty(){}
+  function markSaved(){}
   function renderAlerts(){
     alertsBody.innerHTML='';
     alerts.forEach(a=>{
@@ -652,10 +644,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
     });
   }
 
-  function save(){ // Persist non-alert sections + prioritization answer
-  const payload={version:VERSION,alerts:alerts.map(a=>({id:a.id,priority:a.priority})),timeline,actions:{actions:actActions.value,verification:actVerif.value,rollback:actRollback.value},root:{cause:rcCause.value,impact:rcImpact.value,risk:rcRisk.value,handover:rcHandover.value},priorityAnswer:priorityAnswer.value,priorityDescribe:priorityDescribe.value,q1:q1Answer.value,q2:q2Answer.value,ts:Date.now()};
-    try{ localStorage.setItem(KEY, JSON.stringify(payload)); markSaved(); }catch(e){ alert('Save failed: '+e); }
-  }
+  function save(){}
   function load(){
     try {
       const raw=localStorage.getItem(KEY);
@@ -678,23 +667,14 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
     renderTimeline();
     markSaved();
   }
-  function clearAll(){ if(!confirm('Clear ALL Task 4 data?')) return; localStorage.removeItem(KEY); alerts=[]; timeline=[];
-  [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,priorityAnswer,priorityDescribe,q1Answer,q2Answer].forEach(el=> el.value='');
-    renderAlerts(); renderTimeline(); saveState.textContent='Not saved'; saveState.className='save-state'; }
+  function clearAll(){}
 
-  function exportJSON(){
-    try{ const raw=localStorage.getItem(KEY); if(!raw){ alert('Nothing saved yet. Save first.'); return; }
-      const blob=new Blob([raw],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='task4-alert-correlation.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),5000);
-    }catch(e){ alert('Export failed: '+e); }
-  }
+  function exportJSON(){}
 
   function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
   function fmtTime(iso){ try{ const d=new Date(iso); return d.toISOString().replace('T',' ').slice(0,19)+'Z'; }catch{return iso; } }
 
   btnAddTimeline.addEventListener('click',addTimeline);
-  btnSaveAll.addEventListener('click',save);
-  btnClearAll.addEventListener('click',clearAll);
-  btnExport.addEventListener('click',exportJSON);
 
   // dirty tracking for text areas
   [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,priorityAnswer,priorityDescribe,q1Answer,q2Answer].forEach(el=> el && el.addEventListener('input',markDirty));
@@ -801,5 +781,9 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   // Legacy embedded log explorer removed; Mini Kibana iframe now provides advanced analytics & quiz.
 })();
 </script>
+<a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer.">
+  <img src="/help-contact.svg" width="38" height="38" alt="Contact">
+  <span class="help-label">Questions? Contact on-call.</span>
+</a>
 </body>
 </html>

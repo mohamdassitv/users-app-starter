@@ -1,9 +1,26 @@
-version: "3.8"
 services:
-  lab:
-    build: ./lab
+  app:
+    build: .
+    container_name: users-app
     ports:
       - "8081:8081"
+    environment:
+      - PORT=8081
+      - ADMIN_PASSWORD=2025
+    tty: true        # Keep an interactive TTY so foreground 'docker compose up' stays attachable
+    stdin_open: true # Allow Ctrl+C / interactive signals cleanly
     volumes:
-      - ./lab/state:/app/state
-      - ./lab/logs:/app/logs
+      - app-state:/app/state          # named volume for state to avoid Windows bind issues
+      - app-logs:/app/logs            # named volume for logs
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    # Removed restart policy so Ctrl+C fully stops it; container won't auto-respawn
+    restart: "no"
+
+volumes:
+  app-state:
+  app-logs:

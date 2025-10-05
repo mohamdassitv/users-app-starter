@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" width="768" height="768" role="img" aria-label="Exam Logo">
+	<defs>
+		<radialGradient id="pinkGrad" cx="35%" cy="30%" r="85%">
+			<stop offset="0%" stop-color="#ff168f" />
+			<stop offset="55%" stop-color="#ff027c" />
+			<stop offset="100%" stop-color="#ec006d" />
+		</radialGradient>
+		<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+			<feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#d40062" flood-opacity="0.45" />
+		</filter>
+		<style>
+			.n{fill:#050505;}
+		</style>
+	</defs>
+	<!-- Pink primary circle -->
+	<circle cx="384" cy="384" r="360" fill="url(#pinkGrad)" />
+	<!-- Connection lines -->
+	<path d="M370 520 L560 210" stroke="#050505" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" />
+	<path d="M370 520 L210 400" stroke="#050505" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" />
+	<!-- Bottom node -->
+	<circle class="n" cx="370" cy="520" r="60" />
+	<!-- Upper-right node -->
+	<circle class="n" cx="580" cy="190" r="70" />
+	<!-- Left diamond (rotated square) -->
+	<g transform="translate(210 400) rotate(-52)">
+		<rect x="-60" y="-60" width="120" height="120" class="n" rx="8" ry="8" />
+	</g>
+	<!-- Optional subtle highlight -->
+	<circle cx="300" cy="250" r="180" fill="white" opacity="0.06" />
+	<!-- Accessibility title/desc -->
+	<title>Exam System Logo</title>
+	<desc>Pink gradient circle with three black connected nodes forming a stylized network.</desc>
+</svg>

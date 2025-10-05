@@ -1,5 +1,9 @@
 // Global header timer component
 (async function(){
+  // Viewer mode support: allow read-only display of candidate timer/name when
+  // accessing a candidate link from another browser that has NO localStorage candidateEmail.
+  // We derive slug from path (/generated/<slug>/..., /c/<slug>/<token>) and use public endpoints
+  // to resolve the email -> then fetch /api/candidate/:email for status each second.
   function el(sel){ return document.querySelector(sel); }
   const header = el('.site-header');
   if(!header) return;
@@ -18,19 +22,42 @@
 
   function getCandidateEmail(){ return localStorage.getItem('candidateEmail') || null; }
   async function candidateStatus(email){ try { const r=await fetch('/api/candidate/'+encodeURIComponent(email)); return r.ok? r.json():null; } catch(e){ return null; } }
+
+  let viewerEmail=null; // resolved email when browsing read-only
+  let viewerSlug=null;
+  async function resolveViewerFromPath(){
+    // Already have candidate local storage? skip.
+    if(getCandidateEmail()) return;
+    const parts = location.pathname.split('/').filter(Boolean);
+    // patterns: generated/<slug>/..., c/<slug>/<token>
+    if(parts.length>=2 && (parts[0]==='generated' || parts[0]==='c')){
+      const slug = parts[1];
+      try {
+        const r = await fetch('/public/slug/'+encodeURIComponent(slug)+'/info');
+        if(r.ok){ const j=await r.json(); if(j && j.email){ viewerEmail=j.email; viewerSlug=slug; refresh(true); } }
+      }catch(_e){}
+    }
+  }
+  resolveViewerFromPath();
   // examStatus removed - focusing only on candidate timer
   function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
   function updateBar(){ /* removed progress bar */ }
 
-  async function refresh(){
+  async function refresh(force){
     const email = getCandidateEmail();
-    let st=null; let mode='exam';
-    if(email){ st = await candidateStatus(email); mode='candidate'; if(!st){ // stale email
+    let st=null; let mode='exam'; let usedEmail=null;
+    if(email){
+      st = await candidateStatus(email); mode='candidate'; usedEmail=email;
+      if(!st){ // stale email - clear and fallback to viewer resolve
         localStorage.removeItem('candidateEmail');
         localStorage.removeItem('candidateName');
         mode='exam';
-      }}
-    if(!st){ return; }
+      }
+    }
+    if(!st && viewerEmail){
+      st = await candidateStatus(viewerEmail); if(st){ mode='viewer'; usedEmail=viewerEmail; }
+    }
+    if(!st){ if(force) return; else return; }
     const hEl=el('#digitHours');
     const mEl=el('#digitMinutes');
     const sEl=el('#digitSeconds');
@@ -38,13 +65,11 @@
   const startBtn=null; // removed manual start button
     const badge=el('#candidateBadge');
     if(!hEl||!mEl||!sEl) return;
-    if(mode==='candidate' && st && st.email){
+    if((mode==='candidate' || mode==='viewer') && st && st.email){
       badge.style.display='inline-flex';
       badge.textContent = st.name || st.email;
-      badge.title = st.email + ' (candidate)';
-    } else {
-      badge.style.display='none';
-    }
+      badge.title = st.email + (mode==='viewer'?' (viewer)':' (candidate)');
+    } else { badge.style.display='none'; }
     function setDigits(ms){
       if(ms<0) ms=0;
       const totalSeconds=Math.floor(ms/1000);
@@ -63,10 +88,11 @@
         document.getElementById('boxHours').classList.add('expired');
         document.getElementById('boxMinutes').classList.add('expired');
         document.getElementById('boxSeconds').classList.add('expired');
-        if(localStorage.getItem('candidateSubmitted')!=='1'){
-          // mark submitted to lock editors locally (server will also auto-lock)
-          localStorage.setItem('candidateSubmitted','1');
-          setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+        if(mode==='candidate'){ // only auto-finish for real candidate session
+          if(localStorage.getItem('candidateSubmitted')!=='1'){
+            localStorage.setItem('candidateSubmitted','1');
+            setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+          }
         }
   // finished
       } else { finale.style.display='none'; }
@@ -76,9 +102,11 @@
       document.getElementById('boxHours').classList.add('expired');
       document.getElementById('boxMinutes').classList.add('expired');
       document.getElementById('boxSeconds').classList.add('expired');
-      if(localStorage.getItem('candidateSubmitted')!=='1'){
-        localStorage.setItem('candidateSubmitted','1');
-        setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+      if(mode==='candidate'){
+        if(localStorage.getItem('candidateSubmitted')!=='1'){
+          localStorage.setItem('candidateSubmitted','1');
+          setTimeout(()=>{ if(!location.pathname.endsWith('/finished.html')) location.href='/finished.html'; },1500);
+        }
       }
   // finished
     } else {
@@ -90,13 +118,13 @@
   // Auto-start logic: if candidate logged in and no startTime yet, start immediately.
   async function autoStartIfNeeded(){
     const email=getCandidateEmail();
-    if(!email) return; // only auto-start for candidate mode
+    if(!email) return; // only auto-start for actual candidate, not viewer
     const st = await candidateStatus(email);
-    if(!st || st.startTime) return; // already started or cannot fetch
+    if(!st || st.startTime) return;
     await fetch('/api/candidate/'+encodeURIComponent(email)+'/start?self=1',{method:'POST'});
   }
   // Kick off auto-start early
   autoStartIfNeeded();
   el('#htAdmin').addEventListener('click', ()=>{ window.location='/admin-login.html'; });
-  setInterval(refresh,1000); refresh();
+  setInterval(()=>refresh(false),1000); refresh(true);
 })();

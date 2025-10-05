@@ -7,11 +7,11 @@
 <link rel="stylesheet" href="/styles.css" />
 <style>
 .page{max-width:1140px;margin:0 auto;padding:24px 40px 90px;}
-.mail-shell{background:linear-gradient(145deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:scenPulse 14s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:26px;padding:34px 38px 34px;position:relative;box-shadow:0 14px 40px -12px rgba(190,24,93,.55),0 4px 14px -4px rgba(190,24,93,.5);margin:0 0 56px;overflow:hidden;}
+.mail-shell{background:linear-gradient(145deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:scenPulse 14s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:26px;padding:34px 38px 34px;position:relative;box-shadow:0 14px 40px -12px rgba(190,24,93,.55),0 4px 14px -4px rgba(190,24,93,.5);margin:0 0 120px;overflow:hidden;}
 .mail-shell:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 18%,rgba(255,184,220,.42),transparent 62%);pointer-events:none;mix-blend-mode:screen;}
 .mail-shell h1{margin:0 0 10px;font-size:38px;letter-spacing:.05em;}
 .mail-intro{font-size:15px;line-height:1.55;margin:0;font-weight:500;}
-.qa-area{display:flex;flex-direction:column;gap:40px;}
+.qa-area{display:flex;flex-direction:column;gap:40px;margin-top:0;}
 .qa-card{background:#fffafb;border:1px solid #fbcfe8;border-radius:26px;padding:30px 34px 40px;position:relative;box-shadow:0 4px 20px -8px rgba(219,39,119,.35),0 1px 3px rgba(0,0,0,.08);}
 .qa-card:before{content:"";position:absolute;inset:0;border-radius:26px;padding:1px;background:linear-gradient(145deg,#fbcfe8,#f472b6,#ec4899,#db2777);background-size:180% 180%;animation:qaGlow 10s ease infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9;pointer-events:none;}
 .qa-card>*{position:relative;z-index:1;}
@@ -43,7 +43,7 @@
 </head>
 <body>
 <header class="site-header" id="siteHeader">
-  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="brandNav">
     <img src="/logo.svg" alt="Logo" class="logo-img">
     <span class="brand-hacker">CHECK POINT</span>
   </div>
@@ -51,11 +51,18 @@
 <main class="page fade-in">
   <section class="mail-shell">
     <h1>Task 2 — Customer Escalation Email Response</h1>
-    <p class="mail-intro">Craft a professional, de‑escalating response to the customer's angry email while preserving investigative neutrality and securing missing telemetry.</p>
+  <!-- Subtitle removed per request -->
+    <a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+      <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+      <span class="help-label">Questions? Contact on-call.</span>
+    </a>
   </section>
   <section class="qa-area">
     <div class="qa-card">
-      <h2 style="margin-top:0;margin-bottom:12px;font-size:20px;letter-spacing:.5px;color:#0f172a;">Escalation Email (Raw)</h2>
+      <!-- Escalation Email (Raw) heading removed -->
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.55;color:#334155;font-weight:600;">
+        <strong>Scenario:</strong> You're mid-shift when your inbox pings with the following escalation email:
+      </p>
       <div class="mail-envelope" role="document" aria-label="Escalation email sample">
         <div class="mail-header">
           <div class="mh-row"><span class="mh-label">Subject:</span><span class="mh-value subject">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</span></div>
@@ -70,55 +77,14 @@
           <p style="margin-top:22px;">B.R.<br>Othman Kharoubi<br>CTO - Mycompany</p>
         </div>
       </div>
-      <h2 style="margin:32px 0 10px;font-size:20px;color:#0f172a;letter-spacing:.5px;">Your Response Draft</h2>
-  <textarea id="emailAnswer" class="answer-box" data-rich="1" placeholder="Compose a calming, structured reply: acknowledgment → current facts → immediate actions & ETA → telemetry request → next update time..." rows="14"></textarea>
-      <div class="meta"><span id="saveState" class="save-state">Not saved</span></div>
-      <div class="actions">
-        <button type="button" class="btn-primary" id="btnSave">Save Draft</button>
-        <button type="button" class="btn-ghost" id="btnClear">Reset</button>
+      <div style="margin-top:34px;background:#dcfce7;border:1px solid #86efac;padding:20px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
+        <p style="margin:0;font-size:16px;line-height:1.55;color:#064e3b;font-weight:700;">
+          <strong>Task Instruction 2.1:</strong> Write a professional, calming reply that (1) acknowledges frustration, (2) lowers heat, (3) requests the precise missing telemetry you still need, and (4) sets a realistic next-touch expectation. Add your full email response ONLY to your final DOCX/PDF submission (do not type it here). You may optionally outline bullet points before drafting in your file.
+        </p>
       </div>
-      <p class="muted" style="font-size:11.5px;margin-top:6px;">Draft is stored locally only (<code>localStorage</code>). Use the global dock for full exam submission.</p>
     </div>
   </section>
 </main>
-<script src="/collab-dock-simple.js?v=3" defer></script>
-<script src="/ckeditor-init.js" defer></script>
 <script src="/header-timer.js" defer></script>
-<script>
-(function(){
-  const KEY='mailTaskAnswer_v1';
-  const LEGACY_CASE_KEY='caseStudyQA_v1'; // for migration of old email answers
-  const VERSION=1; // standalone mail task
-  const box=document.getElementById('emailAnswer');
-  const stateEl=document.getElementById('saveState');
-  const btnSave=document.getElementById('btnSave');
-  const btnClear=document.getElementById('btnClear');
-  function markSaved(){ stateEl.textContent='Saved '+new Date().toLocaleTimeString(); stateEl.className='save-state saved'; }
-  function markDirty(){ stateEl.textContent='Unsaved changes'; stateEl.className='save-state dirty'; }
-  function load(){
-    try{
-      const raw=localStorage.getItem(KEY);
-      if(raw){ const data=JSON.parse(raw); if(data.answer!=null) box.value=data.answer; markSaved(); return; }
-      // migration attempt from older case study versions
-      const legacy=localStorage.getItem(LEGACY_CASE_KEY);
-      if(legacy){
-        const data=JSON.parse(legacy);
-        // v1: a1=email
-        // v2: a2=email
-        // v3: a2=email
-        if(!data.version || data.version===1){ if(data.a1) box.value=data.a1; }
-        else if(data.version===2 || data.version===3){ if(data.a2) box.value=data.a2; }
-        if(box.value) markSaved();
-      }
-    }catch(e){ console.warn('load fail',e); }
-  }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify({version:VERSION,answer:box.value,ts:Date.now()})); markSaved(); }catch(e){ alert('Save failed: '+e); }}
-  function clearAll(){ if(!confirm('Clear draft?')) return; localStorage.removeItem(KEY); box.value=''; stateEl.textContent='Not saved'; stateEl.className='save-state'; }
-  box.addEventListener('input',markDirty);
-  btnSave.addEventListener('click',save);
-  btnClear.addEventListener('click',clearAll);
-  load();
-})();
-</script>
 </body>
 </html>

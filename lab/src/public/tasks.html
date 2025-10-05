@@ -5,8 +5,8 @@
 </head>
 <body>
   <header class="site-header" id="siteHeader">
-    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='tasks.html'">
-      <img src="/logo.svg" alt="logo" />
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="brandNav">
+  <img src="/logo.svg" alt="logo" class="logo-img" />
       <span class="brand-hacker" title="Return to hub">CHECK POINT</span>
     </div>
   </header>
@@ -19,6 +19,11 @@
     <section class="section hero-grid"></section>
     <section class="section">
       <div class="task-list" role="list" aria-label="Assessment tasks">
+        <div style="background:#132033;border:1px solid #1f2d3d;padding:18px 20px;border-radius:18px;margin:0 0 26px;">
+          <h2 style="margin:0 0 8px;font-size:17px;">Exam Template</h2>
+          <p style="margin:0 0 10px;font-size:13px;color:#cbd5e1;line-height:1.5;" id="templateNotice">Loading template info…</p>
+          <button id="btnDownloadTemplate" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-weight:600;display:none;">Download Exam DOCX</button>
+        </div>
         <div class="task-row" role="listitem">
           <div class="task-badge">Case Study</div>
           <h3>Task 1 — Branch Performance Degradation</h3>
@@ -44,18 +49,40 @@
   </main>
   <div style="max-width:980px;margin:30px auto 80px;padding:0 40px;">
     <div id="finalSubmitBox" style="background:#132033;border:1px solid #1f2d3d;padding:20px 24px;border-radius:18px;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Finalize & Submit</h2>
-  <p id="finalStatus" style="margin:0 0 14px;font-size:13px;color:#cbd5e1;">When you are completely done with all tasks, click Submit. This will lock your answers. After submitting you will be redirected to a finish page.</p>
-      <button id="btnFinalSubmit" class="btn" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:600;">Submit All Answers</button>
+      <h2 style="margin:0 0 8px;font-size:18px;">Final Submission</h2>
+      <p style="margin:0 0 14px;font-size:13px;color:#cbd5e1;">Upload your final PDF (required) and optional DOCX. Uploading locks your exam and redirects you to the finish page.</p>
+      <h3 style="margin:0 0 10px;font-size:16px;">Upload Final Work</h3>
+      <p style="margin:0 0 10px;font-size:12px;color:#94a3b8;">Ensure all answers from the exam template are included before uploading. This action is irreversible.</p>
+      <form id="finalUploadForm" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;">
+          <label style="font-size:12px;color:#cbd5e1;">PDF File (required)<br>
+            <input type="file" id="pdfFile" name="pdfFile" accept="application/pdf" required style="margin-top:4px;" />
+          </label>
+          <label style="font-size:12px;color:#cbd5e1;">DOCX File (optional)<br>
+            <input type="file" id="docxFile" name="docxFile" accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" style="margin-top:4px;" />
+          </label>
+          <button type="submit" id="btnUploadFinal" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-weight:600;">Upload & Lock</button>
+        </div>
+        <div id="uploadMsg" style="font-size:12px;color:#cbd5e1;"></div>
+      </form>
     </div>
   </div>
-  <a href="/contact.html" class="help-fab" id="helpFab" title="Need help? Contact on-call.">
-    <img src="/help-contact.svg" alt="Help" width="38" height="38">
-    <span class="help-label">Need help? Contact on-call.</span>
+  <a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+  <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+  <span class="help-label">Questions? Contact on-call.</span>
   </a>
   <script>
     (function(){
       const header=document.getElementById('siteHeader');
+      const brand=document.getElementById('brandNav');
+      if(brand){
+        brand.addEventListener('click',()=>{
+          const slug=localStorage.getItem('candidateSlug');
+          const hub=localStorage.getItem('candidateHubToken');
+          if(slug && hub){ window.location='/c/'+slug+'/'+hub; }
+          else { window.location='tasks.html'; }
+        });
+      }
       window.addEventListener('scroll',()=>{const y=window.scrollY;header.classList.toggle('shrink', y>16);});
       const email=localStorage.getItem('candidateEmail');
       const name=localStorage.getItem('candidateName');
@@ -67,32 +94,67 @@
       else { if(greet) greet.textContent='Not logged in'; if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>'; }
 
       // Final submission logic
-      const btn=document.getElementById('btnFinalSubmit');
-      const statusEl=document.getElementById('finalStatus');
       const box=document.getElementById('finalSubmitBox');
-      if(btn && email){
-        if(localStorage.getItem('candidateSubmitted')==='1'){
-          btn.disabled=true; btn.textContent='Already Submitted'; box.style.opacity='0.75';
-          statusEl.textContent='You have submitted. Redirecting to finish page...';
-          setTimeout(()=>{ location.href='/finished.html'; },1200);
-        }
-        btn.addEventListener('click', async ()=>{
-          if(!confirm('Submit and lock all answers? You cannot edit after submitting.')) return;
-          btn.disabled=true; btn.textContent='Submitting...';
-          try{
-            const r=await fetch('/api/candidate/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
-            if(!r.ok){ btn.disabled=false; btn.textContent='Submit All Answers'; alert('Submission failed'); return; }
+      const uploadForm=document.getElementById('finalUploadForm');
+      const uploadBtn=document.getElementById('btnUploadFinal');
+      const uploadMsg=document.getElementById('uploadMsg');
+      if(email && localStorage.getItem('candidateSubmitted')==='1'){
+        box.style.opacity='0.75';
+        uploadMsg.textContent='Already submitted. Redirecting…';
+        setTimeout(()=>{ location.href='/finished.html'; },1200);
+        if(uploadBtn) uploadBtn.disabled=true;
+        if(uploadForm) uploadForm.querySelectorAll('input,button').forEach(el=> el.disabled=true);
+      }
+      // File upload submission
+      if(uploadForm && email){
+        uploadForm.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          if(localStorage.getItem('candidateSubmitted')==='1'){ alert('Already submitted.'); return; }
+          const pdfInput=document.getElementById('pdfFile');
+          if(!pdfInput.files.length){ alert('PDF file required'); return; }
+          const pdfFile=pdfInput.files[0];
+          if(pdfFile.size > 15*1024*1024){ alert('PDF exceeds 15MB limit'); return; }
+          const docxInput=document.getElementById('docxFile');
+          if(docxInput.files[0] && docxInput.files[0].size > 15*1024*1024){ alert('DOCX exceeds 15MB limit'); return; }
+          if(!confirm('Upload now and lock your exam? This cannot be undone.')) return;
+          uploadBtn.disabled=true; uploadBtn.textContent='Uploading...';
+          uploadMsg.textContent='Uploading files...';
+          try {
+            const fd=new FormData();
+            fd.append('email', email);
+            fd.append('pdfFile', pdfFile);
+            if(docxInput.files[0]) fd.append('docxFile', docxInput.files[0]);
+            const r=await fetch('/api/candidate/upload-final',{method:'POST',body:fd});
+            if(!r.ok){
+              uploadBtn.disabled=false; uploadBtn.textContent='Upload & Lock';
+              uploadMsg.textContent='Upload failed ('+r.status+').';
+              return;
+            }
             const j=await r.json();
             localStorage.setItem('candidateSubmitted','1');
-            statusEl.textContent='Submitted at '+ new Date(j.submittedAt).toLocaleString()+'. Redirecting...';
-            btn.textContent='Submitted';
+            uploadMsg.textContent='Files uploaded and exam locked at '+ (j.uploadedAt? new Date(j.uploadedAt).toLocaleString(): new Date().toLocaleString()) +'. Redirecting...';
+            uploadMsg.textContent+=' Redirecting...';
+            uploadBtn.textContent='Uploaded';
             box.style.opacity='0.75';
-            setTimeout(()=>{ location.href='/finished.html'; },1000);
-          }catch(e){ btn.disabled=false; btn.textContent='Submit All Answers'; alert('Network error'); }
+            uploadForm.querySelectorAll('input,button').forEach(el=> el.disabled=true);
+            setTimeout(()=>{ location.href='/finished.html'; },1500);
+          } catch(err){
+            uploadBtn.disabled=false; uploadBtn.textContent='Upload & Lock';
+            uploadMsg.textContent='Network error uploading';
+          }
         });
       }
+
+      // Exam template fetch
+      const templateNotice=document.getElementById('templateNotice');
+      const dlBtn=document.getElementById('btnDownloadTemplate');
+      fetch('/exam-template/meta').then(r=> r.json()).then(j=>{
+        if(!j.available){ templateNotice.textContent='Exam template not yet published. Check back soon.'; return; }
+        templateNotice.innerHTML='Download the DOCX template below. Complete ALL tasks inside that file. When finished, upload your final PDF (and optional DOCX) in the Finalize section below.';
+        dlBtn.style.display='inline-block';
+        dlBtn.addEventListener('click',()=>{ window.open('/exam-template/download','_blank'); });
+      }).catch(()=>{ templateNotice.textContent='Unable to load template status.'; });
     })();
   </script>
   <script src="/header-timer.js" defer></script>
-  <script src="/collab-dock-simple.js?v=2" defer></script>
 </body></html>

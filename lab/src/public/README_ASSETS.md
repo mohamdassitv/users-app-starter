@@ -5,7 +5,7 @@ This file documents active vs archived assets to keep the project organized.
 ## Active (used in pages)
 - vendor/ckeditor/ckeditor5-build-classic-dna-master/build/ckeditor.js – Loaded by Task 1 page and other CKEditor instances.
 - header-timer.js – Timer logic across tasks.
-- collab-dock-simple.js – Included in many task pages.
+<!-- collab-dock-simple.js removed (deprecated inline editor dock) -->
 - richify.js – Enhances textarea / simple rich features.
 - styles.css – Global styling.
 - task/*.html – Exam task pages.

@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+Dockerfile*
+.dockerignore
+.git
+.gitignore
+logs
+**/npm-cache
+**/.npm
+**/dist
+.editorconfig

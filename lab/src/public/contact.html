@@ -1,23 +1,40 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Contact On-Call</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/styles.css"></head><body>
-<header class="site-header" id="siteHeader"><div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'"><img src="/logo.svg" alt="logo" class="logo-img"><span class="brand-hacker">CHECK POINT</span></div></header>
+<header class="site-header" id="siteHeader"><div class="brand" id="brandNav" style="display:flex;align-items:center;gap:10px;cursor:pointer;"><img src="/logo.svg" alt="logo" class="logo-img"><span class="brand-hacker">CHECK POINT</span></div></header>
 <main class="page fade-in">
   <!-- exam bar removed; header timer used -->
   <div class="card" style="max-width:480px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">
-    <img src="/help-contact.svg" alt="Contact" width="96" height="96" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15))">
+  <img src="/whatsapp.svg" alt="Contact" width="96" height="96" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15))">
     <h2 style="margin-top:4px">On-Call Contact</h2>
-    <p class="muted" id="phoneInfo">Loading...</p>
-    <p class="muted" style="font-size:13px">Phone cannot be changed after registration. Use your phone for any urgent escalation instructions provided to you offline.</p>
-    <a href="/" class="btn" style="margin-top:4px">Back</a>
+  <p class="muted" id="phoneInfo">Loading on-call…</p>
+    <p class="muted" style="font-size:13px">This is the engineer currently on shift. If you run into issues or have questions, feel free to reach out.</p>
+  <a href="/tasks.html" class="btn" style="margin-top:4px">Back</a>
   </div>
 </main>
-<div class="help-fab" title="This page shows the registered phone."><img src="/help-contact.svg" width="38" height="38" alt="Help"><span class="help-label">Contact</span></div>
+<div class="help-fab" title="This page shows the registered phone."><img src="/help-contact.svg" width="38" height="38" alt="Contact"><span class="help-label">Contact</span></div>
 <script>
-async function examStatus(){ const r=await fetch('/api/exam/status'); return r.ok? r.json():{}; }
-function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
-function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){bar.style.width='0%';return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
-// old timer removed
- document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
- (async ()=>{ const st = await examStatus(); const el=document.getElementById('phoneInfo'); if(st.phone) el.textContent='Registered Phone: '+st.phone; else el.textContent='No phone registered yet. Click the logo to register.'; })();
+// On-call fetch + brand navigation
+(async ()=>{
+  try {
+    const r=await fetch('/api/oncall');
+    const el=document.getElementById('phoneInfo');
+    if(r.ok){
+      const j=await r.json();
+      if(j.onCall){
+        el.textContent = 'On-Call: '+ (j.onCall.name? j.onCall.name+' — ':'') + (j.onCall.phone||j.onCall.email);
+      } else {
+        el.textContent='No on-call engineer selected yet.';
+      }
+    } else {
+      el.textContent='Failed to load on-call.';
+    }
+  } catch(e){ const el=document.getElementById('phoneInfo'); el.textContent='Error loading on-call.'; }
+})();
+
+document.getElementById('brandNav').addEventListener('click', ()=>{
+  const slug=localStorage.getItem('candidateSlug');
+  const hub=localStorage.getItem('candidateHubToken');
+  if(slug && hub) window.location='/c/'+slug+'/'+hub; else if(localStorage.getItem('candidateEmail')) window.location='/tasks.html'; else window.location='/login.html';
+});
 </script>
 <script src="/header-timer.js" defer></script>
 </body></html>

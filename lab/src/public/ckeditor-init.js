@@ -1,6 +1,7 @@
 // Unified CKEditor initializer for task pages
 (function(){
   const CK_SRC = '/vendor/ckeditor/ckeditor5-build-classic-dna-master/build/ckeditor.js';
+  if(!window._ckeditorInstances) window._ckeditorInstances={};
   if(!window.ClassicEditor){
     const s=document.createElement('script');
     s.src=CK_SRC;
@@ -36,6 +37,10 @@
       placeholder,
       toolbar:{ items:['heading','|','bold','italic','underline','|','bulletedList','numberedList','|','code','codeBlock','|','link','insertTable','blockQuote','|','undo','redo'] }
     }).then(editor=>{
+      // Register globally for hydration/viewer modes
+      window._ckeditorInstances[id]=editor;
+      // Fire event for listeners (answer-save)
+      try{ document.dispatchEvent(new CustomEvent('ckeditor-ready',{detail:{id,instance:editor}})); }catch(_e){}
       if(existingValue){ editor.setData(existingValue); }
       // Persistence per textarea id
       const storeKey='ck_ans_'+id;

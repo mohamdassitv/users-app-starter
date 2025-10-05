@@ -32,10 +32,13 @@ a:hover { text-decoration:underline; }
 /* Header */
 .site-header {position:sticky;top:0;z-index:50;background:#fff;display:flex;align-items:center;gap:16px;padding:2px 28px;height:86px;border-bottom:1px solid var(--border);transition:height var(--transition), box-shadow var(--transition);}
 .site-header.shrink {height:72px;box-shadow:0 4px 14px -6px rgba(0,0,0,0.08);}
-.logo {font-weight:600;font-size:20px;background:var(--bg-accent);-webkit-background-clip:text;color:transparent;}
+.logo {font-weight:600;font-size:20px;background:var(--bg-accent);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .brand {display:flex;align-items:center;gap:12px;text-decoration:none;}
-.logo-img {width:60px;height:60px;display:block;}
-.logo-text {font-size:18px;font-weight:600;letter-spacing:.5px;background:var(--bg-accent);-webkit-background-clip:text;color:transparent;}
+.logo-img {width:42px;height:42px;display:block;}
+@media (max-width:780px){
+  .logo-img {width:36px;height:36px;}
+}
+.logo-text {font-size:18px;font-weight:600;letter-spacing:.5px;background:var(--bg-accent);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .nav {display:flex;gap:32px;font-size:14px;font-weight:500;}
 .nav a {color:var(--text);position:relative;padding:4px 0;}
 .nav a:after {content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--magenta);opacity:0;transform:scaleX(.4);transition:var(--transition);}
@@ -149,6 +152,8 @@ tbody tr:hover {background:#fff5fa;}
 .help-fab .help-label {font-size:13px;font-weight:500;color:var(--text-muted);white-space:nowrap;}
 .help-fab:hover {box-shadow:var(--shadow-hover);transform:translateY(-3px);} 
 
+/* (inline-contact UI removed; floating help-fab restored) */
+
 /* Tooltip for logo (using title attribute override not needed) */
 .brand {position:relative;}
 .brand:hover:after {content:'If you need help register phone first';position:absolute;left:0;bottom:-32px;background:#000;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;}
@@ -201,140 +206,8 @@ pre {background:#f6f8fa;border:1px solid var(--border);border-radius:var(--radiu
 .rich-inline.white:focus-within{box-shadow:0 0 0 3px rgba(236,72,153,.35);border-color:#ec4899;}
 .rich-inline .ql-toolbar button:hover{color:#ec4899;}
 
-/* --- ✨ BEAUTIFUL WHITE & PINK TAB POPUP STYLING ✨ --- */
-.collab-dock {
-  position: fixed;
-  bottom: 0;
-  right: 20px;
-  z-index: 9999;
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-}
 
-.collab-dock-tab {
-  background: linear-gradient(135deg, #ff69b4, #ff1493, #da70d6);
-  color: white;
-  padding: 16px 20px;
-  border-radius: 12px 12px 0 0;
-  cursor: pointer;
-  box-shadow: 0 -2px 10px rgba(255, 105, 180, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 18px;
-  transition: all 0.3s ease;
-  user-select: none;
-  min-width: 60px;
-  position: fixed; /* keep above fullscreen panel */
-  bottom: 0;
-  right: 20px;
-  z-index: 10001; /* higher than panel */
-}
-
-/* When open, move the tab (now showing the down arrow) to the top-right so it never gets hidden */
-.collab-dock.open .collab-dock-tab {
-  top: 14px;
-  right: 20px;
-  bottom: auto;
-  border-radius: 12px; /* uniform when floating */
-  box-shadow: 0 4px 20px rgba(255,105,180,0.35);
-}
-
-.collab-dock-tab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 -4px 20px rgba(255, 105, 180, 0.4);
-  background: linear-gradient(135deg, #ff1493, #ff69b4, #da70d6);
-}
-
-.collab-dock-arrow {
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.collab-dock-panel {
-  background: white;
-  border: 2px solid #ff69b4;
-  border-radius: 0;
-  width: 100vw;
-  height: 100vh;
-  box-shadow: 0 -4px 25px rgba(255, 105, 180, 0.2), 0 -8px 40px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  top: 0;
-  transform: translateY(100%);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  visibility: hidden;
-  z-index: 10000; /* below tab */
-}
-
-.collab-dock.open .collab-dock-panel {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Remove the bouncy animation and background effects */
-
-/* Remove shimmer effects */
-.collab-dock-header {
-  background: linear-gradient(135deg, #ff69b4, #ff1493);
-  color: white;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-}
-
-.collab-dock-title {
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.collab-dock-close {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.collab-dock-close:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.collab-dock-body {
-  background: white;
-  padding: 20px;
-  height: 100vh;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Remove fancy background effects */
-
-/* Remove floating hearts animation */
+/* (collab dock styles removed) */
 
 /* ===== RICH TEXT EDITOR STYLES ===== */
 

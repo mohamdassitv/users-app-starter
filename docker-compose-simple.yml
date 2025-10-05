@@ -1,0 +1,6 @@
+version: "3.8"
+services:
+  lab:
+    build: ./lab
+    ports:
+      - "8081:8081"

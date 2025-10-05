@@ -7,7 +7,7 @@
   <li>A clear <strong>next update time</strong> (e.g., "next update in 20 minutes")</li>
   <li><strong>Ownership</strong> ("I'm taking ownership", "I will update you", etc.)</li>
 </ul>
-<textarea id="txt" rows="6" data-rich="1" data-answer name="incident_update" placeholder="Type your update here..."></textarea>
+<textarea id="txt" rows="6" placeholder="(Optional quick draft – final answer must be in uploaded PDF/DOCX)" ></textarea>
 <button onclick="submitUpdate()">Submit</button>
 <pre id="out"></pre>
 </div>
@@ -25,7 +25,6 @@ async function submitUpdate(){
   }
 }
 </script>
-<script src="/collab-dock-simple.js?v=2" defer></script>
-<script src="/ckeditor-init.js" defer></script>
-<script src="/answer-save.js" data-task-id="incident" defer></script>
+<!-- Rich editor & autosave removed -->
+<a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer."><img src="/help-contact.svg" width="38" height="38" alt="Contact"><span class="help-label">Questions? Contact on-call.</span></a>
 </body></html>

@@ -48,7 +48,7 @@ table tbody tr:nth-child(even){background:#fff7fb;}
   </div>
 
   <div class="panel card" id="candidatesPanel" style="display:none;">
-    <h2>Candidates <span class="badge" id="candCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
+  <h2>Active Candidates <span class="badge" id="candCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
     <div style="overflow:auto;max-height:260px;border:1px solid #1e2533;border-radius:14px;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead style="background:#132033;position:sticky;top:0;">
@@ -59,9 +59,7 @@ table tbody tr:nth-child(even){background:#fff7fb;}
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Reset</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Delete</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">+Min</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Extend</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Final Work</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Extend Time</th>
           </tr>
         </thead>
         <tbody id="candRows"></tbody>
@@ -86,14 +84,31 @@ table tbody tr:nth-child(even){background:#fff7fb;}
 
   <!-- Config panel trimmed: only on-call contact retained -->
   <div class="panel card" id="configPanel" style="display:none;">
-    <h2>Exam Config <span class="badge" id="configDirty" style="display:none;background:#b45309;border:1px solid #f59e0b;">UNSAVED</span></h2>
-    <label for="onCall">On-Call Contact (phone or alias)</label>
-    <input type="text" id="onCall" class="input" placeholder="+81-xxx-xxxx" />
-    <div class="actions-line">
+    <h2>On-Call Rotation <span class="badge" id="configDirty" style="display:none;background:#b45309;border:1px solid #f59e0b;">UNSAVED</span></h2>
+    <label for="onCallSelect">Select On-Call Engineer</label>
+    <select id="onCallSelect" class="input" style="height:44px;font-size:14px;padding:8px 12px;border-radius:12px;border:1px solid #ffbadb;background:#fff;">
+      <option value="" disabled selected>Loading staff…</option>
+    </select>
+    <div style="margin-top:10px;font-size:12px;color:#7b1f54;" id="onCallDetails"></div>
+    <div class="actions-line" style="margin-top:14px;">
       <button class="btn btn-primary" id="btnSaveConfig">Save</button>
       <button class="btn btn-ghost" id="btnShowConfig">Reload</button>
     </div>
-    <small class="desc">Used for internal reference only.</small>
+    <small class="desc">Managers are excluded from selection. Saved choice becomes the active on-call contact.</small>
+  </div>
+
+  <div class="panel card" id="templatePanel" style="display:none;">
+    <h2>Exam Template (DOCX)</h2>
+    <p style="font-size:12px;line-height:1.5;margin-top:0;">Upload a single master DOCX that candidates will download from their Tasks page. Re-uploading replaces the previous version immediately.</p>
+    <form id="templateUploadForm" enctype="multipart/form-data" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+      <label style="font-size:12px;color:#7b1f54;">Template DOCX<br>
+        <input type="file" id="templateFile" name="template" accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" required style="margin-top:4px;" />
+      </label>
+      <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">Upload / Replace</button>
+      <button type="button" id="btnReloadTemplate" class="btn btn-ghost">Refresh</button>
+    </form>
+    <div id="templateMeta" style="margin-top:10px;font-size:12px;color:#7a1e52;">No template uploaded yet.</div>
+    <small class="desc">Max 10MB. Candidates fetch via secure link injected into their Tasks hub.</small>
   </div>
 
   <!-- Global maintenance panel removed per new per-candidate reset requirement -->
@@ -110,6 +125,7 @@ table tbody tr:nth-child(even){background:#fff7fb;}
             <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Submitted At</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Duration Used</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Files</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">View</th>
           </tr>
         </thead>
@@ -146,6 +162,7 @@ function showPanels(){
   document.getElementById('configPanel').style.display='block';
   document.getElementById('candidatesPanel').style.display='block';
   document.getElementById('finalWorkPanel').style.display='block';
+  const tp=document.getElementById('templatePanel'); if(tp) tp.style.display='block';
 }
 async function verifySession(){
   // Try a cheap call that requires admin; use config endpoint
@@ -184,34 +201,53 @@ document.getElementById('btnGoLogin').addEventListener('click', ()=> location.hr
 verifySession();
 
 // Config save
-const onCallEl=document.getElementById('onCall');
-onCallEl.addEventListener('input',()=> document.getElementById('configDirty').style.display='inline-block');
+const onCallSelect=document.getElementById('onCallSelect');
+const onCallDetails=document.getElementById('onCallDetails');
+onCallSelect && onCallSelect.addEventListener('change',()=> document.getElementById('configDirty').style.display='inline-block');
 
 document.getElementById('btnSaveConfig').addEventListener('click', async ()=>{
-  const body={recipients: '', onCall: onCallEl.value};
+  const selected=onCallSelect.value;
+  if(!selected){ alert('Select an on-call engineer'); return; }
+  const body={recipients:'', onCall:selected};
   const r= await gateFetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(r.ok){ document.getElementById('configDirty').style.display='none'; }
 });
 
 document.getElementById('btnShowConfig').addEventListener('click', loadConfig);
 async function loadConfig(){
-  const r= await gateFetch('/api/admin/config');
-  if(r.ok){ const j=await r.json(); onCallEl.value=j.onCall||''; document.getElementById('configDirty').style.display='none'; }
+  const rStaff = await gateFetch('/api/admin/staff');
+  if(rStaff.ok){
+    const data=await rStaff.json();
+    const current=data.onCall||'';
+    const list=(data.staff||[]).filter(s=> !s.manager);
+    onCallSelect.innerHTML='<option disabled value="">Select engineer…</option>' + list.map(s=> '<option value="'+s.email+'">'+s.name+' ('+s.email.split('@')[0]+')</option>').join('');
+    if(current){ onCallSelect.value=current; }
+    const sel=list.find(s=> s.email===onCallSelect.value);
+    if(sel){ onCallDetails.textContent=sel.email+' — '+sel.phone; } else { onCallDetails.textContent=''; }
+    onCallSelect.addEventListener('change',()=>{
+      const ch=list.find(s=> s.email===onCallSelect.value); onCallDetails.textContent= ch? (ch.email+' — '+ch.phone):'';
+    });
+    document.getElementById('configDirty').style.display='none';
+  }
 }
 
 // Removed global reset logic
 
 // Candidate list logic
 async function loadCandidates(){
+  await loadUploadsIndex();
   const r = await gateFetch('/api/admin/candidates');
   if(!r.ok) return; const j = await r.json();
-  document.getElementById('candCount').textContent=j.total;
+  const active = j.candidates.filter(c=> !c.submittedAt);
+  document.getElementById('candCount').textContent=active.length;
   const tbody=document.getElementById('candRows');
   tbody.innerHTML='';
-  j.candidates.sort((a,b)=> (a.startTime?1:0)-(b.startTime?1:0) || (a.name||'').localeCompare(b.name||''));
-  loadCandidatesWrapperData(j.candidates);
-  j.candidates.forEach(c=>{
+  active.sort((a,b)=> (a.startTime?1:0)-(b.startTime?1:0) || (a.name||'').localeCompare(b.name||''));
+  loadCandidatesWrapperData(active);
+  active.forEach(c=>{
     const tr=document.createElement('tr');
+    const emailLower=c.email.toLowerCase();
+    const fileMap=uploadsByEmail[emailLower]||{};
     tr.innerHTML=
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
@@ -219,9 +255,12 @@ async function loadCandidates(){
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" /></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.submittedAt? '<button data-view="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button> <button data-open="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">Open</button>' : '<span style="font-size:10px;color:#b2497a;">—</span>')+'</td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+
+        '<div style="display:flex;gap:6px;align-items:center;justify-content:center;">'+
+          '<input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" />'+
+          '<button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button>'+
+        '</div>'+
+  '</td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
@@ -257,6 +296,10 @@ async function loadCandidates(){
   tbody.querySelectorAll('[data-open]').forEach(btn=> btn.addEventListener('click', e=>{
     const email=e.target.getAttribute('data-open');
     window.open('/candidate-view.html?email='+encodeURIComponent(email),'_blank');
+  }));
+  tbody.querySelectorAll('[data-dl]').forEach(btn=> btn.addEventListener('click', e=>{
+    const f=e.target.getAttribute('data-dl');
+    if(f) window.open('/api/admin/uploads/'+encodeURIComponent(f),'_blank');
   }));
   startTimerUpdates();
   buildFinalWork(j.candidates);
@@ -294,6 +337,26 @@ let currentCandidates={};
 function loadCandidatesWrapperData(list){
   currentCandidates={};
   list.forEach(c=> currentCandidates[c.email.toLowerCase()]=c);
+}
+// Uploaded final files index
+let uploadsByEmail={};
+async function loadUploadsIndex(){
+  uploadsByEmail={};
+  try {
+    const r=await gateFetch('/api/admin/uploads');
+    if(!r.ok) return; const j=await r.json();
+    (j.files||[]).forEach(f=>{
+      const m=/^([a-z0-9@._-]+)_(final|work)_(\d+)\.[a-z0-9]+$/i.exec(f.file);
+      if(!m) return; const email=m[1].toLowerCase(); const kind=m[2]; const ts=parseInt(m[3],10);
+      if(!uploadsByEmail[email]) uploadsByEmail[email]={};
+      const slot = kind==='final'? 'pdf' : 'docx';
+      const prev=uploadsByEmail[email][slot];
+      if(!prev){ uploadsByEmail[email][slot]=f.file; }
+      else {
+        const pm=/_(final|work)_(\d+)\./.exec(prev); const prevTs=pm? parseInt(pm[2],10):0; if(ts>prevTs) uploadsByEmail[email][slot]=f.file;
+      }
+    });
+  }catch(e){ /* ignore */ }
 }
 let candidatePollInterval=null;
 function startCandidatePolling(){
@@ -357,12 +420,17 @@ function buildFinalWork(candidates){
     const usedMs = c.submittedAt - (c.startTime||c.submittedAt);
     const h=Math.floor(usedMs/3600000); const m=Math.floor((usedMs%3600000)/60000); const s=Math.floor((usedMs%60000)/1000);
     const tr=document.createElement('tr');
+    const emailLower=c.email.toLowerCase();
+    const fileMap = (typeof uploadsByEmail!=='undefined' && uploadsByEmail[emailLower]) ? uploadsByEmail[emailLower] : {};
+    const pdfBtn = fileMap.pdf ? '<button data-dl-final="'+fileMap.pdf+'" style="background:#047857;color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:10px;cursor:pointer;">PDF</button>' : '<span style="font-size:10px;color:#b2497a;">—</span>';
+    const docxBtn = fileMap.docx ? '<button data-dl-final="'+fileMap.docx+'" style="background:#475569;color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:10px;cursor:pointer;">DOCX</button>' : '';
     tr.innerHTML=
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+ new Date(c.submittedAt).toLocaleString() +'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+h+'h '+m+'m '+s+'s</td>'+
-  '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view-final="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button> <button data-open-final="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">Open</button></td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;display:flex;gap:4px;justify-content:center;">'+pdfBtn+ (docxBtn? ' '+docxBtn:'') +'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-view-final="'+c.email+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button> <button data-open-final="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">Open</button></td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('[data-view-final]').forEach(btn=> btn.addEventListener('click', e=>{
@@ -373,9 +441,48 @@ function buildFinalWork(candidates){
     const email=e.target.getAttribute('data-open-final');
     window.open('/candidate-view.html?email='+encodeURIComponent(email),'_blank');
   }));
+  tbody.querySelectorAll('[data-dl-final]').forEach(btn=> btn.addEventListener('click', e=>{
+    const file=e.target.getAttribute('data-dl-final');
+    if(file) window.open('/api/admin/uploads/'+encodeURIComponent(file),'_blank');
+  }));
 }
 document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loadCandidates());
+
+// ---- Exam Template Panel Logic ----
+(function(){
+  const form=document.getElementById('templateUploadForm');
+  const metaEl=document.getElementById('templateMeta');
+  const reloadBtn=document.getElementById('btnReloadTemplate');
+  if(!form || !metaEl) return;
+  async function loadTemplate(){
+    try{
+      const r=await gateFetch('/api/admin/exam-template');
+      if(!r.ok){ metaEl.textContent='Failed to load template status.'; return; }
+      const j=await r.json();
+      if(!j.template){ metaEl.textContent='No template uploaded yet.'; return; }
+      metaEl.innerHTML='Current: <strong>'+escapeHtml(j.template.originalName||'exam_template.docx')+'</strong> uploaded '+ new Date(j.template.uploadedAt).toLocaleString()+'. <a href="/exam-template/download" target="_blank">Download</a>';
+    }catch(e){ metaEl.textContent='Error loading template.'; }
+  }
+  form.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const file=document.getElementById('templateFile').files[0];
+    if(!file){ alert('Select a DOCX file'); return; }
+    if(file.size > 10*1024*1024){ alert('File exceeds 10MB limit'); return; }
+    const btn=form.querySelector('button[type=submit]');
+    btn.disabled=true; btn.textContent='Uploading...';
+    try{
+      const fd=new FormData(); fd.append('template', file);
+      const r=await gateFetch('/api/admin/exam-template',{method:'POST',body:fd});
+      if(!r.ok){ alert('Upload failed ('+r.status+')'); btn.disabled=false; btn.textContent='Upload / Replace'; return; }
+      await loadTemplate();
+    }catch(err){ alert('Network error'); }
+    btn.disabled=false; btn.textContent='Upload / Replace';
+    form.reset();
+  });
+  reloadBtn && reloadBtn.addEventListener('click', e=>{ e.preventDefault(); loadTemplate(); });
+  // Defer initial load until session verified triggers showPanels; poll for existence
+  let tries=0; const int=setInterval(()=>{ if(metaEl.offsetParent!==null){ clearInterval(int); loadTemplate(); } if(++tries>40) clearInterval(int); },250);
+})();
 </script>
-<script src="/collab-dock-simple.js?v=2" defer></script>
 </body>
 </html>
