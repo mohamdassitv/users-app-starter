@@ -4,6 +4,8 @@
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<style>#syncIndicator{position:fixed;bottom:10px;right:14px;background:#132033;color:#cbd5e1;font-size:11px;padding:6px 10px;border-radius:10px;border:1px solid #1f2d3d;z-index:5000;font-family:ui-monospace,monospace;box-shadow:0 4px 12px -4px rgba(0,0,0,.4);}</style>
+
   <header class="site-header" id="siteHeader">
     <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="brandNav">
   <img src="/logo.svg" alt="logo" class="logo-img" />
@@ -35,14 +37,24 @@
           <div class="actions"><a class="btn" href="/task/mail.html">Open →</a></div>
         </div>
         <div class="task-row" role="listitem">
+          <div class="task-badge">Reliability</div>
+          <h3>Task 3 — Shift Alert Correlation & Handover</h3>
+          <div class="actions"><a class="btn" href="/task/alerts.html">Open →</a></div>
+        </div>
+        <div class="task-row" role="listitem">
           <div class="task-badge">Operations</div>
-          <h3>Task 3 — High-Volume User Cleanup</h3>
+          <h3>Task 4 — High-Volume User Cleanup</h3>
           <div class="actions"><a class="btn" href="/task/users.html">Open →</a></div>
         </div>
         <div class="task-row" role="listitem">
-          <div class="task-badge">Reliability</div>
-          <h3>Task 4 — Shift Alert Correlation & Handover</h3>
-          <div class="actions"><a class="btn" href="/task/alerts.html">Open →</a></div>
+          <div class="task-badge">Networking</div>
+          <h3>Task 5 — Configure Basic Routing</h3>
+          <div class="actions"><a class="btn" href="/task/routing-task5.html">Open →</a></div>
+        </div>
+        <div class="task-row" role="listitem">
+          <div class="task-badge">Analysis</div>
+          <h3>Task 6 — Tenant Data Investigation</h3>
+          <div class="actions"><a class="btn" href="/task/tenants.html">Open →</a></div>
         </div>
       </div>
     </section>
@@ -154,7 +166,21 @@
         dlBtn.style.display='inline-block';
         dlBtn.addEventListener('click',()=>{ window.open('/exam-template/download','_blank'); });
       }).catch(()=>{ templateNotice.textContent='Unable to load template status.'; });
+      
+      // ---------- Session bootstrap for persistent autosave (candidate side) ----------
+      try {
+        const email = localStorage.getItem('candidateEmail');
+        const name = localStorage.getItem('candidateName');
+        let sessionId = localStorage.getItem('examSessionId');
+        async function createIfNeeded(){
+          if(!email) return; if(sessionId) return;
+          const r=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({candidate_name:name,email})});
+          if(r.ok){ const j=await r.json(); sessionId=j.session.id; localStorage.setItem('examSessionId',sessionId); }
+        }
+        createIfNeeded();
+      }catch(e){ /* ignore */ }
     })();
   </script>
+  <script src="/answer-sync.js" defer></script>
   <script src="/header-timer.js" defer></script>
 </body></html>

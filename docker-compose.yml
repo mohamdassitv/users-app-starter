@@ -1,26 +1,146 @@
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: users-app-postgres
+    environment:
+      - POSTGRES_PASSWORD=exam
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=examdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
   app:
     build: .
     container_name: users-app
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
       - PORT=8081
       - ADMIN_PASSWORD=2025
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=exam
+      - PGDATABASE=examdb
+      - PGPORT=5432
+      - USE_WS=0
     tty: true        # Keep an interactive TTY so foreground 'docker compose up' stays attachable
     stdin_open: true # Allow Ctrl+C / interactive signals cleanly
     volumes:
       - app-state:/app/state          # named volume for state to avoid Windows bind issues
       - app-logs:/app/logs            # named volume for logs
+      - //var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket for terminal access
+      # Bind mount disabled on Windows due to host path mount error; using image contents instead
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8081/health"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 15s
-    # Removed restart policy so Ctrl+C fully stops it; container won't auto-respawn
+      start_period: 20s
     restart: "no"
+
+  # Branch office terminals for Task 1
+  branch-tokyo:
+    image: alpine:3.20
+    container_name: branch-tokyo
+    command: sh -c "apk add --no-cache curl iputils bind-tools tcpdump iproute2 util-linux traceroute && tail -f /dev/null"
+    networks:
+      - branch-net
+    cap_add:
+      - NET_ADMIN
+    hostname: tokyo-branch
+
+  branch-osaka:
+    image: alpine:3.20
+    container_name: branch-osaka
+    volumes:
+      - ./lab/osaka-slow.sh:/tmp/osaka-slow.sh:ro
+    command: >
+      sh -c "apk add --no-cache curl iputils bind-tools tcpdump iproute2 util-linux traceroute &&
+      sh /tmp/osaka-slow.sh &&
+      tail -f /dev/null"
+    networks:
+      - branch-net
+    cap_add:
+      - NET_ADMIN
+    hostname: osaka-branch
+
+  branch-kyoto:
+    image: alpine:3.20
+    container_name: branch-kyoto
+    command: sh -c "apk add --no-cache curl iputils bind-tools tcpdump iproute2 util-linux traceroute && tail -f /dev/null"
+    networks:
+      - branch-net
+    cap_add:
+      - NET_ADMIN
+    hostname: kyoto-branch
+
+  # Gateway containers - only g4 has disk issue
+  g1:
+    image: alpine:3.20
+    container_name: g1
+    command: sh -c "apk add --no-cache curl iputils bind-tools util-linux coreutils && tail -f /dev/null"
+    networks:
+      - branch-net
+    hostname: g1
+
+  g2:
+    image: alpine:3.20
+    container_name: g2
+    command: sh -c "apk add --no-cache curl iputils bind-tools util-linux coreutils && tail -f /dev/null"
+    networks:
+      - branch-net
+    hostname: g2
+
+  g3:
+    image: alpine:3.20
+    container_name: g3
+    command: sh -c "apk add --no-cache curl iputils bind-tools util-linux coreutils && tail -f /dev/null"
+    networks:
+      - branch-net
+    hostname: g3
+
+  g4:
+    image: alpine:3.20
+    container_name: g4
+    volumes:
+      - ./lab/gateway-disk-setup.sh:/tmp/gateway-disk-setup.sh:ro
+    command: >
+      sh -c "apk add --no-cache curl iputils bind-tools util-linux coreutils &&
+      sh /tmp/gateway-disk-setup.sh &&
+      tail -f /dev/null"
+    networks:
+      - branch-net
+    hostname: g4
+
+  # Legacy gateway-phoenix kept for compatibility
+  gateway-phoenix:
+    image: alpine:3.20
+    container_name: gateway-phoenix
+    volumes:
+      - ./lab/gateway-disk-setup.sh:/tmp/gateway-disk-setup.sh:ro
+    command: >
+      sh -c "apk add --no-cache curl iputils bind-tools util-linux coreutils &&
+      sh /tmp/gateway-disk-setup.sh &&
+      tail -f /dev/null"
+    networks:
+      - branch-net
+    hostname: gateway-phoenix
+
+networks:
+  branch-net:
+    driver: bridge
 
 volumes:
   app-state:
   app-logs:
+  pgdata:

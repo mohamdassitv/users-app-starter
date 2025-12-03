@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  router:
+    build: ./image
+    container_name: nbr-router
+    cap_add: [ "NET_ADMIN", "NET_RAW" ]
+    command: ["sh", "-c", "sh /seed.sh router && sleep infinity"]
+    networks:
+      net1:
+        ipv4_address: 192.168.178.2
+      net2:
+        ipv4_address: 10.0.0.2
+    volumes:
+      - ./scripts/seed.sh:/seed.sh:ro
+
+  leaf01:
+    build: ./image
+    container_name: nbr-leaf01
+    cap_add: [ "NET_ADMIN", "NET_RAW" ]
+    command: ["sh", "-c", "sh /seed.sh leaf01 && sleep infinity"]
+    networks:
+      net1:
+        ipv4_address: 192.168.178.10
+    volumes:
+      - ./scripts/seed.sh:/seed.sh:ro
+
+  leaf02:
+    build: ./image
+    container_name: nbr-leaf02
+    cap_add: [ "NET_ADMIN", "NET_RAW" ]
+    command: ["sh", "-c", "sh /seed.sh leaf02 && sleep infinity"]
+    networks:
+      net2:
+        ipv4_address: 10.0.0.20
+    volumes:
+      - ./scripts/seed.sh:/seed.sh:ro
+
+networks:
+  net1:
+    ipam:
+      config: [{ subnet: 192.168.178.0/24 }]
+  net2:
+    ipam:
+      config: [{ subnet: 10.0.0.0/16 }]

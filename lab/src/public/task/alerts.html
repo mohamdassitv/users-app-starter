@@ -5,6 +5,11 @@
 <title>Task 4 — Shift Alert Correlation & Handover</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
 <style>
 .page{max-width:1280px;margin:0 auto;padding:24px 40px 120px;}
 .hero-box{background:linear-gradient(150deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:hbPulse 16s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:30px;padding:38px 44px 40px;position:relative;box-shadow:0 18px 50px -14px rgba(190,24,93,.55),0 6px 18px -6px rgba(190,24,93,.5);margin:0 0 60px;overflow:hidden;}
@@ -124,15 +129,16 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
 </header>
 <main class="page fade-in">
   <section class="hero-box">
-    <h1>Task 4 — Shift Alert Correlation & Handover</h1>
-  <p class="hero-desc">Scenario: You are in the <strong>middle of an ongoing shift</strong>. A noisy burst of alerts has just landed in the last few minutes while other engineers are tied up. You have to rapidly: isolate the first alert to tackle, articulate why, collapse duplicates/noise, map dependencies, and outline impact — all while preparing a succinct handover for the next shift. Work the panels in order; do not assume any alert text is trustworthy without validation.<span class="badge-inline">Critical</span></p>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h1>Task 4 — Shift Alert Correlation & Handover</h1>
+        <p class="hero-desc">Scenario: You are in the <strong>middle of an ongoing shift</strong>. A noisy burst of alerts has just landed in the last few minutes while other engineers are tied up. You have to rapidly: isolate the first alert to tackle, articulate why, collapse duplicates/noise, map dependencies, and outline impact — all while preparing a succinct handover for the next shift. Work the panels in order; do not assume any alert text is trustworthy without validation.<span class="badge-inline">Critical</span></p>
+      </div>
+      <button onclick="resetGateway()" style="background:#dc2626;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(220,38,38,0.3);font-size:14px;">Reset Gateway</button>
+    </div>
   </section>
   <div class="tabs-bar" role="tablist">
     <button class="tab-btn active" data-tab="alerts" role="tab" aria-selected="true">Active Alerts</button>
-  <button class="tab-btn" data-tab="tenants" role="tab" aria-selected="false">Tenants List</button>
-  <button class="tab-btn" data-tab="timeline" role="tab" aria-selected="false">Portal</button>
-    <button class="tab-btn" data-tab="actions" role="tab" aria-selected="false">Mitigation Actions</button>
-    <button class="tab-btn" data-tab="rootcause" role="tab" aria-selected="false">Root Cause & Handover</button>
   </div>
   <section class="panels">
     <!-- Active Alerts Panel -->
@@ -151,157 +157,64 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       </table>
       <div id="alertDetail" aria-live="polite"></div>
       <div id="prioritizationBlock" style="margin-top:34px;">
-        <h3 style="margin:34px 0 10px;font-size:18px;color:#0f172a;">Prioritization Question</h3>
-        <p style="font-size:13px;line-height:1.55;max-width:900px;">Given the current alert snapshot above (mixed severities, overlapping functional areas, potential duplicate symptoms), which single alert would you triage <strong>first</strong> and why? In your answer justify based on: potential blast radius, user impact signals, dependency fan‑out, and mitigation leverage. If two are strongly coupled, state the pair and primary driver.</p>
-        <label for="priorityAnswer" style="display:block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;margin:16px 0 6px;">Your Answer</label>
-  <textarea id="priorityAnswer" class="text-box" data-rich="1" placeholder="State ONLY the single alert (or tightly coupled pair) you would start with and the justification. Avoid generic answers (e.g. 'because it is P1')." style="min-height:140px;"></textarea>
-    <label for="priorityDescribe" style="display:block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;margin:22px 0 6px;">Describe Selected Alert & Impact</label>
-    <p style="margin:0 0 6px;font-size:12px;color:#475569;">Describe (a) what the chosen alert technically represents, (b) potential / observed blast radius, (c) user or system impact signals, and (d) why handling it first yields the highest mitigation leverage.</p>
-  <textarea id="priorityDescribe" class="text-box" data-rich="1" placeholder="Describe the alert in your own words, its failure domain, user/system impact, downstream risk, and leverage gained by fixing it first." style="min-height:160px;"></textarea>
-      </div>
-    </div>
-    <!-- Tenants List Panel -->
-    <div class="panel" id="panel-tenants" data-panel="tenants">
-      <h2>Tenants Table</h2>
-      <div class="tenants-summary" id="tenSummary"></div>
-      <div class="tenants-header-row">
-        <div style="flex:1;min-width:240px;"></div>
-        <input type="text" id="tenSearch" class="tenants-search-box" placeholder="Search By Tenant Name or Id…" aria-label="Search tenants" />
-      </div>
-      <div class="tenants-table-wrap">
-        <table class="tenants-table" id="tenTable" aria-label="Tenants list">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th class="sortable" data-sort="name">Name <span class="sort-ind" id="sortInd-name"></span></th>
-              <th class="sortable" data-sort="sites" style="text-align:right;">Number Of Sites <span class="sort-ind" id="sortInd-sites"></span></th>
-              <th class="sortable" data-sort="instances">Instances Status <span class="sort-ind" id="sortInd-instances"></span></th>
-              <th class="sortable" data-sort="tenantStatus">Tenant Status <span class="sort-ind" id="sortInd-tenantStatus"></span></th>
-              <th class="sortable" data-sort="regDate" style="white-space:nowrap;">Registration Date <span class="sort-ind" id="sortInd-regDate"></span></th>
-            </tr>
-          </thead>
-          <tbody id="tenBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination-bar" id="tenPagination" aria-label="Pagination controls">
-        <label style="display:flex;align-items:center;gap:6px;">Rows per page <select id="tenRows"><option>25</option><option>10</option><option>50</option></select></label>
-        <div id="tenRange">0–0 of 0</div>
-        <div style="display:flex;gap:8px;">
-          <button id="tenPrev" disabled>Prev</button>
-          <button id="tenNext" disabled>Next</button>
+        <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:0 0 20px;">
+          <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Given the current alert snapshot above, which single alert would you triage first and why?</div>
+          <div id="triageAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
         </div>
-      </div>
-      <div id="tenEmpty" class="empty-state" style="display:none;">No results</div>
-      <div id="tenQuestions" style="margin-top:34px;">
-        <h3 style="margin:10px 0 12px;font-size:18px;color:#0f172a;">Tenant ID Exercise</h3>
-        <ol style="margin:0 0 20px 22px;font-size:13px;line-height:1.55;max-width:920px;">
-          <li style="margin-bottom:14px;">Search the table for a tenant ID you observed earlier in an alert or investigation material. Record the tenant <strong>ID</strong>, its <strong>Name</strong>, and its <strong>Registration Date</strong> exactly as shown.</li>
-          <li>One of your peers reported a possible data consistency bug involving two specific clients: <strong>NorthPeak Mining</strong> and <strong>Metro Legal Assoc</strong>. Inspect them in the table and explain what you believe the underlying problem is and why it could be risky for downstream systems.</li>
-        </ol>
-        <div class="field-set" style="margin-top:4px;">
-          <div class="field">
-            <label>Question 1 — Tenant ID, Name & Registration Date</label>
-            <textarea id="q1Answer" class="text-box" data-rich="1" placeholder="Format suggestion: ID = ...\nName = ...\nRegistration Date = ..." style="min-height:120px;"></textarea>
+        <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
+          <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Describe the selected alert and its impact on the tenant's environment.</div>
+          <div id="alertDescriptionAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
+        </div>
+        
+        <!-- Tenant ID Verification Section -->
+        <div style="background:#fef3c7;border:1px solid #fbbf24;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(251,191,36,.25);margin:26px 0 20px;">
+          <div style="font-size:15px;font-weight:700;color:#92400e;margin-bottom:12px;">Enter Tenant ID to Continue</div>
+          <div style="font-size:13px;color:#78350f;margin-bottom:12px;">Enter the tenant ID from the alert details to access the portal and continue the investigation.</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="text" id="tenantIdInput" placeholder="Enter Tenant ID from alert details" style="flex:1;padding:10px 14px;border:1px solid #fbbf24;border-radius:10px;font-size:13px;font-family:ui-monospace,monospace;" />
+            <button id="verifyTenantBtn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Verify & Access Portal</button>
           </div>
-          <div class="field">
-            <label>Question 2 — Bug Analysis (NorthPeak Mining & Metro Legal Assoc)</label>
-            <textarea id="q2Answer" class="text-box" data-rich="1" placeholder="Describe the issue you see between the two tenants, potential root cause (e.g. data ingest, duplication, key collision), risks (reporting, billing, isolation), and suggested remediation." style="min-height:160px;"></textarea>
+          <div id="tenantVerifyMsg" style="margin-top:10px;font-size:12px;min-height:18px;"></div>
+        </div>
+        
+        <!-- Hidden until tenant ID verified -->
+        <div id="portalAndQuestionsSection" style="display:none;">
+          <!-- Portal with All Gateways Section -->
+          <div style="background:#e0f2fe;border:1px solid #0ea5e9;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(14,165,233,.25);margin:26px 0 20px;">
+            <div style="font-size:15px;font-weight:700;color:#075985;margin-bottom:12px;">Infinity Portal - Gateway Access</div>
+            <div style="font-size:13px;color:#0c4a6e;margin-bottom:12px;">Click on any gateway name to open its SSH terminal below.</div>
+            <iframe id="portalIframe" src="/infinity-portal-mock.html" title="Infinity Portal Mock" style="width:100%;height:320px;border:1px solid #7dd3fc;border-radius:14px;background:#fff;box-shadow:0 2px 8px -2px rgba(14,165,233,.2);"></iframe>
+            
+            <!-- Gateway Terminal Section (appears when gateway is clicked) -->
+            <div id="gatewayTerminalSectionMain" style="display:none;margin-top:16px;border:1px solid #7dd3fc;border-radius:14px;background:#f0f9ff;padding:16px;">
+              <h4 id="gatewayTerminalTitle" style="margin:0 0 10px;font-size:14px;color:#075985;">Gateway Terminal: <span id="gatewayNameDisplay"></span></h4>
+              <div id="gatewayTerminal" style="background:#000;border-radius:8px;padding:0;height:420px;overflow:hidden;"></div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div id="jibanaEmbed" style="margin-top:46px;">
-        <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Jibana Log Explorer</h3>
-        <p style="font-size:12.5px;color:#475569;margin:0 0 16px;max-width:980px;">Embedded lightweight log explorer. Use the time range, KQL-like query bar, histogram, and field selector to inspect synthetic gateway/auth logs. This version has no quiz elements.</p>
-        <iframe src="/kibana/index.html" title="Jibana Log Explorer" style="width:100%;height:820px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;box-shadow:0 4px 18px -6px rgba(0,0,0,.08);"></iframe>
-        <div style="font-size:11px;color:#64748b;margin-top:8px;">Open in new tab: <a href="/kibana/index.html" target="_blank">/kibana/index.html</a></div>
-      </div>
-      <div id="ownershipMatrixEmbed" style="margin-top:54px;">
-        <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">SASE Ownership Matrix & Ticket Intake</h3>
-        <p style="font-size:12.5px;color:#475569;margin:0 0 16px;max-width:980px;">Reference ownership across modules and practice rapid incident ticket drafting. Filter matrix, run quick assignment quiz, then generate a markdown ticket. Data is mock training content.</p>
-  <iframe src="/task/sase_ownership_matrix_ticket.html" title="SASE Ownership Matrix & Ticket Intake" style="width:100%;height:920px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;box-shadow:0 4px 20px -6px rgba(219,39,119,.18);"></iframe>
-        <div style="font-size:11px;color:#64748b;margin-top:8px;">Open in new tab: <a href="/task/sase_ownership_matrix_ticket.html" target="_blank">/task/sase_ownership_matrix_ticket.html</a></div>
-      </div>
-    </div>
-    <!-- Portal Panel (renamed from Timeline) -->
-    <div class="panel" id="panel-timeline" data-panel="timeline">
-      <h2>Portal</h2>
-      <p class="small-hint">Embedded Infinity Portal mock below. Original timeline input retained above if needed.</p>
-      <div class="flex-row" style="gap:10px;align-items:flex-end;margin-bottom:12px;">
-        <div style="flex:3;min-width:260px;">
-          <label style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;">Entry</label>
-          <input type="text" id="timelineEntry" class="mini-box" placeholder="e.g. Elevated latency on GW-3 vs baseline 45ms → 120ms" />
-        </div>
-        <div style="flex:1;min-width:160px;">
-          <label style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;">Tag</label>
-          <select id="timelineTag" class="mini-box" style="min-height:48px;">
-            <option value="obs">observation</option>
-            <option value="action">action</option>
-            <option value="result">result</option>
-            <option value="escalation">escalation</option>
-            <option value="handover">handover</option>
-          </select>
-        </div>
-        <button type="button" class="btn-primary" id="btnAddTimeline">Append</button>
-      </div>
-      <ol class="timeline-list" id="timelineList" aria-label="Portal notes list"></ol>
-      <div style="margin-top:26px;">
-        <h3 style="margin:0 0 12px;font-size:17px;color:#0f172a;">Infinity Portal (Embedded)</h3>
-        <iframe src="/infinity-portal-mock.html" title="Infinity Portal Mock" style="width:100%;height:780px;border:1px solid #e0d2e9;border-radius:18px;background:#fff;box-shadow:0 4px 18px -6px rgba(180,60,160,.18);"></iframe>
-        <div style="font-size:11px;color:#885088;margin-top:8px;">Open standalone: <a href="/infinity-portal-mock.html" target="_blank">/infinity-portal-mock.html</a></div>
-      </div>
-    </div>
-    <!-- Mitigation Actions -->
-    <div class="panel" id="panel-actions" data-panel="actions">
-      <h2>Mitigation Actions & Verification</h2>
-      <p class="small-hint">Track each attempted mitigation and its verification step/results.</p>
-      <div class="field-set">
-        <div class="field">
-          <label>Actions & Rationale</label>
-          <textarea id="actActions" class="text-box" data-rich="1" placeholder="List each action with rationale.\nEx: Disabled noisy synthetic probe #4 to reduce gateway CPU contention."></textarea>
-        </div>
-        <div class="field">
-          <label>Verification Checks</label>
-          <textarea id="actVerif" class="text-box" data-rich="1" placeholder="Post-mitigation metrics / packet loss / latency / user error rate."></textarea>
-        </div>
-        <div class="field">
-          <label>Rollback / Contingency</label>
-          <textarea id="actRollback" class="text-box" data-rich="1" placeholder="Rollback triggers & safe revert path."></textarea>
-        </div>
-      </div>
-    </div>
-    <!-- Root Cause & Handover -->
-    <div class="panel" id="panel-rootcause" data-panel="rootcause">
-      <h2>Root Cause Synthesis & Shift Handover</h2>
-      <p class="small-hint">Summarize confirmed root cause (or current leading hypothesis), residual risk, user impact, metrics trajectory, and explicit next steps for incoming shift.</p>
-      <div class="field-set">
-        <div class="field">
-          <label>Confirmed Root Cause / Leading Hypothesis</label>
-          <textarea id="rcCause" class="text-box" data-rich="1" placeholder="Ex: ISP uplink-A 12% packet loss due to upstream maintenance window; latency & CPU cascade."></textarea>
-        </div>
-        <div class="field">
-          <label>Impact Assessment</label>
-          <textarea id="rcImpact" class="text-box" data-rich="1" placeholder="Scope, duration, affected branches/users, error rates."></textarea>
-        </div>
-        <div class="field">
-          <label>Residual Risk / Watch Items</label>
-          <textarea id="rcRisk" class="text-box" data-rich="1" placeholder="Remaining elevated latency on GW-3 (65ms > 45ms baseline); monitor for next 30m."></textarea>
-        </div>
-        <div class="field">
-          <label>Handover Note</label>
-          <textarea id="rcHandover" class="text-box" data-rich="1" placeholder="Concise shift handover message for successor."></textarea>
+          
+          <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
+            <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Compare the affected gateway vs. a healthy gateway</div>
+            <div style="margin-top:10px;font-size:13px;color:#065f46;margin-bottom:12px;">Provide two screenshots (affected vs healthy) and a brief description of the differences.</div>
+            <div id="gatewayComparisonAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
+          </div>
+          <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
+            <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Follow the playbook step by step and document each stage.</div>
+            <div style="margin-top:10px;font-size:13px;color:#065f46;margin-bottom:12px;">Execute the investigation/cleanup part of the playbook exactly in order and document:<br>Provide screenshots for each step and a final summary screenshot of the final disk state.</div>
+            <div id="playbookExecutionAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
   <div class="actions" style="justify-content:flex-start;">
-    <div style="font-size:12px;color:#475569;font-weight:600;">(Record alert correlation & handover in your final PDF/DOCX submission.)</div>
+    
   </div>
 </main>
 <script src="/header-timer.js" defer></script>
 <script>
 (function(){
   const KEY='alertCorrelationTask_v1';
-  const VERSION=3; // v3 switches alerts panel to static snapshot list
+    const VERSION=19; // v19 removes Tenants List panel (moved to Task 6)
   // Structured decoy playbook overrides (non-P1). Used for rich rendering instead of raw list lines.
   const PLAYBOOK_OVERRIDES={
     'ALRT-IDA-20250918-202502':{
@@ -391,6 +304,36 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       decision:'If backlog drains & consumer lag < threshold for 15m → Resolved; else escalate to Streaming Platform.'
     }
   };
+  // Fallback static alerts reduced to requested P1 + new P3 LaaS alert
+  const ALERTS_FALLBACK=[
+    {"id":"ALRT-MEM-20250917-053802","product":"Harmony Connect","severity":"P1","title":"[FIRING:1] Instance | High Disk Usage - var log","customer":"disk usage var log alertinfoTM-92250","time_iso":"2025-09-17T05:38:00+03:00","affectedGateway":"g4","tenantId":"8ab93415-5bb1-4fdf-b1dc-2d1174626109"},
+    {"id":"ALRT-LAAS-20250205-EXPNOTENABLED","product":"LaaS","severity":"P3","title":"Main LaaS Sanity | Exporter is not enabled {}","customer":"Main LaaS Sanity","time_iso":"2025-02-05T09:00:00Z","createdBy":"Benjamin Sabbag","lastModified":"2025-02-05","moreInfoHref":"#kb/KB-LAAS-EXPNOTENABLED","playbookId":"PB-LAAS-EXPORTER-NOT-ENABLED","tenantId":"7c2f8a93-1e4b-4a8c-9d5e-3f6b2c1a8e7d"},
+    {"id":"ALRT-MON-20250203-DELAY","product":"Monitoring","severity":"P4","title":"Metric Collection Delay Detected","customer":"Global Retail Systems","time_iso":"2025-02-03T14:22:00Z","tenantId":"9f3e5c71-4d2a-4b9f-8e6d-1a7c3b5f4e2a"},
+    {"id":"ALRT-API-20250203-SLOWRESP","product":"API Gateway","severity":"P4","title":"API Response Time Elevated","customer":"FinTech Solutions","time_iso":"2025-02-03T13:15:00Z","tenantId":"2d4e8b19-6f3c-4e7a-9b2d-5c8f1a4e6b3d"},
+    {"id":"ALRT-CERT-20250203-EXPIRING","product":"Certificate Manager","severity":"P5","title":"SSL Certificate Expiring in 45 Days","customer":"Healthcare Networks","time_iso":"2025-02-03T10:30:00Z","tenantId":"5a7c3f82-9e1b-4d6c-8f4a-2b9e5c7d1f3a"},
+    {"id":"ALRT-LOG-20250203-ROTATION","product":"Log Management","severity":"P5","title":"Log Rotation Warning","customer":"Manufacturing Corp","time_iso":"2025-02-03T09:45:00Z","tenantId":"4e9b2c71-8d3f-4a6e-9c2b-7f5a1d8e4c6b"},
+    {"id":"ALRT-BACKUP-20250203-SLOW","product":"Backup Service","severity":"P4","title":"Backup Duration Exceeded Threshold","customer":"Media Distribution","time_iso":"2025-02-03T08:00:00Z","tenantId":"6c1f4e93-2a8d-4b7e-9f3c-5d8a2e6f1b4c"},
+    {"id":"ALRT-DNS-20250203-LATENCY","product":"DNS Service","severity":"P5","title":"DNS Query Latency Spike","customer":"Education Platform","time_iso":"2025-02-03T07:20:00Z","tenantId":"8d2e6f41-9c3b-4a7d-8e5f-2c9a4b1d7e3f"},
+    {"id":"ALRT-CACHE-20250203-HITRATE","product":"Cache Layer","severity":"P4","title":"Cache Hit Rate Below Target","customer":"E-Commerce Hub","time_iso":"2025-02-03T06:10:00Z","tenantId":"3f7a9e52-4b8c-4d1e-9a6f-5e2c8d4f1b7a"},
+    {"id":"ALRT-LB-20250203-UNEVEN","product":"Load Balancer","severity":"P5","title":"Uneven Traffic Distribution","customer":"Gaming Platform","time_iso":"2025-02-03T05:30:00Z","tenantId":"1b4e8c93-7f2d-4a9e-8c5b-6d3f9a2e4c1b"}
+  ];
+  function useFallback(){
+    if(alerts.length>0) return; // don't overwrite if already loaded
+    alerts=ALERTS_FALLBACK.map(a=>({
+      id:a.id,
+      team:'Harmony Sase',
+      priority:a.severity,
+      title:a.title,
+      context:a.customer,
+      opened:new Date(a.time_iso).toLocaleString(),
+      raw:a
+    }));
+    // Inject tenant/account details for P1 alert
+    alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='Mitsubishi HC Capital BO'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
+  repositionP1();
+    renderAlerts();
+    updateCounters();
+  }
   // Elements
   const tabButtons=[...document.querySelectorAll('.tab-btn')];
   const panels=[...document.querySelectorAll('.panel')];
@@ -398,7 +341,13 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
     tabButtons.forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');});
     panels.forEach(p=> p.classList.toggle('active', p.dataset.panel===tab));
   }
-  tabButtons.forEach(btn=> btn.addEventListener('click',()=>activate(btn.dataset.tab)));
+  tabButtons.forEach(btn=> btn.addEventListener('click',()=>{
+    const heroBox = document.querySelector('.hero-box');
+    const offset = 80;
+    const elementPosition = heroBox.getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({top: elementPosition - offset, behavior: 'smooth'});
+    activate(btn.dataset.tab);
+  }));
 
   // Alerts (static snapshot)
   const alertsBody=document.getElementById('alertsBody');
@@ -407,7 +356,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   const ctrP2P3=document.getElementById('ctrP2P3');
   const ctrLower=document.getElementById('ctrLower');
   let alerts=[]; // static objects
-  let timeline=[]; // {time,tag,text}
+  // timeline removed in v5
   // (Correlation fields removed in Tenants refactor)
   // Actions
   const actActions=document.getElementById('actActions');
@@ -418,11 +367,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   const rcImpact=document.getElementById('rcImpact');
   const rcRisk=document.getElementById('rcRisk');
   const rcHandover=document.getElementById('rcHandover');
-  // Timeline
-  const timelineList=document.getElementById('timelineList');
-  const timelineEntry=document.getElementById('timelineEntry');
-  const timelineTag=document.getElementById('timelineTag');
-  const btnAddTimeline=document.getElementById('btnAddTimeline');
+  // Timeline elements removed in v5
 
   // Save/UI controls removed
   const priorityAnswer=document.getElementById('priorityAnswer');
@@ -527,9 +472,11 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
         ${alias?kv('Alias', alias):''}
         ${ownerTeam?kv('Owner Team', ownerTeam):''}
         ${tenant?kv('Tenant', tenant):''}
+        ${r.affectedGateway?kv('Affected Gateway', r.affectedGateway):''}
+        ${r.account_name?kv('Account', r.account_name):''}
+        ${r.account_id?kv('Account Id', r.account_id):''}
         ${lastDup?kv('Last Duplicated', lastDup):''}
       </div>
-      <div class="detail-section"><strong>More Info</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(r.more_info||'')}</pre></div>
       ${labelsObj?`<div class="detail-section"><strong>Raw Labels</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(Object.entries(labelsObj).map(([k,v])=>k+' = '+v).join('\n'))}</pre></div>`:''}
       ${annObj?`<div class="detail-section"><strong>Annotations</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(Object.entries(annObj).map(([k,v])=>k+' = '+v).join('\n'))}</pre></div>`:''}
       ${trueCause?`<div class="detail-section"><strong>Examiner True Cause</strong><pre class="code-block" style="margin-top:6px;white-space:pre-wrap;">${esc(trueCause)}</pre></div>`:''}
@@ -560,8 +507,10 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
           <div style="font-weight:600;text-align:center;padding:6px 10px;border:1px solid #fbcfe8;background:#ffe4ef;border-radius:10px;margin-bottom:16px;">Preliminary</div>
           <div style="font-size:12.5px;margin-bottom:18px;">
             <ol style="margin:0 0 0 18px;padding:0;">
-              <li>SSH to gateway host</li>
-              <li>Run <code style="background:#0f172a;color:#fbcfe8;border:none;padding:2px 6px;border-radius:6px;">free -m</code> & <code style="background:#0f172a;color:#fbcfe8;border:none;padding:2px 6px;border-radius:6px;">df -h</code> (differentiate cache vs real)</li>
+              <li>Go to <a href="#" onclick="document.querySelector('.tab-btn[data-tab=tenants]').click(); return false;" style="color:#db2777;font-weight:600;text-decoration:none;border-bottom:1px solid #fbcfe8;">Tenant List</a> (click to open tenant finder tab)</li>
+              <li>Search for your tenant by <strong>Tenant ID</strong> from Additional Info</li>
+              <li>After finding it, click on the tenant - this will take you to our portal where you can run commands from this playbook</li>
+              <li>Find the affected gateway and click on it to SSH connect to it</li>
             </ol>
           </div>
           <div style="font-weight:600;text-align:center;padding:6px 10px;border:1px solid #fbcfe8;background:#fff5cc;border-radius:10px;margin:4px 0 16px;">Investigation / Cleanup</div>
@@ -631,18 +580,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   function formatKVList(o){ if(!o) return ''; return Object.entries(o).map(([k,v])=>`${k} = ${v}`).join('\n'); }
   function calcElapsed(startIso,endIso){ try{ const s=new Date(startIso).getTime(); const e=new Date(endIso).getTime(); let d=Math.max(0,e-s); const days=Math.floor(d/86400000); d%=86400000; const h=Math.floor(d/3600000); d%=3600000; const m=Math.floor(d/60000); return `${days}d ${h}h ${m}m`; }catch{return '?';} }
 
-  function addTimeline(){
-    if(!timelineEntry.value.trim()) return; timeline.push({time:new Date().toISOString(),tag:timelineTag.value,text:timelineEntry.value.trim()}); timelineEntry.value=''; renderTimeline(); markDirty();
-  }
-  function renderTimeline(){
-    timelineList.innerHTML='';
-    timeline.sort((a,b)=> a.time.localeCompare(b.time));
-    timeline.forEach(t=>{
-      const li=document.createElement('li'); li.className='timeline-item';
-      li.innerHTML=`<div class="tmeta"><span>${fmtTime(t.time)}</span><span class="tag">${esc(t.tag)}</span></div><div>${esc(t.text)}</div>`;
-      timelineList.appendChild(li);
-    });
-  }
+  // Timeline functions removed in v5
 
   function save(){}
   function load(){
@@ -651,7 +589,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       if(raw){
         const data=JSON.parse(raw);
         if(data){
-          timeline=Array.isArray(data.timeline)?data.timeline:[];
+          // timeline removed in v5
           if(data.actions){ actActions.value=data.actions.actions||''; actVerif.value=data.actions.verification||''; actRollback.value=data.actions.rollback||''; }
           if(data.root){ rcCause.value=data.root.cause||''; rcImpact.value=data.root.impact||''; rcRisk.value=data.root.risk||''; rcHandover.value=data.root.handover||''; }
           if(typeof data.priorityAnswer==='string'){ priorityAnswer.value=data.priorityAnswer; }
@@ -664,7 +602,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       console.warn('Load fail',e);
     }
     defineStaticAlerts(); // async will render when done
-    renderTimeline();
+    // renderTimeline removed in v5
     markSaved();
   }
   function clearAll(){}
@@ -674,10 +612,10 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
   function fmtTime(iso){ try{ const d=new Date(iso); return d.toISOString().replace('T',' ').slice(0,19)+'Z'; }catch{return iso; } }
 
-  btnAddTimeline.addEventListener('click',addTimeline);
+  // Timeline event listener removed in v5
 
   // dirty tracking for text areas
-  [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,priorityAnswer,priorityDescribe,q1Answer,q2Answer].forEach(el=> el && el.addEventListener('input',markDirty));
+  [actActions,actVerif,actRollback,rcCause,rcImpact,rcRisk,rcHandover,q1Answer,q2Answer].forEach(el=> el && el.addEventListener('input',markDirty));
 
   load();
   async function defineStaticAlerts(){
@@ -687,97 +625,217 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       const data=await res.json();
       alerts=(data.alerts||[]).map(a=>({
         id:a.id,
-        team:a.product,
+        team:'Harmony Sase',
         priority:a.severity,
         title:a.title,
         context:a.customer,
         opened:new Date(a.time_iso).toLocaleString(),
         raw:a
       }));
+      // Inject tenant/account details for P1 alert
+      alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='Mitsubishi HC Capital BO'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
+      // If P3 exporter-not-enabled alert missing, append it
+      if(!alerts.find(x=>x.id==='ALRT-LAAS-20250205-EXPNOTENABLED')){
+        alerts.push({
+          id:'ALRT-LAAS-20250205-EXPNOTENABLED',
+          team:'Harmony Sase',
+          priority:'P3',
+          title:'Main LaaS Sanity | Exporter is not enabled {}',
+          context:'Main LaaS Sanity',
+          opened:new Date('2025-02-05T09:00:00Z').toLocaleString(),
+          raw:{id:'ALRT-LAAS-20250205-EXPNOTENABLED',product:'LaaS',severity:'P3',title:'Main LaaS Sanity | Exporter is not enabled {}',customer:'Main LaaS Sanity',time_iso:'2025-02-05T09:00:00Z',createdBy:'Benjamin Sabbag',lastModified:'2025-02-05',moreInfoHref:'#kb/KB-LAAS-EXPNOTENABLED',playbookId:'PB-LAAS-EXPORTER-NOT-ENABLED'}
+        });
+      }
+      // Don't filter - keep all alerts including P4/P5
+      repositionP1();
       renderAlerts();
       updateCounters();
+      if(alerts.length===0) useFallback();
     }catch(e){
       console.warn('Failed to load mock_alerts.json',e);
+      useFallback();
     }
   }
-  /* ===================== TENANTS TABLE LOGIC ===================== */
-  const TENANTS=(function(){
-    const base=new Date();
-    function daysAgo(n){const d=new Date(base);d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
-    return [
-      {id:'ead9000d-89ea-4d02-922d-518d469e2509',name:'Zenith Health Core',sites:54,inst:{ok:4,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(2)},
-      {id:'f3c1b210-11d4-4f2f-9b2c-01aa3f91d001',name:'Acme Retail East',sites:12,inst:{ok:3,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(1)},
-      {id:'7c2f9d2e-62b5-4b10-8b4f-19bca1a41002',name:'Global EduNet',sites:33,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(5)},
-      {id:'0b9a86d1-6f99-4d8c-9a73-003c56ab1003',name:'FinNova Sandbox',sites:4,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(9)},
-      {id:'f2bfaa7d-5a01-4e8a-9f60-994bc2ba1004',name:'Urban Logistics',sites:21,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(12)},
-      {id:'1c5d5d4f-5c33-4d75-bb8f-af2f39d81005',name:'Skyline Media Group',sites:8,inst:{ok:2,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(4)},
-      {id:'2a7c71be-2e5c-4ac5-a7fd-8cd520d21006',name:'AeroSecure Ops',sites:16,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(14)},
-      {id:'38f0aab2-3d29-4dc7-a7b1-17b6882b1007',name:'Evergreen Bio Labs',sites:5,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(3)},
-      {id:'4d98f4c5-50e3-4c1b-bb8d-7723056e1008',name:'Helios Energy',sites:27,inst:{ok:4,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(20)},
-  // Intentional duplicate ID with NorthPeak Mining below to create a data consistency bug for exercise
-  {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'Metro Legal Assoc',sites:6,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(7)},
-  {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'NorthPeak Mining',sites:18,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(18)},
-      {id:'73ddf3b4-6c19-4d5d-bd7a-169f84bf1011',name:'Orchid Pharmaceuticals',sites:11,inst:{ok:2,warn:1,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(45)},
-      {id:'8a349bb9-2a2e-4fc3-9dfd-c761ad8a1012',name:'Pioneer Robotics',sites:9,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(6)},
-      {id:'97a3c0c9-dc4b-4e0c-a5ad-3d4f1f801013',name:'Quantum Analytics',sites:14,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(11)},
-      {id:'a4b5c6d7-e8f9-4010-a1b2-c3d4e5f61014',name:'Riverbend Hospitality',sites:30,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(8)},
-      {id:'b5c6d7e8-f901-4123-a1b2-c3d4e5f61015',name:'Summit Outdoor Gear',sites:7,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(2)},
-      {id:'c6d7e8f9-0123-4234-a1b2-c3d4e5f61016',name:'Terra Agriculture Co',sites:19,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(22)},
-      {id:'d7e8f901-1234-4345-a1b2-c3d4e5f61017',name:'Unity Gaming Cloud',sites:41,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(16)},
-      {id:'e8f90123-2345-4456-a1b2-c3d4e5f61018',name:'Vista Insurance',sites:13,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(19)},
-      {id:'f9012345-3456-4567-a1b2-c3d4e5f61019',name:'Wave Financial',sites:23,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(10)},
-      {id:'01234567-4567-4678-a1b2-c3d4e5f61020',name:'Xenon Defense R&D',sites:3,inst:{ok:0,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(1)},
-      {id:'12234567-5678-4789-a1b2-c3d4e5f61021',name:'YellowBrick Studios',sites:15,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(9)},
-      {id:'23234567-6789-4890-a1b2-c3d4e5f61022',name:'Zephyr Textiles',sites:26,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(24)},
-      {id:'34234567-7890-4901-a1b2-c3d4e5f61023',name:'Atlas Navigation',sites:17,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(13)},
-      {id:'45234567-8901-4a02-a1b2-c3d4e5f61024',name:'Brightline Security',sites:22,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(15)},
-      {id:'56234567-9012-4b03-a1b2-c3d4e5f61025',name:'Celestial Mapping',sites:2,inst:{ok:0,warn:1,down:0},tenantStatus:'CREATED',regDate:daysAgo(5)},
-      {id:'67234567-0123-4c04-a1b2-c3d4e5f61026',name:'DeepWater Research',sites:29,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(27)},
-      {id:'78234567-1234-4d05-a1b2-c3d4e5f61027',name:'Everest Fitness',sites:25,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(6)},
-      {id:'89234567-2345-4e06-a1b2-c3d4e5f61028',name:'Frost Data Systems',sites:20,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(30)},
-      {id:'90234567-3456-4f07-a1b2-c3d4e5f61029',name:'Granite Construction IT',sites:10,inst:{ok:2,warn:0,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(55)},
-      {id:'a0234567-4567-4008-a1b2-c3d4e5f61030',name:'Harbor Freight Logistics',sites:31,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(17)}
-    ];
-  })();
-  let tenState={sort:'regDate',dir:'desc',page:1,rows:25,search:''};
-  function renderTenants(){
-    const body=document.getElementById('tenBody'); if(!body) return;
-    let data=[...TENANTS];
-    if(tenState.search){ const q=tenState.search.toLowerCase(); data=data.filter(t=>t.name.toLowerCase().includes(q)||t.id.toLowerCase().includes(q)); }
-    data.sort((a,b)=>{
-      const col=tenState.sort; let av, bv;
-      if(col==='instances'){ av=(a.inst.down*100)+(a.inst.warn*10)+a.inst.ok; bv=(b.inst.down*100)+(b.inst.warn*10)+b.inst.ok; }
-      else if(col==='sites'){ av=a.sites; bv=b.sites; }
-      else if(col==='name'){ av=a.name.toLowerCase(); bv=b.name.toLowerCase(); }
-      else if(col==='tenantStatus'){ av=a.tenantStatus; bv=b.tenantStatus; }
-      else if(col==='regDate'){ av=a.regDate; bv=b.regDate; }
-      if(av<bv) return tenState.dir==='asc'? -1:1;
-      if(av>bv) return tenState.dir==='asc'? 1:-1; return 0;
-    });
-    const total=data.length; const start=(tenState.page-1)*tenState.rows; const pageData=data.slice(start,start+tenState.rows);
-    body.innerHTML='';
-    if(pageData.length===0){ document.getElementById('tenEmpty').style.display='block'; }
-    else { document.getElementById('tenEmpty').style.display='none'; pageData.forEach(t=>{
-        const tr=document.createElement('tr');
-        const instClass=t.inst.down>0?'inst-down':(t.inst.warn>0?'inst-warn':'inst-ok');
-        const instLabel=`${t.inst.ok} OK / ${t.inst.warn} Warn / ${t.inst.down} Down`;
-        const pill=`<div class="inst-pill ${instClass}"><span class="inst-dot"></span>${instLabel}</div>`;
-        let tenantStatusHTML='';
-        if(t.tenantStatus==='HIBERNATED') tenantStatusHTML=`<span class="hibernated-status">HIBERNATED<a href="#" data-ten="${t.id}" class="resume-link">resume</a></span>`;
-        else tenantStatusHTML=`<span class="${t.tenantStatus==='READY'?'inst-ok':(t.tenantStatus==='CREATED'?'inst-warn':'')}">${t.tenantStatus}</span>`;
-        tr.innerHTML=`<td class="mono" style="white-space:nowrap;">${t.id}</td><td><a href="#" class="tenant-link" data-ten="${t.id}">${t.name}</a></td><td style="text-align:right;">${t.sites}</td><td>${pill}</td><td>${tenantStatusHTML}</td><td style="font-size:12px;">${t.regDate}</td>`;
-        body.appendChild(tr);
-      }); }
-    const to=Math.min(start+tenState.rows,total); const range=document.getElementById('tenRange'); const from=total===0?0:start+1; range.textContent=`${from}–${to} of ${total}`;
-    document.getElementById('tenPrev').disabled=tenState.page===1; document.getElementById('tenNext').disabled=to>=total;
-    renderTenSummary(data);
-    ['name','sites','instances','tenantStatus','regDate'].forEach(c=>{ const ind=document.getElementById('sortInd-'+c); if(!ind) return; ind.textContent = c===tenState.sort ? (tenState.dir==='asc'?'▲':'▼') : ''; });
-    body.querySelectorAll('.tenant-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();console.log('Tenant link clicked',a.dataset.ten);}));
-    body.querySelectorAll('.resume-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();console.log('Resume tenant requested',a.dataset.ten);}));
+  // Move P1 alert (if present) to a random non-last position for variability
+  function repositionP1(){
+    const idx=alerts.findIndex(a=>a.priority==='P1');
+    if(idx===-1) return;
+    const alert=alerts.splice(idx,1)[0];
+    if(alert){
+      let target=Math.floor(Math.random()*(alerts.length));
+      // Ensure not last position to satisfy requirement
+      if(target === alerts.length) target = alerts.length-1;
+      if(target < 0) target = 0;
+      alerts.splice(target,0,alert);
+    }
   }
-  function renderTenSummary(filtered){ const el=document.getElementById('tenSummary'); if(!el) return; const total=filtered.length; const status=s=>filtered.filter(t=>t.tenantStatus===s).length; const chips=[['TOTAL',total],['CREATED',status('CREATED')],['PRE-TRIAL',status('PRE-TRIAL')],['READY',status('READY')],['HIBERNATED',status('HIBERNATED')]]; el.innerHTML=chips.map(c=>`<span class="ten-chip">${c[0]}: ${c[1]}</span>`).join(''); }
-  function initTenants(){ const search=document.getElementById('tenSearch'); if(!search) return; search.addEventListener('input',()=>{tenState.search=search.value.trim();tenState.page=1;renderTenants();}); const rowsSel=document.getElementById('tenRows'); rowsSel.addEventListener('change',()=>{tenState.rows=parseInt(rowsSel.value,10);tenState.page=1;renderTenants();}); document.getElementById('tenPrev').addEventListener('click',()=>{ if(tenState.page>1){ tenState.page--; renderTenants(); } }); document.getElementById('tenNext').addEventListener('click',()=>{ tenState.page++; renderTenants(); }); document.querySelectorAll('#tenTable thead th.sortable').forEach(th=> th.addEventListener('click',()=>{ const col=th.dataset.sort; if(tenState.sort===col) tenState.dir=tenState.dir==='asc'?'desc':'asc'; else { tenState.sort=col; tenState.dir = col==='name' ? 'asc':'desc'; } tenState.page=1; renderTenants(); })); renderTenants(); }
-  initTenants();
+  // Tenants table moved to Task 6 (/task/tenants.html)
+  
+  // Reset gateway function - recreates disk issue in g4
+  window.resetGateway = async function() {
+    if (!confirm('This will reset the g4 gateway to its original state with the disk issue. Continue?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/reset-gateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        alert('Reset done');
+        // Reload terminal if it's open
+        const frame = document.getElementById('gatewayTerminalFrame');
+        if (frame && frame.src) {
+          frame.src = frame.src; // Reload iframe
+        }
+      } else {
+        alert('Failed to reset gateway. Please try again.');
+      }
+    } catch (error) {
+      console.error('Reset error:', error);
+      alert('Error resetting gateway: ' + error.message);
+    }
+  };
+  
+  // Tenant ID verification
+  let currentTerminal = null;
+  const validTenantId = '8ab93415-5bb1-4fdf-b1dc-2d1174626109';
+  
+  document.getElementById('verifyTenantBtn').addEventListener('click', function() {
+    const input = document.getElementById('tenantIdInput');
+    const msg = document.getElementById('tenantVerifyMsg');
+    const enteredId = input.value.trim();
+    
+    if (!enteredId) {
+      msg.style.color = '#dc2626';
+      msg.textContent = '❌ Please enter a tenant ID';
+      return;
+    }
+    
+    if (enteredId === validTenantId) {
+      msg.style.color = '#059669';
+      msg.textContent = '✅ Tenant ID verified! Portal and investigation tools are now accessible.';
+      document.getElementById('portalAndQuestionsSection').style.display = 'block';
+      
+      // Scroll to portal section
+      setTimeout(() => {
+        document.getElementById('portalAndQuestionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    } else {
+      msg.style.color = '#dc2626';
+      msg.textContent = '❌ Invalid tenant ID. Please check the alert details and try again.';
+    }
+  });
+  
+  // Gateway terminal function for main portal section
+  window.openGatewayTerminal = function(gatewayName) {
+    const mainSection = document.getElementById('gatewayTerminalSectionMain');
+    if (mainSection) {
+      const nameDisplay = document.getElementById('gatewayNameDisplay');
+      const terminalDiv = document.getElementById('gatewayTerminal');
+      
+      if (nameDisplay && terminalDiv) {
+        nameDisplay.textContent = gatewayName;
+        
+        // Clean up existing terminal
+        if (currentTerminal) {
+          currentTerminal.dispose();
+          currentTerminal = null;
+        }
+        terminalDiv.innerHTML = '';
+        
+        // Check if Terminal libraries are loaded
+        if (typeof Terminal === 'undefined' || typeof FitAddon === 'undefined') {
+          console.error('Terminal or FitAddon not loaded');
+          terminalDiv.innerHTML = '<div style="color:#fff;padding:20px;font-family:monospace;">Terminal libraries not loaded. Please refresh the page.</div>';
+          mainSection.style.display = 'block';
+          return;
+        }
+        
+        // Create new xterm terminal
+        const containerName = gatewayName;
+        const term = new Terminal({
+          cursorBlink: true,
+          fontSize: 13,
+          fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+          theme: {
+            background: '#000000',
+            foreground: '#ffffff'
+          }
+        });
+        
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(terminalDiv);
+        fitAddon.fit();
+        
+        // WebSocket connection
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${location.host}/api/terminal-ws/${containerName}`);
+        
+        ws.onopen = () => {
+          term.write('\\r\\n\\x1b[32mConnected to ' + gatewayName + '\\x1b[0m\\r\\n\\r\\n');
+        };
+        
+        ws.onmessage = (event) => {
+          term.write(event.data);
+        };
+        
+        term.onData((data) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(data);
+          }
+        });
+        
+        ws.onclose = () => {
+          term.write('\\r\\n\\x1b[31mConnection closed\\x1b[0m\\r\\n');
+        };
+        
+        ws.onerror = () => {
+          term.write('\\r\\n\\x1b[31mConnection error\\x1b[0m\\r\\n');
+        };
+        
+        currentTerminal = term;
+        mainSection.style.display = 'block';
+        
+        setTimeout(() => {
+          mainSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  };
+  
+  // Initialize CKEditor for triage answer
+  const { ClassicEditor, Essentials, Bold, Italic, Paragraph, List, Link, Heading } = window.CKEDITOR;
+  ClassicEditor.create(document.querySelector('#triageAnswer'), {
+    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
+    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    placeholder: 'Type your answer here... Explain which alert you would prioritize and your reasoning.'
+  }).catch(error => console.error('CKEditor initialization error:', error));
+  
+  // Initialize CKEditor for alert description answer
+  ClassicEditor.create(document.querySelector('#alertDescriptionAnswer'), {
+    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
+    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    placeholder: 'Describe the selected alert and its impact on the tenant environment...'
+  }).catch(error => console.error('CKEditor initialization error:', error));
+  
+  // Initialize CKEditor for gateway comparison answer
+  ClassicEditor.create(document.querySelector('#gatewayComparisonAnswer'), {
+    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
+    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    placeholder: 'Compare affected gateway vs. healthy gateway with screenshots and descriptions...'
+  }).catch(error => console.error('CKEditor initialization error:', error));
+  
+  // Initialize CKEditor for playbook execution answer
+  ClassicEditor.create(document.querySelector('#playbookExecutionAnswer'), {
+    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
+    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    placeholder: 'Document each playbook step with screenshots and final disk state summary...'
+  }).catch(error => console.error('CKEditor initialization error:', error));
+  
   // Legacy embedded log explorer removed; Mini Kibana iframe now provides advanced analytics & quiz.
 })();
 </script>

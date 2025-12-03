@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exam: Configure Basic Routing</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container row between center">
+      <h1>Exam: Configure Basic Routing</h1>
+      <button id="themeToggle" aria-label="Toggle theme">🌗</button>
+    </div>
+  </header>
+
+  <main class="container grid-2">
+    <section class="card instructions">
+      <h2>Scenario</h2>
+      <p>You have three Linux machines on two networks:</p>
+      <ul>
+        <li><b>leaf-01</b> — <code>192.168.178.10/24</code> on <b>net-1</b></li>
+        <li><b>leaf-02</b> — <code>10.0.0.20/16</code> on <b>net-2</b></li>
+        <li><b>router</b> — dual-homed gateway: <code>192.168.178.2/24</code> (net-1) and <code>10.0.0.2/16</code> (net-2)</li>
+      </ul>
+      <p>Nodes cannot reach each other yet because they lack proper routing.</p>
+      <img class="topology" src="assets/topology.png" alt="Network topology diagram">
+
+      <h3>Goal</h3>
+      <p>Configure basic routing so that <b>leaf-01</b> and <b>leaf-02</b> can communicate via the <b>router</b>.</p>
+
+      <h3>Hands-on Lab (Docker)</h3>
+      <ol class="steps">
+        <li>Install Docker &amp; Docker Compose.</li>
+        <li><code>make up</code> – launches <b>leaf-01</b>, <b>leaf-02</b>, and <b>router</b> containers on two isolated networks.</li>
+        <li>Open shells: <code>make sh-leaf01</code>, <code>make sh-leaf02</code>, <code>make sh-router</code>.</li>
+        <li>Do the configuration (see <b>Exam Tasks</b> below).</li>
+        <li>Verify with <code>make grade</code>.</li>
+      </ol>
+
+      <details class="note"><summary>Tip: reset the lab</summary>
+        <p>Run <code>make reset</code> to recreate clean containers (it removes default routes on the leaves for you).</p>
+      </details>
+
+      <h3>Exam Tasks</h3>
+      <ol class="tasks">
+        <li>
+          On <b>leaf-01</b>, set the default route via the router on net-1.
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route del default || true; ip route add default via 192.168.178.2">Copy</button>
+            <code>ip route del default || true; ip route add default via 192.168.178.2</code>
+          </div>
+        </li>
+        <li>
+          On <b>leaf-02</b>, set the default route via the router on net-2.
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route del default || true; ip route add default via 10.0.0.2">Copy</button>
+            <code>ip route del default || true; ip route add default via 10.0.0.2</code>
+          </div>
+        </li>
+        <li>
+          On <b>router</b>, enable IPv4 forwarding.
+          <div class="cmd">
+            <button class="copy" data-cmd="echo 1 > /proc/sys/net/ipv4/ip_forward">Copy</button>
+            <code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</code>
+          </div>
+        </li>
+        <li>
+          Test connectivity.
+          <ul>
+            <li>From leaf-01: <span class="cmd-inline" data-cmd="ping -c 3 10.0.0.20">ping -c 3 10.0.0.20</span></li>
+            <li>From leaf-02: <span class="cmd-inline" data-cmd="ping -c 3 192.168.178.10">ping -c 3 192.168.178.10</span></li>
+          </ul>
+        </li>
+      </ol>
+
+      <details class="solution">
+        <summary>Show reference solution</summary>
+        <pre>leaf-01$ ip route del default || true
+leaf-01$ ip route add default via 192.168.178.2
+
+leaf-02$ ip route del default || true
+leaf-02$ ip route add default via 10.0.0.2
+
+router$ echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+
+# verify (either host)
+leaf-01$ ping -c 3 10.0.0.20
+leaf-02$ ping -c 3 192.168.178.10</pre>
+      </details>
+    </section>
+
+    <aside class="card console">
+      <nav class="tabs">
+        <button data-tab="leaf01" class="active">leaf-01</button>
+        <button data-tab="router">router</button>
+        <button data-tab="leaf02">leaf-02</button>
+      </nav>
+      <div class="panes">
+        <div class="pane active" id="leaf01">
+          <h3>leaf-01 quick actions</h3>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip a">Copy</button>
+            <code>ip a</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route">Copy</button>
+            <code>ip route</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route del default || true; ip route add default via 192.168.178.2">Copy</button>
+            <code>ip route del default || true; ip route add default via 192.168.178.2</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ping -c 3 10.0.0.20">Copy</button>
+            <code>ping -c 3 10.0.0.20</code>
+          </div>
+        </div>
+
+        <div class="pane" id="router">
+          <h3>router quick actions</h3>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip -br a">Copy</button>
+            <code>ip -br a</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="cat /proc/sys/net/ipv4/ip_forward">Copy</button>
+            <code>cat /proc/sys/net/ipv4/ip_forward</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="echo 1 > /proc/sys/net/ipv4/ip_forward">Copy</button>
+            <code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="sysctl -w net.ipv4.ip_forward=1">Copy</button>
+            <code>sysctl -w net.ipv4.ip_forward=1</code>
+          </div>
+        </div>
+
+        <div class="pane" id="leaf02">
+          <h3>leaf-02 quick actions</h3>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip a">Copy</button>
+            <code>ip a</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route">Copy</button>
+            <code>ip route</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ip route del default || true; ip route add default via 10.0.0.2">Copy</button>
+            <code>ip route del default || true; ip route add default via 10.0.0.2</code>
+          </div>
+          <div class="cmd">
+            <button class="copy" data-cmd="ping -c 3 192.168.178.10">Copy</button>
+            <code>ping -c 3 192.168.178.10</code>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer-note">
+        <p>Use the Docker lab for a real environment. This panel lets you copy commands quickly.</p>
+      </footer>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© networking-basic-routing-exam — Self-contained exam &amp; lab. MIT License.</p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

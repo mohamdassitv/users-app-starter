@@ -2,19 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Task 3 — High-Volume User Cleanup & On-Shift Automation</title>
+<title>Task 4 — High-Volume User Cleanup & On-Shift Automation</title>
 <link rel="stylesheet" href="/styles.css">
 <style>
-  table{border-collapse:collapse;width:100%;font-size:0.9rem}
-  th,td{border:1px solid #e2e8f0;padding:4px 6px;text-align:left}
-  th{background:#f1f5f9}
-  tbody tr:nth-child(even){background:#f8fafc}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-  .muted{color:#64748b}
-  .danger{color:#dc2626}
-  .btn-sm{font-size:0.75rem;padding:2px 6px}
-  #pager{margin-top:8px;display:flex;gap:8px;align-items:center}
-  #story pre{white-space:pre-wrap;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:4px;font-size:0.75rem;max-height:260px;overflow:auto}
+.page{max-width:1280px;margin:0 auto;padding:24px 40px 120px;}
+.hero-box{background:linear-gradient(150deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:hbPulse 16s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:30px;padding:38px 44px 40px;position:relative;box-shadow:0 18px 50px -14px rgba(190,24,93,.55),0 6px 18px -6px rgba(190,24,93,.5);margin:0 0 40px;overflow:hidden;}
+.hero-box:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 22%,rgba(255,192,220,.42),transparent 65%);mix-blend-mode:screen;pointer-events:none;}
+.hero-box h1{margin:0 0 12px;font-size:40px;letter-spacing:.05em;}
+.hero-desc{margin:0;font-size:15px;line-height:1.55;font-weight:500;max-width:960px;}
+.card{background:#fff;border:1px solid #fbcfe8;border-radius:20px;padding:32px 36px;margin:0 0 30px;box-shadow:0 6px 28px -12px rgba(219,39,119,.35);}
+.card h2{margin:0 0 16px;font-size:26px;color:#831843;letter-spacing:.5px;}
+.card h3{margin:24px 0 12px;font-size:20px;color:#be185d;}
+.card ul{margin:0 0 16px 24px;line-height:1.6;}
+.card p{margin:0 0 12px;line-height:1.6;}
+table{border-collapse:collapse;width:100%;font-size:0.9rem;margin:16px 0;}
+th,td{border:1px solid #fbcfe8;padding:8px 10px;text-align:left;}
+th{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#831843;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;}
+tbody tr:nth-child(even){background:#fff5fa;}
+tbody tr:hover{background:#fff0f7;}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;}
+.muted{color:#64748b;font-size:14px;}
+.danger{color:#dc2626;}
+.btn-sm{font-size:0.75rem;padding:4px 10px;background:#fff;border:1px solid #f9a8d4;color:#be185d;border-radius:8px;cursor:pointer;font-weight:600;transition:.18s;}
+.btn-sm:hover{background:#fff0f7;border-color:#ec4899;}
+button{background:linear-gradient(135deg,#f472b6,#ec4899,#db2777);color:#fff;font-weight:600;border:none;padding:12px 24px;border-radius:14px;font-size:14px;cursor:pointer;letter-spacing:.4px;box-shadow:0 6px 20px -8px rgba(236,72,153,.5);transition:transform .18s,box-shadow .18s;}
+button:hover{transform:translateY(-2px);box-shadow:0 12px 30px -12px rgba(236,72,153,.6);}
+#pager{margin-top:12px;display:flex;gap:10px;align-items:center;}
+@keyframes hbPulse{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
 </style>
 </head>
 <body>
@@ -27,7 +41,7 @@
   <main class="page fade-in">
     <!-- exam bar removed; header timer globally -->
   <div class="card" id="story">
-  <h2>Task 3 — High-Volume User Cleanup (Shift Escalation)</h2>
+  <h2>Task 4 — High-Volume User Cleanup (Shift Escalation)</h2>
     <p><strong>Scenario.</strong> 02:10 UTC — A SaaS customer (enterprise plan) opens a P1 chat: they accidentally bulk‑provisioned thousands of duplicate placeholder accounts during a failed HR import. Their compliance team insists the extras must be purged before 03:00 UTC to avoid license overage penalties. Engineering’s bulk tooling is offline (maintenance window overran) and you are the only on‑call operations engineer with console access.</p>
     <p><strong>Your Mission.</strong> Provide a rapid, manual-but-efficient remediation path: list the 5,000 user entries, surgically delete selected rows (simulating the cleanup decisions), and optionally add corrected user records. This UI emulates a thin emergency console you might spin up to unblock a customer while awaiting a permanent batch job fix.</p>
     <p><strong>Objectives.</strong></p>
@@ -47,16 +61,10 @@
     </ul>
   </div>
   <div class="card">
-    <h3>User Dataset</h3>
+    <h3>User Dataset (5000 entries loaded locally)</h3>
     <div class="controls">
-      <label>Page Size <select id="limit">
-        <option>25</option><option>50</option><option>100</option><option>200</option><option>500</option><option>5000</option>
-      </select></label>
-      <button onclick="prevPage()">Prev</button>
-      <button onclick="nextPage()">Next</button>
       <span id="meta" class="muted"></span>
       <button onclick="promptAdd()">Add User</button>
-      <button onclick="reloadAll()">Reload</button>
       <button onclick="resetUsers()" style="margin-left:auto;background:var(--bg-accent);color:#fff;border:none;">Reset Users</button>
     </div>
     <table id="tbl"><thead><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Action</th></tr></thead><tbody></tbody></table>
@@ -70,75 +78,18 @@
   <span class="help-label">Questions? Contact on-call.</span>
 </a>
 <script>
-const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>16) header.classList.add('shrink'); else header.classList.remove('shrink');});
-// Exam shared helpers
-async function examStatus(){ const r = await fetch('/api/exam/status'); return r.ok? r.json():{}; }
-function fmt(ms){ if(ms==null) return '--:--:--'; let s=Math.floor(ms/1000); const h=String(Math.floor(s/3600)).padStart(2,'0'); s%=3600; const m=String(Math.floor(s/60)).padStart(2,'0'); s%=60; return h+':'+m+':'+String(s).padStart(2,'0'); }
-function updateProgress(startTime,duration){ const bar=document.getElementById('examProgress'); if(!bar) return; if(!startTime){ bar.style.width='0%'; return;} const now=Date.now(); const end=startTime+duration; const total=duration; const left=end-now; const used=Math.min(Math.max(0,total-left),total); const pct=(used/total)*100; bar.style.width=pct+"%"; }
-// old exam timer removed
-document.querySelector('.brand').addEventListener('click', async (e)=>{ e.preventDefault(); const st=await examStatus(); if(!st.phone) window.location='/register.html'; else window.location='/'; });
-let offset=0, total=0;
-function qs(id){return document.getElementById(id);} 
-async function load(){
-  const limit = parseInt(qs('limit').value,10);
-  const res = await fetch(`/api/users?offset=${offset}&limit=${limit}`);
-  const data = await res.json();
-  total = data.total;
-  const tbody = document.querySelector('#tbl tbody');
-  tbody.innerHTML = data.users.map(u=>`<tr data-id="${u.id}"><td>${u.id}</td><td>${u.firstName}</td><td>${u.lastName}</td><td><button class=btn-sm onclick="delUser(${u.id})">Delete</button></td></tr>`).join('');
-  qs('meta').textContent = `Showing ${data.offset+1}-${data.offset+data.users.length} of ${data.total}`;
-  qs('pager').textContent = `Offset ${data.offset} | Page Size ${data.limit} | Remaining ${data.total}`;
-}
-async function delUser(id){
-  // silent delete without browser confirm
-  const res = await fetch('/api/users/'+id,{method:'DELETE'});
-  if(res.ok){
-    // Stay on same offset; refetch; adjust if past end
-    const limit = parseInt(qs('limit').value,10);
-    if(offset >= total-1) offset = Math.max(0, offset - limit);
-    await load();
-  } else {
-    alert('Delete failed');
-  }
-}
-function prevPage(){
-  const limit = parseInt(qs('limit').value,10);
-  offset = Math.max(0, offset - limit);
-  load();
-}
-function nextPage(){
-  const limit = parseInt(qs('limit').value,10);
-  offset = offset + limit;
-  if(offset >= total) offset = total - (total % limit || limit);
-  if(offset < 0) offset = 0;
-  load();
-}
-async function promptAdd(){
-  const fn = prompt('First Name?'); if(!fn) return;
-  const ln = prompt('Last Name?'); if(!ln) return;
-  const res = await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:fn,lastName:ln})});
-  if(res.ok){
-    // Jump to end where new user appended
-    const user = await res.json();
-    total += 1; // optimistic
-    // calculate last page offset
-    const limit = parseInt(qs('limit').value,10);
-    offset = Math.floor((total-1)/limit)*limit;
-    await load();
-    const row = document.querySelector(`tr[data-id='${user.id}']`);
-    if(row) row.style.background='#d1fae5';
-  } else {
-    alert('Add failed');
-  }
-}
-function reloadAll(){ load(); }
-async function resetUsers(){
-  const res = await fetch('/api/users/reset',{method:'POST'});
-  if(res.ok){ offset = 0; await load(); alert('Users reset to 5000 baseline'); } else { alert('Reset failed'); }
-}
-qs('limit').addEventListener('change', ()=>{ offset=0; load(); });
-// default to 100; leave selection if user chooses 5000
-load();
+// Local-only dataset of 5000 random users (no API calls)
+const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{header.classList.toggle('shrink',window.scrollY>16);});
+const firstNames=['Liam','Emma','Noah','Olivia','Elijah','Ava','Sophia','Mason','Isabella','Logan','Mia','Lucas','Charlotte','Amelia','Ethan','Harper','James','Evelyn','Benjamin','Abigail','Henry','Ella','Sebastian','Avery','Jackson','Scarlett','Alexander','Emily','Owen','Aria','Daniel','Layla','Matthew','Chloe','Wyatt','Mila','Carter','Nora','Julian','Lily','Grayson','Zoey','Leo','Riley','Isaac','Victoria','Lincoln','Aurora','Ezra','Penelope'];
+const lastNames=['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter'];
+let users=[]; let nextId=1;
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function seedUsers(){users=[]; for(let i=0;i<5000;i++){users.push({id:nextId++,firstName:rand(firstNames),lastName:rand(lastNames)});} }
+function render(){const tbody=document.querySelector('#tbl tbody'); tbody.innerHTML=users.map(u=>`<tr data-id="${u.id}"><td>${u.id}</td><td>${u.firstName}</td><td>${u.lastName}</td><td><button class="btn-sm" onclick="delUser(${u.id})">Delete</button></td></tr>`).join(''); document.getElementById('meta').textContent=`Showing all ${users.length} users`; }
+function delUser(id){const idx=users.findIndex(u=>u.id===id); if(idx>-1){users.splice(idx,1); render();}}
+function promptAdd(){const fn=prompt('First Name?'); if(!fn) return; const ln=prompt('Last Name?'); if(!ln) return; users.push({id:nextId++,firstName:fn,lastName:ln}); render(); const row=document.querySelector(`tr[data-id='${nextId-1}']`); if(row) row.style.background='#d1fae5';}
+function resetUsers(){if(!confirm('Reset to fresh random 5000 users?')) return; nextId=1; seedUsers(); render();}
+seedUsers(); render();
 </script>
 </body>
 </html>

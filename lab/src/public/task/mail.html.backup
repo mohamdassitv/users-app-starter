@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Task 2 — Customer Escalation Email Response</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+/* Modern Email Client UI - Bold/Clean Style */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.email-app-container {
+  display: flex;
+  height: calc(100vh - 200px);
+  background: #e5e7eb;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+/* Sidebar */
+.email-sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.compose-btn {
+  margin: 20px 16px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+.compose-btn:hover { background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5); }
+.compose-btn:before { content: "✏"; font-size: 16px; }
+
+.folder-list {
+  padding: 0;
+  border-top: none;
+}
+.folder-item {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #e5e7eb;
+  transition: all 0.15s;
+  border-bottom: none;
+  margin: 0;
+  border-radius: 0;
+}
+.folder-item:hover { background: rgba(102, 126, 234, 0.2); }
+.folder-item.active { background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%); color: #fff; font-weight: 600; border-left: 3px solid #667eea; }
+.folder-icon { width: 20px; text-align: center; }
+.folder-count { margin-left: auto; color: #d1d5db; font-size: 13px; }
+
+/* Main email area */
+.email-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Email list pane */
+.email-list-pane {
+  width: 380px;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  background: #f3f4f6;
+}
+
+.list-header {
+  padding: 20px 20px;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  border-radius: 12px 12px 0 0;
+}
+.list-header h2 { font-size: 20px; font-weight: 700; color: #111827; }
+.list-tools { display: flex; gap: 8px; }
+.tool-btn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tool-btn:hover { background: #f9fafb; border-color: #9ca3af; color: #374151; }
+
+.search-box {
+  padding: 16px 16px;
+  border-bottom: none;
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+}
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 10px center;
+  background-size: 16px;
+}
+.search-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+
+.email-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.email-item {
+  padding: 18px 20px;
+  border-bottom: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  margin: 0 0 8px 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.email-item:hover { background: #e5e7eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.email-item.active { background: linear-gradient(90deg, #dbeafe 0%, #e0e7ff 100%); border-left: 3px solid #667eea; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25); }
+.email-item.unread { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2); }
+.email-item.unread .email-subject { font-weight: 700; }
+
+.email-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.email-sender {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+.email-item.unread .email-sender { font-weight: 700; }
+.email-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+.email-subject {
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.email-preview {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.label-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  margin-right: 6px;
+  border: 1px solid currentColor;
+}
+.label-urgent { background: #fee2e2; color: #991b1b; }
+.label-external { background: #fef3c7; color: #92400e; }
+.label-support { background: #dbeafe; color: #1e40af; }
+
+/* Email detail pane */
+.email-detail-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.detail-header {
+  padding: 24px 32px;
+  border-bottom: 2px solid #667eea;
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+.detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.action-btn {
+  background: #d1d5db;
+  border: 1px solid #9ca3af;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: #e5e7eb; border-color: #6b7280; }
+.action-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+.action-btn.primary:hover { background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4); }
+
+.email-subject-line {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.detail-labels {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.message-card {
+  background: #f9fafb;
+  border-bottom: none;
+  padding: 28px 32px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.message-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+.sender-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.message-meta {
+  flex: 1;
+}
+.message-from {
+  font-weight: 700;
+  font-size: 15px;
+  color: #111827;
+  margin-bottom: 2px;
+}
+.message-to {
+  font-size: 13px;
+  color: #6b7280;
+}
+.message-to strong { color: #374151; font-weight: 600; }
+.message-timestamp {
+  font-size: 13px;
+  color: #6b7280;
+  text-align: right;
+}
+
+.message-content {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #374151;
+  padding-left: 56px;
+}
+.message-content p {
+  margin: 0 0 12px;
+}
+.message-content p:last-child { margin-bottom: 0; }
+
+.message-warning {
+  background: #fffbeb;
+  border: 2px solid #fbbf24;
+  border-left: 5px solid #f59e0b;
+  padding: 14px 18px;
+  border-radius: 6px;
+  margin: 20px 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #92400e;
+  box-shadow: 0 2px 6px rgba(245,158,11,0.15);
+}
+.message-warning:before {
+  content: "⚠";
+  font-size: 18px;
+  color: #f59e0b;
+}
+
+.message-attachment {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 16px 56px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.attachment-icon {
+  width: 32px;
+  height: 32px;
+  background: #dbeafe;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.attachment-info {
+  flex: 1;
+}
+.attachment-name {
+  font-weight: 600;
+  color: #111827;
+}
+.attachment-flagged {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Response area */
+.response-area {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  border-top: none;
+  padding: 28px 32px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  border-radius: 0 0 16px 16px;
+}
+.response-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.response-label:before {
+  content: "📝";
+  font-size: 16px;
+}
+
+.task-instructions {
+  background: #ecfdf5;
+  border: 2px solid #6ee7b7;
+  border-left: 5px solid #10b981;
+  padding: 20px 24px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #065f46;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.1);
+}
+.task-instructions strong {
+  color: #047857;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.header-toggle-bar {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 16px 56px;
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  border-radius: 12px;
+  border-top: none;
+  border-bottom: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.toggle-btn {
+  background: #f3f4f6;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.toggle-btn:hover { background: #e5e7eb; color: #111827; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.headers-view {
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 16px;
+  border-radius: 6px;
+  margin: 16px 56px;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* CKEditor styling */
+.ck-editor__editable { min-height: 200px !important; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .email-sidebar { width: 200px; }
+  .email-list-pane { width: 320px; }
+}
+@media (max-width: 768px) {
+  .email-sidebar { display: none; }
+  .email-list-pane { width: 100%; border-right: none; }
+  .email-detail-pane { display: none; }
+  .email-item.active ~ .email-detail-pane { display: flex; position: fixed; inset: 60px 0 0 0; z-index: 100; }
+}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+
+<!-- Scenario Header -->
+<div style="background: linear-gradient(135deg, #4b5563 0%, #374151 100%); color: white; padding: 24px 32px; margin-top: 60px; border-bottom: none; border-radius: 0 0 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+  <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; color: #fff;">📧 Task 2: Customer Email Response</h1>
+  <p style="font-size: 16px; line-height: 1.6; color: #d1d5db; margin: 0;">
+    <strong>Scenario:</strong> You're starting your shift as a Technical Support Engineer. You open your email inbox and find two messages that require your immediate attention. Read each email carefully and compose professional responses addressing the customers' concerns.
+  </p>
+</div>
+
+<div class="email-app-container" style="height: calc(100vh - 200px); margin-top: 0;">
+  <!-- Sidebar -->
+  <aside class="email-sidebar">
+    <nav class="folder-list">
+      <div class="folder-item active">
+        <span class="folder-icon">📥</span>
+        <span>Inbox</span>
+        <span class="folder-count">2</span>
+      </div>
+      <div class="folder-item">
+        <span class="folder-icon">⭐</span>
+        <span>Starred</span>
+      </div>
+      <div class="folder-item">
+        <span class="folder-icon">📤</span>
+        <span>Sent</span>
+      </div>
+      <div class="folder-item">
+        <span class="folder-icon">📝</span>
+        <span>Drafts</span>
+      </div>
+      <div class="folder-item">
+        <span class="folder-icon">🗑️</span>
+        <span>Trash</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Email List -->
+  <div class="email-list-pane">
+    <div class="list-header">
+      <h2>Inbox</h2>
+    </div>
+    <div class="search-box">
+      <input type="text" class="search-input" placeholder="Search messages...">
+    </div>
+    <div class="email-list">
+      <div class="email-item active unread" data-email="1">
+        <div class="email-item-header">
+          <span class="email-sender">Othman Kharoubi</span>
+          <span class="email-time">8:34 AM</span>
+        </div>
+        <div class="email-subject">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</div>
+        <div class="email-preview">We opened a Service Request 847291 7 days ago. Since then – no response!!!!</div>
+        <span class="label-badge label-urgent">Urgent</span>
+        <span class="label-badge label-support">SR 847291</span>
+      </div>
+      <div class="email-item unread" data-email="2">
+        <div class="email-item-header">
+          <span class="email-sender">Othman Kharoubi (Japan Bank)</span>
+          <span class="email-time">2:17 PM</span>
+        </div>
+        <div class="email-subject">FW: Urgent VPN Token Validation Required - Action Needed</div>
+        <div class="email-preview">We just received this from "Check Point Validation." Can you please confirm whether it's legit?</div>
+        <span class="label-badge label-external">External</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Detail -->
+  <div class="email-detail-pane">
+    <!-- Email 1 Detail -->
+    <div class="email-detail" id="email-1" style="display: flex; flex-direction: column; height: 100%;">
+      <div class="detail-header">
+        <h1 class="email-subject-line">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</h1>
+        <div class="detail-labels">
+          <span class="label-badge label-urgent">Urgent</span>
+          <span class="label-badge label-support">SR 847291</span>
+        </div>
+      </div>
+      
+      <div class="detail-body">
+        <div class="message-card">
+          <div class="message-header">
+            <div class="sender-avatar">OK</div>
+            <div class="message-meta">
+              <div class="message-from">Othman Kharoubi</div>
+              <div class="message-to"><strong>To:</strong> support@support.support</div>
+              <div class="message-to"><strong>Ticket:</strong> SR 847291</div>
+            </div>
+            <div class="message-timestamp">Today 8:34 AM</div>
+          </div>
+          <div class="message-content">
+            <p>We opened a Service Request 847291 7 days ago. Since then – no response!!!!</p>
+            <p>The support level we receive for the amount of money we pay is outrageous!</p>
+            <p>Our users suffer from frequent connectivity issues!</p>
+            <p>Please respond ASAP!!!</p>
+            <p style="margin-top: 20px;">B.R.<br>Othman Kharoubi<br>CTO - Mycompany</p>
+          </div>
+        </div>
+        
+        <div class="response-area">
+          <div class="task-instructions">
+            <strong>📋 Task 2.1: Customer Escalation Response</strong>
+            Write a concise, professional response to the client. Address their concerns about the delayed SR, acknowledge their frustration, and provide clear next steps. Compose your full email in the editor below.
+          </div>
+          <div class="response-label">Your Email Response</div>
+          <div id="editor-task21" data-task-id="mail.task21Response"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email 2 Detail (Phishing) -->
+    <div class="email-detail" id="email-2" style="display: none; flex-direction: column; height: 100%;">
+      <div class="detail-header">
+        <h1 class="email-subject-line">FW: Urgent VPN Token Validation Required - Action Needed</h1>
+        <div class="detail-labels">
+          <span class="label-badge label-external">External Sender</span>
+        </div>
+      </div>
+      
+      <div class="detail-body">
+        <!-- Client context message -->
+        <div class="message-card" style="background: #f0f9ff; border-bottom: 2px solid #0066ff;">
+          <div class="message-header">
+            <div class="sender-avatar" style="background: linear-gradient(135deg, #0ea5e9 0%, #0066ff 100%);">OK</div>
+            <div class="message-meta">
+              <div class="message-from">Othman Kharoubi (CTO, Japan Bank)</div>
+              <div class="message-to"><strong>To:</strong> Support Team</div>
+            </div>
+            <div class="message-timestamp">Today 2:17 PM</div>
+          </div>
+          <div class="message-content">
+            <p>We just received this from "Check Point Validation." Can you please confirm whether it's legit? If it is, we'll follow the steps. If not, tell us what to do next. Forwarding the mail now.</p>
+          </div>
+        </div>
+
+        <!-- Forwarded suspicious email -->
+        <div class="message-card">
+          <div class="message-warning">
+            <span>External sender — exercise caution with links and attachments</span>
+          </div>
+          <div class="header-toggle-bar">
+            <button type="button" class="toggle-btn active" data-view="plain">📄 Plain Text</button>
+            <button type="button" class="toggle-btn" data-view="headers">🔍 View Headers</button>
+          </div>
+          <div class="message-header">
+            <div class="sender-avatar" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">⚠</div>
+            <div class="message-meta">
+              <div class="message-from">"Check Point Validation" &lt;support@checkp0int-security.com&gt;</div>
+              <div class="message-to"><strong>To:</strong> you@company.com</div>
+              <div class="message-to"><strong>Date:</strong> Mon, 14 Oct 2024 09:12:08 +0000</div>
+              <div class="message-to"><strong>Msg-ID:</strong> &lt;98345723.validation@checkp0int-security.com&gt;</div>
+            </div>
+            <div class="message-timestamp">Oct 14, 9:12 AM</div>
+          </div>
+          
+          <div class="message-content" id="t22Plain">
+            <p>Dear User,</p>
+            <p>Our automated security gateway detected an issue validating your Harmony VPN token. To avoid service interruption, you must re-validate within 1 hour.</p>
+            <p><strong>Please follow the secure validation portal here:</strong> hxxps://validate-checkp0int.com/harmony/token?id=98345723</p>
+            <p>If you do not act, your remote access will be suspended.</p>
+            <p style="margin-top: 20px;">Regards,<br>Security Validation Robot<br>Check Point Software</p>
+          </div>
+
+          <div class="headers-view" id="t22Headers" style="display: none;">Return-Path: &lt;mailer@validate-checkp0int.com&gt;
+From: "Check Point Validation" &lt;support@checkp0int-security.com&gt;
+Reply-To: helpdesk@checkp0int-billing.ru
+Message-ID: &lt;98345723.validation@checkp0int-security.com&gt;
+Received: from 198.51.100.23 (unknown) by mx.customer.example with ESMTP id ABC123
+Authentication-Results: mx.customer.example;
+  spf=softfail smtp.mailfrom=checkp0int-security.com;
+  dkim=none;
+  dmarc=fail (p=reject) header.from=checkp0int-security.com
+X-Link-Preview: validate-checkp0int.com (not checkpoint.com)</div>
+
+          <div class="message-attachment">
+            <div class="attachment-icon">📎</div>
+            <div class="attachment-info">
+              <div class="attachment-name">Harmony_VPN_Token_Fix.zip</div>
+              <div class="attachment-flagged">⚠ FLAGGED - Attachment stripped by security gateway</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="response-area">
+          <div class="task-instructions">
+            <strong>🔍 Task 2.x: Phishing Analysis & Customer Response</strong>
+            Review the suspicious email and respond to the customer.
+            <br><br>
+            <strong>Your response should include:</strong><br>
+            • Your professional assessment (Is this legitimate or a phishing attempt?)<br>
+            • Key evidence you found (check headers, sender details, links, urgency tone)<br>
+            • What could happen if the customer clicked or responded<br>
+            • What actions you're taking to protect them<br>
+            • Clear, reassuring guidance on what they should do next<br>
+          </div>
+          <div class="response-label">Your Analysis & Reply</div>
+          <div id="editor-task22" data-task-id="mail.replyDraft"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+<script src="/header-timer.js" defer></script>
+
+<script>
+// Email switching
+document.querySelectorAll('.email-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const emailId = this.dataset.email;
+    
+    // Update active state in list
+    document.querySelectorAll('.email-item').forEach(i => i.classList.remove('active'));
+    this.classList.add('active');
+    
+    // Show corresponding email detail
+    document.querySelectorAll('.email-detail').forEach(detail => {
+      detail.style.display = detail.id === `email-${emailId}` ? 'flex' : 'none';
+    });
+  });
+});
+
+// Header toggle for email 2
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const view = this.dataset.view;
+    const plain = document.getElementById('t22Plain');
+    const headers = document.getElementById('t22Headers');
+    
+    if (view === 'plain') {
+      plain.style.display = 'block';
+      headers.style.display = 'none';
+    } else {
+      plain.style.display = 'none';
+      headers.style.display = 'block';
+    }
+    
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Initialize CKEditor for both tasks
+(function(){
+  const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, Code, CodeBlock } = window.CKEDITOR;
+
+  const editorConfigs = [
+    { id: 'editor-task21', taskId: 'mail.task21Response' },
+    { id: 'editor-task22', taskId: 'mail.replyDraft' }
+  ];
+
+  editorConfigs.forEach(config => {
+    ClassicEditor
+      .create(document.getElementById(config.id), {
+        plugins: [
+          Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+          Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, Code, CodeBlock
+        ],
+        toolbar: [
+          'heading', '|',
+          'bold', 'italic', 'underline', '|',
+          'link', 'bulletedList', 'numberedList', '|',
+          'imageUpload', 'blockQuote', 'insertTable', 'codeBlock', '|',
+          'undo', 'redo'
+        ],
+        heading: {
+          options: [
+            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+          ]
+        },
+        image: {
+          toolbar: ['imageTextAlternative']
+        },
+        placeholder: config.id === 'editor-task21' 
+          ? 'Write your professional email response here...' 
+          : 'Write your analysis and reply here...'
+      })
+      .then(editor => {
+        console.log('CKEditor initialized:', config.id);
+        window[config.id] = editor;
+      })
+      .catch(error => {
+        console.error('CKEditor initialization error for', config.id, error);
+      });
+  });
+})();
+</script>
+</body>
+</html>

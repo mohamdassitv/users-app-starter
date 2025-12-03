@@ -32,52 +32,53 @@ h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;l
 .tablist{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;padding:0;list-style:none;}
 .tablist button{border:none;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;background:linear-gradient(90deg,var(--pink-200),var(--pink-100));color:var(--ink-700);box-shadow:0 2px 6px rgba(0,0,0,.06);transition:var(--trans);position:relative;}
 .tablist button[aria-selected="true"],.tablist button:hover{background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:0 6px 18px -6px rgba(255,92,168,.6);}
-.tab-panel{display:none;animation:fadeSlide .5s ease;}
+.tab-panel{display:none;}
 .tab-panel.active{display:block;}
-@keyframes fadeSlide{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-@keyframes popUp{from{opacity:0;transform:scale(0.8) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
-.msg.animate{animation:popUp 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;}
 
-/* Chat */
-.chat-wrap{background:var(--ink-50);border:1px solid rgba(255,92,168,.25);border-radius:22px;padding:18px 0 12px;display:flex;flex-direction:column;max-height:none;min-height:380px;}
-.chat-scroll{overflow:auto;padding:0 24px 12px;list-style:none;margin:0;display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth;}
-.msg{display:flex;gap:22px;line-height:1.7;font-size:18px;margin-bottom:28px;font-weight:500;}
+/* Chat - Professional Style */
+.chat-wrap{background:#f8f9fa;border:1px solid #d1d5db;border-radius:8px;padding:18px 0 12px;display:flex;flex-direction:column;max-height:none;min-height:380px;}
+.chat-scroll{overflow:auto;padding:0 24px 12px;list-style:none;margin:0;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;}
+.msg{display:flex;gap:16px;line-height:1.6;font-size:15px;margin-bottom:12px;font-weight:400;}
 .msg.left{flex-direction:row;}
 .msg.right{flex-direction:row-reverse;}
-.msg .avatar{width:60px;height:60px;border-radius:50%;background:#ffffff url("data:image/svg+xml,%3csvg width='512' height='512' viewBox='0 0 512 512' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='256' cy='140' r='100' fill='%23FF6AA8'/%3e%3cellipse cx='256' cy='380' rx='230' ry='132' fill='%23FF6AA8'/%3e%3c/svg%3e") center/contain no-repeat;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px -8px rgba(255,92,168,.6),0 0 0 2px rgba(255,255,255,.6);border:2px solid rgba(255,92,168,.6);overflow:hidden;}
-.bubble{background:linear-gradient(160deg,#ffffff,#ffe9f4);padding:26px 30px 28px;border-radius:36px;min-width:200px;max-width:850px;position:relative;border:1px solid rgba(255,92,168,.4);box-shadow:0 6px 20px -6px rgba(255,92,168,.4),0 2px 8px -2px rgba(0,0,0,.1);} 
-.right .bubble{background:linear-gradient(140deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:0 8px 24px -8px rgba(255,92,168,.7);} 
-.bubble header{font-size:15px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--pink-600);display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:0 0 14px;opacity:.95;text-shadow:0 1px 1px rgba(255,255,255,.5);}
-.right .bubble header{color:#ffe9f5;text-shadow:0 1px 2px rgba(0,0,0,.2);}
-.bubble p{margin:0;font-size:19px;line-height:1.75;font-weight:500;color:var(--ink-700);letter-spacing:0.01em;} 
-.bubble .tag{background:var(--pink-200);color:var(--pink-600);padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.06em;}
-.right .tag{background:rgba(255,255,255,.3);color:#fff;}
-.msg.info .bubble{border-color:#8b5cf6;}
-.msg.info .tag{background:#ede9fe;color:#6d28d9;}
-.msg.system .avatar{background:linear-gradient(145deg,#fef3c7,#fde68a);border-color:#fbbf24;}
+.msg .avatar{width:44px;height:44px;border-radius:6px;background:#6b7280;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;border:1px solid #9ca3af;flex-shrink:0;}
+.bubble{background:#ffffff;padding:14px 18px;border-radius:8px;min-width:200px;max-width:850px;position:relative;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.1);} 
+.right .bubble{background:#e8eaf6;border-color:#c5cae9;} 
+.bubble header{font-size:13px;letter-spacing:0;text-transform:none;font-weight:600;color:#374151;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px;}
+.right .bubble header{color:#1a237e;}
+.bubble p{margin:0;font-size:15px;line-height:1.6;font-weight:400;color:#1f2937;} 
+.bubble .tag{background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.right .tag{background:#c5cae9;color:#1a237e;}
+.msg.info .bubble{border-color:#c7d2fe;background:#eef2ff;}
+.msg.info .tag{background:#e0e7ff;color:#4338ca;}
+.msg.system .avatar{background:#f59e0b;border-color:#d97706;}
+.msg.system .bubble{background:#fef3c7;border-color:#fde68a;}
 .msg.system .bubble header{color:#92400e;}
-/* Manager highlight */
-.msg.manager .bubble{background:linear-gradient(140deg,#c80060,#ff5ca8 50%,#ff8cc1);color:#fff;box-shadow:0 12px 32px -10px rgba(200,0,96,.6),0 0 0 2px rgba(255,92,168,.4),inset 0 1px 0 rgba(255,255,255,.2);} 
-.msg.manager .bubble header{color:#ffe9f5;letter-spacing:.2em;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.3);} 
-.msg.manager .bubble p{font-size:21px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);line-height:1.8;letter-spacing:0.02em;} 
-.msg.manager .avatar{background:linear-gradient(145deg,#ff3d96,#c80060);color:#fff;border-color:#ffb3d6;box-shadow:0 10px 28px -10px rgba(200,0,96,.7),0 0 0 3px rgba(255,255,255,.3);}
+/* Manager - Serious Professional */
+.msg.manager .avatar{background:#dc2626;border-color:#b91c1c;color:#fff;}
+.msg.manager .bubble{background:#fef2f2;border:2px solid #dc2626;box-shadow:0 2px 4px rgba(220,38,38,.15);} 
+.msg.manager .bubble header{color:#991b1b;font-weight:700;font-size:13px;} 
+.msg.manager .bubble p{font-size:15px;font-weight:500;color:#7f1d1d;line-height:1.6;}
 
-/* NOC Shift Messages */
-
-.msg.noc-header .bubble{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;text-align:center;font-weight:700;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;padding:12px 24px;border-radius:24px;box-shadow:0 4px 12px rgba(79,70,229,.3);min-width:300px;}
-.msg.noc-header .avatar{width:48px;height:48px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-color:#8b5cf6;}
-.msg.maya .bubble{background:linear-gradient(160deg,#f59e0b,#f97316);color:#fff;box-shadow:0 8px 24px -8px rgba(245,158,11,.6);}
-.msg.maya .bubble header{color:#fef3c7;}
-.msg.maya .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
-.msg.kenji .bubble{background:linear-gradient(160deg,#10b981,#059669);color:#fff;box-shadow:0 8px 24px -8px rgba(16,185,129,.6);}
-.msg.kenji .bubble header{color:#d1fae5;}
-.msg.kenji .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
-.msg.ava .bubble{background:linear-gradient(160deg,#8b5cf6,#7c3aed);color:#fff;box-shadow:0 8px 24px -8px rgba(139,92,246,.6);}
-.msg.ava .bubble header{color:#ede9fe;}
-.msg.ava .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);}
-.msg.liam .bubble{background:linear-gradient(160deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 24px -8px rgba(239,68,68,.6);}
-.msg.liam .bubble header{color:#fee2e2;}
-.msg.liam .bubble p{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);} 
+/* NOC Shift Messages - Professional */
+.msg.noc-header .bubble{background:#1e3a8a;color:#fff;border:1px solid #1e40af;text-align:center;font-weight:600;font-size:13px;padding:10px 20px;border-radius:6px;box-shadow:0 2px 4px rgba(30,58,138,.2);min-width:300px;}
+.msg.noc-header .avatar{width:44px;height:44px;background:#1e3a8a;border-color:#1e40af;}
+.msg.kenji .avatar{background:#047857;border-color:#059669;}
+.msg.kenji .bubble{background:#f0fdf4;border:1px solid #86efac;box-shadow:0 1px 3px rgba(16,185,129,.1);}
+.msg.kenji .bubble header{color:#065f46;}
+.msg.kenji .bubble p{color:#064e3b;}
+.msg.ava .avatar{background:#6b21a8;border-color:#7c3aed;}
+.msg.ava .bubble{background:#faf5ff;border:1px solid #d8b4fe;box-shadow:0 1px 3px rgba(139,92,246,.1);}
+.msg.ava .bubble header{color:#6b21a8;}
+.msg.ava .bubble p{color:#581c87;}
+.msg.maya .avatar{background:#c2410c;border-color:#ea580c;}
+.msg.maya .bubble{background:#fff7ed;border:1px solid #fed7aa;box-shadow:0 1px 3px rgba(245,158,11,.1);}
+.msg.maya .bubble header{color:#9a3412;}
+.msg.maya .bubble p{color:#7c2d12;}
+.msg.liam .avatar{background:#b91c1c;border-color:#dc2626;}
+.msg.liam .bubble{background:#fef2f2;border:1px solid #fca5a5;box-shadow:0 1px 3px rgba(239,68,68,.1);}
+.msg.liam .bubble header{color:#991b1b;}
+.msg.liam .bubble p{color:#7f1d1d;} 
 
 /* Buttons */
 .pill-btn{border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;box-shadow:var(--shadow-btn);display:inline-flex;align-items:center;gap:8px;transition:var(--trans);} 
@@ -93,13 +94,6 @@ h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;l
 .rte{min-height:200px;background:#fff;border:1px solid var(--pink-200);padding:14px 16px;border-radius:16px;font-size:14px;line-height:1.5;}
 .rte:focus{outline:2px solid var(--pink-400);} 
 .ascii-helper{font-family:ui-monospace,Menlo,Consolas,monospace;background:#fff;border:1px dashed var(--pink-400);padding:10px 12px;border-radius:16px;white-space:pre;overflow:auto;font-size:12px;}
-.dropzone{border:2px dashed var(--pink-400);border-radius:18px;padding:26px;text-align:center;font-size:13px;color:var(--ink-500);background:var(--pink-100);cursor:pointer;transition:var(--trans);}
-.dropzone.drag{background:var(--pink-200);border-color:var(--pink-600);}
-.uploads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:12px;}
-.upload-item{background:#fff;border:1px solid var(--pink-200);border-radius:16px;position:relative;padding:6px 6px 10px;display:flex;flex-direction:column;gap:4px;}
-.upload-item img{max-width:100%;border-radius:10px;display:block;}
-.upload-item button{position:absolute;top:4px;right:4px;border:none;background:rgba(0,0,0,.55);color:#fff;width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:12px;}
-.caption-input{border:1px solid var(--ink-200);border-radius:10px;padding:4px 6px;font-size:11px;}
 
 /* Notes */
 .notes-wrap{display:flex;flex-direction:column;gap:24px;}
@@ -111,6 +105,17 @@ h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;l
 .inline-field label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pink-600);}
 .inline-field input{padding:8px 10px;border:1px solid var(--pink-200);border-radius:10px;font-size:13px;}
 .inline-field input:focus{outline:2px solid var(--pink-400);} 
+.inline-editor.drag-hover{outline:2px dashed #10b981; background:#ecfdf5;}
+.inline-editor img{display:inline-block;vertical-align:middle;}
+/* Image size variants */
+.inline-editor img[data-size=small]{max-width:220px;}
+.inline-editor img[data-size=medium]{max-width:420px;}
+.inline-editor img[data-size=large]{max-width:100%;}
+/* Floating image controls */
+.img-controls{position:absolute;z-index:6000;display:flex;gap:6px;background:#0f172a;color:#fff;padding:6px 8px;border-radius:10px;font-size:11px;font-family:ui-monospace,monospace;box-shadow:0 4px 12px -4px rgba(0,0,0,.5);}
+.img-controls button{all:unset;cursor:pointer;background:#1e293b;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;line-height:1;font-weight:600;display:flex;align-items:center;}
+.img-controls button:hover{background:#334155;}
+.img-controls button:disabled{opacity:.35;cursor:not-allowed;}
 .task-complete{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;font-weight:600;}
 
 /* Export */
@@ -158,10 +163,15 @@ body.high-contrast .pill-btn{box-shadow:none;}
     <div class="chat-wrap" id="chatWrap">
       <ol class="chat-scroll" id="chatLog" aria-live="polite"></ol>
       <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:22px;margin:24px 24px 8px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
-        <p style="margin:0;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
+        <p style="margin:0 0 14px;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
           <strong>Task Instruction 1.1:</strong>
-          In your exam DOCX file (section <strong>1.1</strong>) add a clear network diagram showing the branch traffic flow and include a concise note describing the direction of user web traffic — <span style="text-decoration:underline;">like your manager requested</span>.
+          Add a clear network diagram showing the branch traffic flow and include a concise note describing the direction of user web traffic — <span style="text-decoration:underline;">like your manager requested</span>.
         </p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <label style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Network Diagram & Traffic Flow</label>
+          <div id="editor-diagram" data-task-id="task1.q1" style="min-height:160px;"></div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#065f46;">Autosaves locally + to server (versioned). Include the same content in your final PDF if required.</div>
       </div>
     </div>
     <!-- Removed notes/checklist/export section -->
@@ -256,38 +266,11 @@ function escapeHtml(str){return str.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;'
 
 // (Editor, uploads, and local save logic removed for file-based submission model)
 
-// --- Animated Chat Display ---
-function animateInitialChat(){
-  if(state.animationShown) return; // Only animate once
-  state.animationShown = true;
-  
-  // Clear chat and show messages with animation
-  chatLog.innerHTML = '';
-  
-  // Show first 3 messages with staggered pop-up animation
-  let delay = 500;
-  state.chat.forEach((msg, index) => {
-    setTimeout(() => {
-      const msgElement = renderMsg(msg, index);
-      msgElement.classList.add('animate');
-      chatLog.appendChild(msgElement);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }, delay);
-    delay += 1000; // 1 second between each message
-  });
-}
-
 function updateProgress(){} // disabled
 
 // --- Restore ---
 function restore(){
-  // Use animation for first load, regular render for subsequent
-  if(!state.animationShown){
-    animateInitialChat();
-  } else {
-    renderChat();
-  }
-  
+  renderChat();
   // Editor removed; nothing to initialize here.
 }
 
@@ -304,27 +287,29 @@ terminalSection.innerHTML=`
     <ol class="chat-scroll" id="nocChatLog" aria-live="polite"></ol>
   </div>
 
-  <div class="bt-shell" aria-label="Branch terminal simulator">
-    <div class="bt-tabs" role="tablist" aria-label="Branch terminals">
-      <button role="tab" aria-selected="true" data-branch="tokyo">Tokyo</button>
-      <button role="tab" aria-selected="false" data-branch="osaka">Osaka</button>
-      <button role="tab" aria-selected="false" data-branch="kyoto">Kyoto</button>
-
+  <div style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:30px;">
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <button onclick="switchTerminal('tokyo')" id="tab-tokyo" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Tokyo Branch</button>
+      <button onclick="switchTerminal('osaka')" id="tab-osaka" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Osaka Branch</button>
+      <button onclick="switchTerminal('kyoto')" id="tab-kyoto" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Kyoto Branch</button>
     </div>
-    <div class="bt-terminal" aria-live="polite">
-      <pre id="termOutput" class="bt-output" tabindex="0"></pre>
-      <div class="bt-input-row">
-        <label for="termInput" id="promptLabel" class="prompt-label">tokyo$</label>
-        <input id="termInput" type="text" autocomplete="off" spellcheck="false" aria-labelledby="promptLabel" />
-      </div>
+    <div style="position:relative;height:500px;">
+      <iframe id="term-tokyo" src="/api/terminal/branch-tokyo" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:block;"></iframe>
+      <iframe id="term-osaka" src="/api/terminal/branch-osaka" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
+      <iframe id="term-kyoto" src="/api/terminal/branch-kyoto" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
     </div>
   </div>
 
   <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:22px;margin:70px 4px 10px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
-    <p style="margin:0;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
+    <p style="margin:0 0 14px;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
       <strong>Task Instruction 1.2:</strong>
-  In your exam DOCX file (section <strong>1.2</strong>) document your branch performance investigation. Include screenshots (or captured output) of key commands for <strong>Tokyo</strong>, <strong>Kyoto</strong>, and <strong>Osaka</strong>, briefly describe what each shows, and provide a concise sentence on the most likely cause of the Osaka slowdown.
+  Document your branch performance investigation. Capture key command outputs for <strong>Tokyo</strong>, <strong>Kyoto</strong>, and <strong>Osaka</strong>, summarize what each shows, and state the most likely cause of the Osaka slowdown.
     </p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <label style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Branch Performance Investigation</label>
+      <div id="editor-investigation" data-task-id="task1.investigation" style="min-height:300px;"></div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#065f46;">Autosaves locally + to server. Include the same content in your consolidated DOCX/PDF.</div>
   </div>`;
 document.querySelector('main').appendChild(terminalSection);
 // Analysis editor removed.
@@ -337,104 +322,31 @@ const nocMessages = [
 ];
 
 const nocChatLog = document.getElementById('nocChatLog');
-// Animate NOC messages
-let nocDelay = 2000; // Start after main chat animation
+// Display NOC messages immediately
 nocMessages.forEach((msg, index) => {
-  setTimeout(() => {
-    nocChatLog.appendChild(renderMsg(msg, index));
-    nocChatLog.scrollTop = nocChatLog.scrollHeight;
-  }, nocDelay);
-  nocDelay += 800;
+  nocChatLog.appendChild(renderMsg(msg, index));
 });
-// Styles for terminal
-const termStyle=document.createElement('style');termStyle.textContent=`
-.bt-shell{margin-top:10px;background:#1c1f27;border:1px solid #343a46;border-radius:24px;padding:18px 18px 26px;box-shadow:0 10px 28px -10px rgba(0,0,0,.4);} 
-.bt-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;} 
-.bt-tabs button{background:#2a303b;color:#d0d6e2;border:1px solid #3b4350;padding:8px 16px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:.4px;transition:background .2s;} 
-.bt-tabs button[aria-selected=true]{background:linear-gradient(90deg,var(--pink-600),var(--pink-400));color:#fff;border-color:var(--pink-500);} 
-.bt-output{margin:0;background:#11151b;border:1px solid #2a313d;border-radius:16px;padding:20px 20px;max-height:600px;overflow:auto;font:16px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#e2e8f0;box-shadow:inset 0 0 0 1px #1e242d;} 
-.bt-input-row{display:flex;align-items:center;gap:10px;margin-top:12px;background:#11151b;border:1px solid #2a313d;border-radius:14px;padding:10px 14px;} 
-.bt-input-row input{flex:1;background:transparent;border:none;color:#fff;font:16px ui-monospace,Menlo,Consolas,monospace;outline:none;} 
-.prompt-label{font:16px ui-monospace,Menlo,Consolas,monospace;color:#ff72b0;font-weight:600;} 
-.bt-output::-webkit-scrollbar{width:10px;} .bt-output::-webkit-scrollbar-thumb{background:#303742;border-radius:6px;} 
-`;document.head.appendChild(termStyle);
-// Scenario model
-const SCENARIO={
-  vcgwHost:'vc-gw.jpbank.local',internetHost:'www.example.com',dns:{server:'10.10.10.10',domain:'jpbank.local'},
-  branches:{
-    tokyo:{prompt:'tokyo$',ping:{vcgw:{base:25,jitter:5,loss:0},internet:{base:35,jitter:7,loss:0}},trace:{vcgw:['tokyo-edge','tokyo-metro-pe','carrier-core-1','vc-gw.jpbank.local'],internet:['tokyo-edge','tokyo-metro-pe','carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.10.1.1',lan:'10.10.10.0/24'},routes:['default via 10.10.10.1','10.0.0.0/16 via vc-gw']},
-    kyoto:{prompt:'kyoto$',ping:{vcgw:{base:28,jitter:6,loss:0},internet:{base:38,jitter:8,loss:0}},trace:{vcgw:['kyoto-edge','kyoto-metro-pe','carrier-core-1','vc-gw.jpbank.local'],internet:['kyoto-edge','kyoto-metro-pe','carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.20.1.1',lan:'10.20.20.0/24'},routes:['default via 10.20.20.1','10.0.0.0/16 via vc-gw']},
-    osaka:{prompt:'osaka$',ping:{vcgw:{base:220,jitter:40,loss:12},internet:{base:240,jitter:50,loss:8}},trace:{vcgw:['osaka-edge',{hop:'osaka-metro-eth1',note:'high latency'},'carrier-core-1','vc-gw.jpbank.local'],internet:['osaka-edge',{hop:'osaka-metro-eth1',note:'high latency'},'carrier-core-1','internet-exit','www.example.com']},ip:{loop:'10.30.1.1',lan:'10.30.30.0/24'},routes:['default via 10.30.30.1','10.0.0.0/16 via vc-gw']}
-  }
-};
-let activeBranch='tokyo';
-const termOutput=document.getElementById('termOutput');
-const termInput=document.getElementById('termInput');
-const promptLabel=document.getElementById('promptLabel');
-const branchTabs=[...document.querySelectorAll('.bt-tabs button[data-branch]')];
-const transcripts={tokyo:[],osaka:[],kyoto:[]};
-const histories={tokyo:[],osaka:[],kyoto:[]};
-const historyIndex={tokyo:0,osaka:0,kyoto:0};
-function ts(){return 'engineer@'+activeBranch+':';}
-function print(line){transcripts[activeBranch].push(ts()+' '+line);renderTranscript();}
-function renderTranscript(){termOutput.textContent=transcripts[activeBranch].join('\n');termOutput.scrollTop=termOutput.scrollHeight;}
-function switchBranch(b){activeBranch=b;branchTabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.branch===b));promptLabel.textContent=SCENARIO.branches[b].prompt;renderTranscript();}
-branchTabs.forEach(btn=>btn.addEventListener('click',()=>switchBranch(btn.dataset.branch)));
-// Help text initial
-if(!localStorage.getItem('bt_init')){['tokyo','osaka','kyoto'].forEach(b=>transcripts[b].push(ts()+' Type help for commands.'));localStorage.setItem('bt_init','1');}
-// Persistence
-function saveTermState(){try{localStorage.setItem('bt_state_v1',JSON.stringify({transcripts,histories}));}catch(e){}}
-function loadTermState(){try{const raw=localStorage.getItem('bt_state_v1');if(raw){const data=JSON.parse(raw);['tokyo','osaka','kyoto'].forEach(b=>{if(data.transcripts&&data.transcripts[b]) transcripts[b]=data.transcripts[b]; if(data.histories&&data.histories[b]) histories[b]=data.histories[b];});}}catch(e){}}
-loadTermState();renderTranscript();
-// Command parsing
-const HOST_ALIASES={ 'vc-gw':'vc-gw.jpbank.local','vc-gw.jpbank.local':'vc-gw.jpbank.local','internet':'www.example.com','www.example.com':'www.example.com','www.google.com':'www.example.com'};
-termInput.addEventListener('keydown',e=>{if(e.key==='Enter'){const cmd=termInput.value.trim();if(!cmd) return; histories[activeBranch].push(cmd); historyIndex[activeBranch]=histories[activeBranch].length; print(promptLabel.textContent+' '+cmd); execute(cmd); termInput.value=''; saveTermState();}
- else if(e.key==='ArrowUp'){e.preventDefault();if(historyIndex[activeBranch]>0){historyIndex[activeBranch]--;termInput.value=histories[activeBranch][historyIndex[activeBranch]]||'';}}
- else if(e.key==='ArrowDown'){e.preventDefault();if(historyIndex[activeBranch]<histories[activeBranch].length){historyIndex[activeBranch]++;termInput.value=histories[activeBranch][historyIndex[activeBranch]]||'';}}
-});
-function execute(input){const parts=input.split(/\s+/);const base=parts[0];
-  if(base==='help'){showHelp();return;}
-  if(base==='clear'){transcripts[activeBranch]=[];renderTranscript();saveTermState();return;}
-  if(base==='whoami'){print('noc.candidate');return;}
-  if(base==='date'){print(new Date().toString());return;}
-  if(base==='ping'){simulatePing(parts);return;}
-  if(base==='traceroute'||base==='trace'){simulateTrace(parts);return;}
-  if(base==='curl'){simulateCurl(parts);return;}
-  if(base==='dig'||base==='nslookup'){simulateDNS(parts);return;}
-  if(base==='vcstat'){simulateVCStat();return;}
-  if(base==='ip' && parts[1]==='addr'){simulateIP();return;}
-  if(base==='route' && parts[1]==='-n'){simulateRoute();return;}
-  print(base+': command not found');
-}
-function showHelp(){['help - list commands','ping <host> [-c N]','traceroute|trace <host>','curl -s -o /dev/null -w "timers" https://www.example.com','dig <host>','nslookup <host>','vcstat','ip addr','route -n','date','whoami','clear'].forEach(l=>print(l));}
-function pickHost(arg){return HOST_ALIASES[arg]||null;}
-function simulatePing(parts){let count=4; let host=null; const cIndex=parts.findIndex(p=>p==='-c'); if(cIndex>-1){count=parseInt(parts[cIndex+1]||'4',10)||4;}
-  // host = first token not option
-  for(const p of parts.slice(1)){if(p==='-c') {continue;} if(!p.startsWith('-') && !host) host=p;}
-  host=pickHost(host); if(!host){print('Usage: ping <host> [-c N]');return;}
-  const branch=SCENARIO.branches[activeBranch]; const profile = host===SCENARIO.vcgwHost? branch.ping.vcgw: branch.ping.internet;
-  print(`PING ${host} (10.0.0.1): 56 data bytes`);
-  let rtts=[]; let lost=0; for(let i=1;i<=count;i++){const lossChance=profile.loss/100; if(Math.random()<lossChance){print(`Request timeout for icmp_seq ${i}`); lost++; continue;} const val = jitter(profile.base, profile.jitter); rtts.push(val); print(`64 bytes from 10.0.0.1: icmp_seq=${i} ttl=${host===SCENARIO.vcgwHost?62:61} time=${val.toFixed(1)} ms`);} 
-  const transmitted=count; const received=transmitted-lost; const lossPct=Math.round((lost/transmitted)*100); const min=Math.min(...rtts); const max=Math.max(...rtts); const avg=rtts.reduce((a,b)=>a+b,0)/rtts.length; const mdev=stddev(rtts,avg);
-  print(`--- ${host} ping statistics ---`);
-  print(`${transmitted} packets transmitted, ${received} received, ${lossPct}% packet loss, time ${(count*1000+3)}ms`);
-  print(`rtt min/avg/max/mdev = ${isFinite(min)?min.toFixed(1):'0.0'}/${isFinite(avg)?avg.toFixed(1):'0.0'}/${isFinite(max)?max.toFixed(1):'0.0'}/${isFinite(mdev)?mdev.toFixed(1):'0.0'} ms`);
-}
-function jitter(base,jit){const delta=(Math.random()*jit*2)-jit;return base+delta;}
-function stddev(list,mean){if(!list.length) return 0; const v=list.reduce((a,b)=>a+Math.pow(b-mean,2),0)/list.length; return Math.sqrt(v);}
-function simulateTrace(parts){let host=pickHost(parts[1]); if(!host){print('Usage: traceroute <host>');return;} const branch=SCENARIO.branches[activeBranch]; const which= host===SCENARIO.vcgwHost? 'vcgw':'internet'; const hops=branch.trace[which]; print(`traceroute to ${host} (10.0.0.1), 30 hops max`); hops.forEach((h,i)=>{ if(typeof h==='string'){print(`${i+1}  ${h} (10.${i}.0.${i+1})  ${latencyLine(branch,which)}`);} else {print(`${i+1}  ${h.hop} (172.16.20.${i+10})  ${degradedLatencyLine()}  * ${h.note} *`);} }); }
-function latencyLine(branch,which){const prof=branch.ping[which]; return `${jitter(prof.base,prof.jitter).toFixed(1)} ms  ${jitter(prof.base,prof.jitter).toFixed(1)} ms  ${jitter(prof.base,prof.jitter).toFixed(1)} ms`;}
-function degradedLatencyLine(){return `${(200+Math.random()*40).toFixed(1)} ms  ${(210+Math.random()*30).toFixed(1)} ms  ${(230+Math.random()*30).toFixed(1)} ms`;}
-function simulateCurl(parts){printTiming(activeBranch==='osaka');}
-function printTiming(degraded){ if(!degraded){ print('time_namelookup:0.008'); print('time_connect:0.026'); print('time_total:0.142'); } else { print('time_namelookup:0.021'); print('time_connect:0.182'); print('time_total:0.732'); } }
-function simulateDNS(parts){const host=pickHost(parts[1]); if(!host){print('Usage: dig <host>');return;} print(`;; <<>> DiG 9.18 <<>> ${host}`); print(`;; SERVER: ${SCENARIO.dns.server}#53(${SCENARIO.dns.server})`); print(';; ANSWER SECTION:'); print(`${host}.  300 IN A 10.0.0.1`); print(';; Query time: 8 msec');}
-function simulateVCStat(){print('VC-GW reachability: OK'); print('Path quality: '+(activeBranch==='osaka'?'Degraded – Elevated latency detected between osaka-edge and metro':'Good'));}
-function simulateIP(){const b=SCENARIO.branches[activeBranch]; print(`lo: inet ${b.ip.loop}`); print(`br-lan: inet ${b.ip.lan}`); }
-function simulateRoute(){const b=SCENARIO.branches[activeBranch]; b.routes.forEach(r=>print(r)); }
-// Buttons
+nocChatLog.scrollTop = nocChatLog.scrollHeight;
 
-// Ensure transcript persists
-window.addEventListener('beforeunload',saveTermState);
+// Terminal switching function
+function switchTerminal(branch) {
+  const terminals = ['tokyo', 'osaka', 'kyoto'];
+  terminals.forEach(t => {
+    const iframe = document.getElementById('term-' + t);
+    const tab = document.getElementById('tab-' + t);
+    if (t === branch) {
+      iframe.style.display = 'block';
+      tab.style.background = '#4ec9b0';
+      tab.style.color = '#1e1e1e';
+      tab.style.border = 'none';
+    } else {
+      iframe.style.display = 'none';
+      tab.style.background = '#2d2d2d';
+      tab.style.color = '#ccc';
+      tab.style.border = '1px solid #444';
+    }
+  });
+}
 
 // (Analysis editor code removed)
 </script>
@@ -451,8 +363,67 @@ window.addEventListener('beforeunload',saveTermState);
   }
 })();
 </script>
+<script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+
 <script src="/header-timer.js" defer></script>
+<script src="/answer-sync.js" defer></script>
 <!-- answer-save.js reference removed (no in-browser drafting) -->
+<script>
+// Initialize CKEditor for Task 1 investigation fields
+(function(){
+  const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code } = window.CKEDITOR;
+
+  const editorConfigs = [
+    { id: 'editor-diagram', taskId: 'task1.q1', placeholder: 'Describe topology and user traffic direction...' },
+    { id: 'editor-investigation', taskId: 'task1.investigation', placeholder: 'Document your findings for Tokyo, Kyoto, and Osaka branches. Include command outputs, observations, and root cause analysis...' }
+  ];
+
+  editorConfigs.forEach(config => {
+    ClassicEditor
+      .create(document.getElementById(config.id), {
+        plugins: [
+          Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+          Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+        ],
+        toolbar: [
+          'heading', '|',
+          'bold', 'italic', 'underline', 'code', '|',
+          'link', 'bulletedList', 'numberedList', '|',
+          'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+          'undo', 'redo'
+        ],
+        heading: {
+          options: [
+            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+          ]
+        },
+        image: {
+          toolbar: ['imageTextAlternative']
+        },
+        codeBlock: {
+          languages: [
+            { language: 'plaintext', label: 'Plain text' },
+            { language: 'bash', label: 'Bash' },
+            { language: 'python', label: 'Python' },
+            { language: 'json', label: 'JSON' }
+          ]
+        },
+        placeholder: config.placeholder
+      })
+      .then(editor => {
+        console.log('CKEditor initialized:', config.id);
+        window[config.id] = editor;
+      })
+      .catch(error => {
+        console.error('CKEditor initialization error for', config.id, error);
+      });
+  });
+})();
+</script>
 <script>
 // Task 1 in-page submission UI removed; candidates now submit only final consolidated document elsewhere.
 </script>

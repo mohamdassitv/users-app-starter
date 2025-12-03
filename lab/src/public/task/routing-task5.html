@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task 5 — Configure Basic Routing</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      overflow-y: auto;
+    }
+
+    header.site-header {
+      background: #1e293b;
+      padding: 12px 20px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .logo-img {
+      height: 32px;
+      width: auto;
+    }
+
+    .brand-hacker {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .reset-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .reset-btn:hover {
+      background: #ef4444;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+
+    .reset-btn:active {
+      transform: translateY(0);
+    }
+
+    .reset-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .scenario-hero {
+      background: linear-gradient(150deg, #1e293b, #334155, #475569);
+      padding: 30px;
+      border-bottom: 2px solid #0ea5e9;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    }
+
+    .challenge-section {
+      background: #1e293b;
+      padding: 30px;
+      border-bottom: 2px solid #334155;
+    }
+
+    .challenge-section h2 {
+      color: #38bdf8;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .terminal-section {
+      display: flex;
+      height: 500px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .terminal-section {
+      display: flex;
+      height: 500px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .terminal-panel {
+      flex: 1;
+      background: #1e293b;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #334155;
+    }
+
+    .scenario-hero h2 {
+      color: #f472b6;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .scenario-hero p {
+      color: #e2e8f0;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .scenario-hero ul {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .scenario-hero li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .client-quote {
+      background: rgba(244, 114, 182, 0.15);
+      border-left: 4px solid #f472b6;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+    }
+
+    .monitoring-status {
+      background: rgba(52, 211, 153, 0.15);
+      border-left: 4px solid #34d399;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+      color: #a7f3d0;
+    }
+
+    .mission-warning {
+      color: #fbbf24;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-top: 15px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .terminal-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .terminal-tabs {
+      display: flex;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+    }
+
+    .terminal-tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-right: 1px solid #334155;
+      transition: all 0.2s;
+    }
+
+    .terminal-tab:hover {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    .terminal-tab.active {
+      background: #1e293b;
+      color: #38bdf8;
+      border-bottom: 2px solid #0ea5e9;
+      font-weight: 600;
+    }
+
+    .terminal-pane {
+      display: none;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .terminal-pane.active {
+      display: block;
+    }
+
+    .terminal-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000000;
+    }
+
+    .scenario h2 {
+      color: #38bdf8;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    .scenario h3 {
+      color: #7dd3fc;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    .scenario p {
+      line-height: 1.5;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+
+    .scenario ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    .scenario li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .scenario code {
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #f472b6;
+      font-family: "Consolas", "Monaco", monospace;
+      border: 1px solid #334155;
+    }
+
+    .scenario strong {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+
+    .topology-img {
+      width: 100%;
+      max-width: 650px;
+      margin: 15px auto;
+      display: block;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      background: #1e293b;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .info-box {
+      background: rgba(56, 189, 248, 0.15);
+      border-left: 3px solid #38bdf8;
+      padding: 12px;
+      margin: 15px 0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #bae6fd;
+    }
+
+    .info-box strong {
+      color: #7dd3fc;
+    }
+
+    .network-info {
+      background: #1e293b;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 12px 0;
+      border: 1px solid #334155;
+    }
+
+    .network-info h4 {
+      color: #38bdf8;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    .questions-section {
+      background: #1e293b;
+      padding: 25px 30px;
+      border-top: 2px solid #334155;
+    }
+
+    .questions-section h2 {
+      color: #38bdf8;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 10px;
+    }
+
+    .question-block {
+      margin-bottom: 25px;
+      background: #0f172a;
+      padding: 18px;
+      border-radius: 8px;
+      border-left: 4px solid #0ea5e9;
+      border: 1px solid #334155;
+    }
+
+    .question-block h3 {
+      color: #38bdf8;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .question-block p {
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .editor-container {
+      margin-top: 12px;
+      background: white;
+      border-radius: 8px;
+      min-height: 180px;
+      border: 1px solid #334155;
+    }
+
+    .ck-editor__editable {
+      min-height: 180px;
+    }
+
+    .question-block code {
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #f472b6;
+      font-family: "Consolas", "Monaco", monospace;
+      border: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" onclick="location.href='/tasks.html'">
+      <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
+      <span class="brand-hacker">CHECK POINT</span>
+    </div>
+    <div class="header-actions">
+      <button class="reset-btn" id="resetBtn" onclick="resetLab()">Reset Lab</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- SCENARIO HERO - Full Width at Top -->
+    <div class="scenario-hero">
+      <h2>
+        🌙 NOC Night-Shift Scenario – Client Outage (leaf-01 / leaf-02)
+      </h2>
+      
+      <p style="font-weight: 600;">
+        <strong style="color: #ffd700;">It's 01:43 AM on your night shift.</strong><br>
+        A major client calls your NOC emergency line.
+      </p>
+      
+      <p>They report:</p>
+      
+      <div class="client-quote">
+        <p style="color: #ffcccb; font-style: italic; margin-bottom: 8px;">
+          "Our two internal application servers cannot reach each other.<br>
+          Users in both departments are unable to access each other's services.<br>
+          This is impacting overnight batch processing.<br>
+          <strong>Please investigate immediately.</strong>"
+        </p>
+      </div>
+      
+      <p>The client provides the affected server names:</p>
+      <ul>
+        <li style="color: #4ec9b0;"><strong>leaf-01</strong> (Finance department server)</li>
+        <li style="color: #4ec9b0;"><strong>leaf-02</strong> (Logistics department server)</li>
+      </ul>
+      
+      <p>
+        A third device — their <strong style="color: #569cd6;">core gateway router</strong> — connects both networks.
+      </p>
+      
+      <p>
+        They tell you that <strong>no changes were made on their side</strong> and everything worked earlier in the day.
+      </p>
+      
+      <div class="monitoring-status">
+        <p style="margin-bottom: 8px;"><strong style="color: #4ec9b0;">Your monitoring system confirms:</strong></p>
+        <ul>
+          <li style="color: #c8c8c8;">✅ Both servers are online</li>
+          <li style="color: #c8c8c8;">✅ Both NICs report no errors</li>
+          <li style="color: #c8c8c8;">✅ CPU and memory normal</li>
+          <li style="color: #e94560; font-weight: 600;">❌ But traffic between the two networks is failing</li>
+        </ul>
+      </div>
+      
+      <p class="mission-warning">
+        ⚠️ You must troubleshoot this routing failure ⚠️
+      </p>
+    </div>
+
+    <!-- Network Routing Challenge Section -->
+    <div class="challenge-section">
+      <div class="scenario">
+        <h2>Network Routing Challenge</h2>
+        
+        <p>You are given a small lab with three terminals, each representing a different Linux machine in a network.</p>
+
+        <h3>📊 Network Topology Diagram</h3>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <img class="topology-img" src="/task/routing/assets/topology.png?v=2" alt="Network topology diagram" style="width: 100%; max-width: 800px; display: block; margin: 0 auto;" onerror="this.parentElement.innerHTML='<p style=color:red>Image failed to load. Path: /task/routing/assets/topology.png</p>'">
+        </div>
+
+        <h3>Network Configuration Details</h3>
+        
+        <div class="network-info">
+          <h4>Terminal 1 → leaf-01</h4>
+          <ul>
+            <li><strong>IP:</strong> <code>192.168.178.10/24</code></li>
+            <li><strong>Network:</strong> net-1</li>
+            <li>This machine needs a route to reach net-2.</li>
+          </ul>
+        </div>
+
+        <div class="network-info">
+          <h4>Terminal 2 → router</h4>
+          <ul>
+            <li><strong>IP on net-1:</strong> <code>192.168.178.2/24</code></li>
+            <li><strong>IP on net-2:</strong> <code>10.0.0.2/16</code></li>
+            <li>This is the gateway between the two networks.</li>
+            <li>Acts like a Linux router, but <strong>IP forwarding is OFF</strong> by default.</li>
+          </ul>
+        </div>
+
+        <div class="network-info">
+          <h4>Terminal 3 → leaf-02</h4>
+          <ul>
+            <li><strong>IP:</strong> <code>10.0.0.20/16</code></li>
+            <li><strong>Network:</strong> net-2</li>
+            <li>This machine needs a route to reach net-1.</li>
+          </ul>
+        </div>
+
+        <h3>Your Goal</h3>
+        
+        <div class="info-box">
+          <p><strong>Configure the network so that leaf-01 and leaf-02 can communicate with each other through the router.</strong></p>
+        </div>
+
+        <p>Currently, the three machines <strong>cannot reach each other</strong> because:</p>
+        <ul>
+          <li>The leaf nodes don't know how to route traffic to the other network</li>
+          <li>The router is not configured to forward packets between networks</li>
+        </ul>
+
+        <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border: 3px solid #991b1b; border-radius: 12px; padding: 25px 30px; margin: 30px 0; box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);">
+          <p style="color: #fef2f2; font-size: 1.4rem; font-weight: 700; text-align: center; margin: 0; line-height: 1.6; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            ⚠️ STOP! Read ALL Questions Below Before You Start Working ⚠️
+          </p>
+          <p style="color: #fecaca; font-size: 1.05rem; font-weight: 500; text-align: center; margin: 12px 0 0; line-height: 1.5;">
+            Understanding the full scope of the task will help you solve it more efficiently
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminals Section -->
+    <div class="terminal-section">
+    <div class="terminal-panel">
+      <div class="terminal-container">
+        <div class="terminal-tabs">
+          <button class="terminal-tab active" data-terminal="leaf01">Terminal 1: leaf-01</button>
+          <button class="terminal-tab" data-terminal="router">Terminal 2: router</button>
+          <button class="terminal-tab" data-terminal="leaf02">Terminal 3: leaf-02</button>
+        </div>
+        
+        <div class="terminal-pane active" id="terminal-leaf01">
+          <iframe class="terminal-frame" id="frame-leaf01"></iframe>
+        </div>
+        
+        <div class="terminal-pane" id="terminal-router">
+          <iframe class="terminal-frame" id="frame-router"></iframe>
+        </div>
+        
+        <div class="terminal-pane" id="terminal-leaf02">
+          <iframe class="terminal-frame" id="frame-leaf02"></iframe>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- BOTTOM: Questions Section -->
+    <div class="questions-section">
+      <h2 style="color: #4ec9b0; margin-bottom: 30px;">📝 Lab Questions</h2>
+
+      <div class="question-block">
+        <h3>Question 1 – Test External Connectivity (Before Any Changes)</h3>
+        <p>From <strong>leaf-01</strong>, try to reach a public IP address (for example: Google's IP <code>8.8.8.8</code>).</p>
+        <p><strong>Provide a screenshot of the result and explain what you observed.</strong></p>
+        <div class="editor-container" id="editor-q1"></div>
+      </div>
+
+      <div class="question-block">
+        <h3>Question 2 – Test Connectivity From leaf-01 to leaf-02 (Before Any Changes)</h3>
+        <p>Attempt to reach <strong>leaf-02</strong> from <strong>leaf-01</strong>.</p>
+        <p><strong>Provide a screenshot and explain what happened.</strong></p>
+        <div class="editor-container" id="editor-q2"></div>
+      </div>
+
+      <div class="question-block">
+        <h3>Question 3 – Test Connectivity From leaf-02 to leaf-01 (Before Any Changes)</h3>
+        <p>Attempt to reach <strong>leaf-01</strong> from <strong>leaf-02</strong>.</p>
+        <p><strong>Provide a screenshot and explain what happened.</strong></p>
+        <div class="editor-container" id="editor-q3"></div>
+      </div>
+
+      <div class="question-block">
+        <h3>Question 4 – Apply the Necessary Routing Fixes</h3>
+        <p>Make the changes required to allow communication between both leaves through the router.</p>
+        <p><strong>Provide screenshots showing the changes you made and explain the reasoning behind them.</strong></p>
+        <div class="editor-container" id="editor-q4"></div>
+      </div>
+
+      <div class="question-block">
+        <h3>Question 5 – Test Connectivity After Fix (leaf-01 → leaf-02)</h3>
+        <p>After applying the fixes, try reaching <strong>leaf-02</strong> from <strong>leaf-01</strong>.</p>
+        <p><strong>Provide a screenshot and explain whether it works and why.</strong></p>
+        <div class="editor-container" id="editor-q5"></div>
+      </div>
+
+      <div class="question-block">
+        <h3>Question 6 – Test Connectivity After Fix (leaf-02 → leaf-01)</h3>
+        <p>After applying the fixes, try reaching <strong>leaf-01</strong> from <strong>leaf-02</strong>.</p>
+        <p><strong>Provide a screenshot and explain whether it works and why.</strong></p>
+        <div class="editor-container" id="editor-q6"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+  
+  <script>
+    // Initialize CKEditor for all 6 questions
+    const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed } = window.CKEDITOR;
+
+    const editorIds = ['editor-q1', 'editor-q2', 'editor-q3', 'editor-q4', 'editor-q5', 'editor-q6'];
+    
+    editorIds.forEach(id => {
+      ClassicEditor
+        .create(document.getElementById(id), {
+          plugins: [
+            Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+            Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed
+          ],
+          toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'underline', '|',
+            'link', 'bulletedList', 'numberedList', '|',
+            'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
+            'undo', 'redo'
+          ],
+          heading: {
+            options: [
+              { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+              { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+              { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+              { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+            ]
+          },
+          image: {
+            toolbar: ['imageTextAlternative']
+          }
+        })
+        .then(editor => {
+          console.log('Editor initialized:', id);
+        })
+        .catch(error => {
+          console.error('Editor initialization error for', id, error);
+        });
+    });
+
+    // Reset lab function
+    async function resetLab() {
+      const btn = document.getElementById('resetBtn');
+      if (!confirm('Are you sure you want to reset the lab? This will restart all containers and clear all configurations.')) {
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Resetting...';
+      
+      try {
+        const response = await fetch('/api/reset-routing-lab', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Lab reset successfully! Reloading terminals...');
+          // Reload all terminal iframes
+          document.querySelectorAll('.terminal-frame').forEach(frame => {
+            if (frame.src) {
+              frame.src = frame.src; // Reload
+            }
+          });
+        } else {
+          alert('Failed to reset lab: ' + result.error);
+        }
+      } catch (error) {
+        alert('Error resetting lab: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reset Lab';
+      }
+    }
+
+    // Terminal tab switching
+    const tabs = document.querySelectorAll('.terminal-tab');
+    const panes = document.querySelectorAll('.terminal-pane');
+
+    const containerMap = {
+      'leaf01': 'nbr-leaf01',
+      'router': 'nbr-router',
+      'leaf02': 'nbr-leaf02'
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const terminalName = tab.dataset.terminal;
+        
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Update active pane
+        panes.forEach(p => p.classList.remove('active'));
+        document.getElementById(`terminal-${terminalName}`).classList.add('active');
+        
+        // Load terminal iframe if not loaded
+        const frame = document.getElementById(`frame-${terminalName}`);
+        if (!frame.src) {
+          frame.src = `/api/terminal/${containerMap[terminalName] || terminalName}`;
+        }
+      });
+    });
+
+    // Load first terminal on page load
+    document.getElementById('frame-leaf01').src = '/api/terminal/nbr-leaf01';
+  </script>
+  <script src="/header-timer.js" defer></script>
+</body>
+</html>

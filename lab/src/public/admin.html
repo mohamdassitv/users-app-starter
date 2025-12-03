@@ -68,6 +68,7 @@ table tbody tr:nth-child(even){background:#fff7fb;}
     <div class="actions-line" style="margin-top:14px;">
   <button class="btn btn-ghost" id="btnReloadCandidates">Refresh</button>
   <button class="btn btn-primary" id="btnShowCreate" type="button">New Candidate</button>
+  <button class="btn" id="btnDeleteAll" type="button" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;">Delete All Candidates</button>
     </div>
   <form id="createCandidateForm" style="display:none;margin-top:8px;padding:18px 20px;background:rgba(255,255,255,.75);border:1px solid var(--pink-200);border-radius:20px;backdrop-filter:blur(4px);">
       <div style="display:flex;flex-wrap:wrap;gap:10px;">
@@ -136,6 +137,22 @@ table tbody tr:nth-child(even){background:#fff7fb;}
       <button class="btn btn-ghost" id="btnReloadFinalWork" type="button">Refresh</button>
     </div>
   </div>
+  <!-- Realtime Session Monitor (SSE/WS) -->
+  <div class="panel card" id="realtimePanel" style="display:none;">
+    <h2>Realtime Monitor <span class="badge" id="rtStatus" style="background:#1e293b;border-color:#334155;">IDLE</span></h2>
+    <label for="rtSessionId">Session UUID</label>
+    <input type="text" id="rtSessionId" placeholder="e.g. 8b1d3e8d-..." />
+    <div class="actions-line">
+      <button class="btn btn-primary" id="btnRtConnect" type="button">Connect</button>
+      <button class="btn btn-ghost" id="btnRtDisconnect" type="button" style="display:none;">Disconnect</button>
+    </div>
+    <small class="desc">Streams <code>answer_updated</code> and <code>event_logged</code> via SSE (WS if enabled).</small>
+    <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;" id="rtSummary"></div>
+    <div style="margin-top:20px;">
+      <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Live Events</h3>
+      <div id="rtEvents" class="readout" style="max-height:200px;overflow:auto;"></div>
+    </div>
+  </div>
 </main>
 <!-- Modal for viewing candidate final work (answers) -->
 <div id="answersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;align-items:flex-start;justify-content:center;padding:60px 20px;overflow:auto;">
@@ -181,6 +198,8 @@ async function verifySession(){
   showPanels();
   loadConfig();
   loadCandidates();
+  // Enable realtime panel after auth
+  document.getElementById('realtimePanel').style.display='block';
   } else {
     stateEl.textContent='NONE';
     stateEl.style.background='#7f1d1d';
@@ -448,6 +467,58 @@ function buildFinalWork(candidates){
 }
 document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loadCandidates());
 
+// ---- Candidate Management Buttons ----
+document.getElementById('btnReloadCandidates').addEventListener('click', ()=> loadCandidates());
+document.getElementById('floatingRefresh').addEventListener('click', ()=> loadCandidates());
+
+document.getElementById('btnShowCreate').addEventListener('click', ()=>{
+  document.getElementById('createCandidateForm').style.display='block';
+});
+
+document.getElementById('btnCancelCreate').addEventListener('click', ()=>{
+  document.getElementById('createCandidateForm').style.display='none';
+  document.getElementById('newCandName').value='';
+  document.getElementById('newCandEmail').value='';
+});
+
+document.getElementById('createCandidateForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name=document.getElementById('newCandName').value.trim();
+  const email=document.getElementById('newCandEmail').value.trim();
+  if(!email){ alert('Email required'); return; }
+  const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+  if(r.ok){
+    document.getElementById('createCandidateForm').style.display='none';
+    document.getElementById('newCandName').value='';
+    document.getElementById('newCandEmail').value='';
+    loadCandidates();
+  }
+});
+
+document.getElementById('btnCreateAndOpen').addEventListener('click', async ()=>{
+  const name=document.getElementById('newCandName').value.trim();
+  const email=document.getElementById('newCandEmail').value.trim();
+  if(!email){ alert('Email required'); return; }
+  const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+  if(r.ok){
+    document.getElementById('createCandidateForm').style.display='none';
+    document.getElementById('newCandName').value='';
+    document.getElementById('newCandEmail').value='';
+    loadCandidates();
+    window.open('/login.html?email='+encodeURIComponent(email),'_blank');
+  }
+});
+
+document.getElementById('btnDeleteAll').addEventListener('click', async ()=>{
+  if(!confirm('Delete ALL candidates and their data? This cannot be undone!')) return;
+  const r=await gateFetch('/api/admin/candidates/all',{method:'DELETE'});
+  if(r.ok){
+    const j=await r.json();
+    alert('Deleted '+j.deleted+' candidate(s)');
+    loadCandidates();
+  }
+});
+
 // ---- Exam Template Panel Logic ----
 (function(){
   const form=document.getElementById('templateUploadForm');
@@ -482,6 +553,32 @@ document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loa
   reloadBtn && reloadBtn.addEventListener('click', e=>{ e.preventDefault(); loadTemplate(); });
   // Defer initial load until session verified triggers showPanels; poll for existence
   let tries=0; const int=setInterval(()=>{ if(metaEl.offsetParent!==null){ clearInterval(int); loadTemplate(); } if(++tries>40) clearInterval(int); },250);
+})();
+</script>
+<script>
+// Admin realtime logic (SSE only unless USE_WS server flag set)
+(function(){
+  const sidInput=document.getElementById('rtSessionId');
+  const btnConnect=document.getElementById('btnRtConnect');
+  const btnDisconnect=document.getElementById('btnRtDisconnect');
+  const statusEl=document.getElementById('rtStatus');
+  const eventsEl=document.getElementById('rtEvents');
+  const summaryEl=document.getElementById('rtSummary');
+  let es=null; let answersCache={};
+  function setStatus(txt,color){ statusEl.textContent=txt; if(color){ statusEl.style.background=color.bg; statusEl.style.borderColor=color.border; }}
+  function appendEvent(line){ const pre=document.createElement('div'); pre.style.padding='2px 0'; pre.textContent=line; eventsEl.appendChild(pre); eventsEl.scrollTop=eventsEl.scrollHeight; }
+  function renderSummary(){ summaryEl.innerHTML=Object.keys(answersCache).length? Object.entries(answersCache).map(([task,v])=>`<div style="background:#fff4fa;border:1px solid #ffb5da;padding:10px 12px;border-radius:14px;font-size:11px;display:flex;flex-direction:column;gap:4px;"><strong style="font-size:11px;letter-spacing:.08em;">${task}</strong><span style="font-family:ui-monospace,monospace;">v${v.version} @ ${new Date(v.updated_at).toLocaleTimeString()}</span></div>`).join('') : '<div style="font-size:11px;color:#b2497a;">No answers yet.</div>'; }
+  async function primeAnswers(sessionId){ try{ const r=await fetch('/api/sessions/'+encodeURIComponent(sessionId)+'/answers'); if(!r.ok) return; const j=await r.json(); answersCache={}; (j.answers||[]).forEach(a=>{ answersCache[a.task_id]={version:a.version,updated_at:a.updated_at}; }); renderSummary(); }catch(e){} }
+  function connect(){ const sid=(sidInput.value||'').trim(); if(!sid) return alert('Enter session id'); if(es){ es.close(); }
+    primeAnswers(sid);
+    es=new EventSource('/api/sessions/'+encodeURIComponent(sid)+'/stream');
+    setStatus('OPEN',{bg:'#065f46',border:'#059669'}); btnConnect.style.display='none'; btnDisconnect.style.display='inline-block'; appendEvent('Connected to '+sid);
+    es.addEventListener('answer_updated', ev=>{ try{ const data=JSON.parse(ev.data); answersCache[data.task_id]={version:data.version,updated_at:data.updated_at}; renderSummary(); appendEvent('answer_updated '+data.task_id+' v'+data.version); }catch(_e){} });
+    es.addEventListener('event_logged', ev=>{ appendEvent('event '+ev.data); });
+    es.onerror=()=>{ appendEvent('stream error'); setStatus('ERR',{bg:'#7f1d1d',border:'#b91c1c'}); };
+  }
+  function disconnect(){ if(es){ es.close(); es=null; } setStatus('IDLE',{bg:'#1e293b',border:'#334155'}); btnConnect.style.display='inline-block'; btnDisconnect.style.display='none'; appendEvent('Disconnected'); }
+  btnConnect && btnConnect.addEventListener('click', connect); btnDisconnect && btnDisconnect.addEventListener('click', disconnect);
 })();
 </script>
 </body>

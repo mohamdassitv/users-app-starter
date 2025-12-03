@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Task 6 — Tenant Data Investigation</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/styles.css" />
+<script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+<style>
+.page{max-width:1280px;margin:0 auto;padding:24px 40px 120px;}
+.hero-box{background:linear-gradient(150deg,#4f0028,#831843,#be185d,#db2777);background-size:240% 240%;animation:hbPulse 16s ease infinite;color:#ffeef7;border:1px solid #fb6fbe;border-radius:30px;padding:38px 44px 40px;position:relative;box-shadow:0 18px 50px -14px rgba(190,24,93,.55),0 6px 18px -6px rgba(190,24,93,.5);margin:0 0 60px;overflow:hidden;}
+.hero-box:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 22%,rgba(255,192,220,.42),transparent 65%);mix-blend-mode:screen;pointer-events:none;}
+.hero-box h1{margin:0 0 12px;font-size:40px;letter-spacing:.05em;}
+.hero-desc{margin:0;font-size:15px;line-height:1.55;font-weight:500;max-width:960px;}
+.badge-inline{background:#fff;color:#831843;padding:2px 8px 1px;font-size:11px;font-weight:700;border-radius:999px;letter-spacing:.05em;margin-left:8px;}
+.panels{border:1px solid #fbcfe8;background:#fffafb;border-radius:30px;padding:34px 40px 46px;position:relative;box-shadow:0 6px 28px -12px rgba(219,39,119,.35),0 2px 6px -2px rgba(0,0,0,.08);} 
+.panel h2{margin:0 0 14px;font-size:22px;letter-spacing:.5px;color:#0f172a;}
+.small-hint{font-size:12px;color:#475569;margin:0 0 16px;}
+.counter-box{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 18px;font-size:13px;}
+.counter{background:linear-gradient(135deg,#fbcfe8,#f9a8d4);color:#581c39;padding:8px 14px 7px;border-radius:14px;font-weight:700;letter-spacing:.05em;}
+.tenants-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 0;}
+.tenants-table th, .tenants-table td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:middle;}
+.tenants-table th{background:#ffe4ef;color:#581c39;font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;position:relative;}
+.tenants-table th.sortable{cursor:pointer;user-select:none;}
+.tenants-table th.sortable:hover{background:#ffc9e3;}
+.sort-ind{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:10px;color:#831843;}
+.tenants-table tr:hover{background:#fff0f7;}
+.inst-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 3px;font-size:11px;font-weight:600;border-radius:999px;letter-spacing:.05em;}
+.inst-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.inst-ok{background:#d1fae5;color:#053321;}.inst-ok .inst-dot{background:#10b981;}
+.inst-warn{background:#fef3c7;color:#713f12;}.inst-warn .inst-dot{background:#f59e0b;}
+.inst-down{background:#fee2e2;color:#7f1d1d;}.inst-down .inst-dot{background:#dc2626;}
+.hibernated-status{display:flex;align-items:center;gap:8px;color:#64748b;}
+.resume-link{font-size:10px;color:#0ea5e9;text-decoration:none;font-weight:600;letter-spacing:.04em;}
+.resume-link:hover{text-decoration:underline;}
+.pagination-bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:18px;font-size:12px;}
+.pagination-bar label{color:#475569;}
+.pagination-bar select{padding:4px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;font-size:12px;}
+.pagination-bar button{padding:6px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:#0f172a;}
+.pagination-bar button:disabled{opacity:0.5;cursor:not-allowed;}
+.pagination-bar button:not(:disabled):hover{background:#f1f5f9;}
+.empty-state{text-align:center;padding:40px 20px;color:#94a3b8;font-size:14px;}
+.search-box{margin:14px 0;display:flex;gap:10px;align-items:center;}
+.search-box input{flex:1;max-width:420px;padding:10px 14px;border:1px solid #cbd5e1;border-radius:12px;font-size:13px;background:#f8fafc;}
+.search-box input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.35);background:#fff;}
+.field-set{display:flex;flex-direction:column;gap:18px;margin:0 0 28px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#831843;}
+.text-box{width:100%;border:1px solid #cbd5e1;border-radius:14px;padding:12px 14px;font-size:13px;background:#f8fafc;resize:vertical;min-height:120px;line-height:1.5;transition:border-color .18s,box-shadow .18s;}
+.text-box:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.35);background:#fff;}
+@keyframes hbPulse{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.ck-editor__editable_inline{min-height:140px;}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+<main class="page fade-in">
+  <section>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
+      <div class="hero-box" style="flex:1;margin:0;">
+        <h1>Task 6 — Tenant Data Investigation</h1>
+        <p class="hero-desc">Scenario: You are analyzing tenant data in the production environment. Your task is to search the tenant database, identify patterns, investigate data consistency issues, and document your findings. Pay close attention to duplicate entries, status anomalies, and registration patterns.<span class="badge-inline">Analysis</span></p>
+      </div>
+    </div>
+  </section>
+  <section class="panels">
+    <div class="panel active">
+      <h2>Tenants Table</h2>
+      <p class="small-hint">Production tenant data snapshot. Search by name or ID, sort by any column, and investigate the data for consistency issues.</p>
+      <div class="counter-box">
+        <div class="counter" id="ctrTotal">TOTAL: 0</div>
+        <div class="counter" id="ctrCreated">CREATED: 0</div>
+        <div class="counter" id="ctrPreTrial">PRE-TRIAL: 0</div>
+        <div class="counter" id="ctrReady">READY: 0</div>
+        <div class="counter" id="ctrHibernated">HIBERNATED: 0</div>
+      </div>
+      <div class="search-box">
+        <input type="text" id="tenSearch" placeholder="Search By Tenant Name or Id…" />
+      </div>
+      <table class="tenants-table" id="tenTable" aria-label="Tenants list">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="sortable" data-sort="name">Name <span class="sort-ind" id="sortInd-name"></span></th>
+            <th class="sortable" data-sort="sites" style="text-align:right;">Number Of Sites <span class="sort-ind" id="sortInd-sites"></span></th>
+            <th class="sortable" data-sort="instances">Instances Status <span class="sort-ind" id="sortInd-instances"></span></th>
+            <th class="sortable" data-sort="tenantStatus">Tenant Status <span class="sort-ind" id="sortInd-tenantStatus"></span></th>
+            <th class="sortable" data-sort="regDate" style="white-space:nowrap;">Registration Date <span class="sort-ind" id="sortInd-regDate"></span></th>
+          </tr>
+        </thead>
+        <tbody id="tenBody"></tbody>
+      </table>
+      <div class="pagination-bar" id="tenPagination" aria-label="Pagination controls">
+        <label style="display:flex;align-items:center;gap:6px;">Rows per page <select id="tenRows"><option>25</option><option>10</option><option>50</option></select></label>
+        <div id="tenRange">0–0 of 0</div>
+        <div style="display:flex;gap:8px;">
+          <button id="tenPrev" disabled>Prev</button>
+          <button id="tenNext" disabled>Next</button>
+        </div>
+      </div>
+      <div id="tenEmpty" class="empty-state" style="display:none;">No results</div>
+      
+      <!-- Kibana Dashboard Section -->
+      <div style="margin-top:48px;border-top:2px solid #f9a8d4;padding-top:36px;">
+        <h3 style="margin:0 0 8px;font-size:20px;color:#0f172a;font-weight:700;">📊 Kibana Discover — Log Explorer</h3>
+        <p class="small-hint" style="margin-bottom:20px;">Professional Kibana-style log analysis dashboard. Use KQL queries to filter logs (e.g., <code style="background:#fce7f3;color:#831843;padding:2px 6px;border-radius:4px;font-size:11.5px;">data.message:login.fail AND data.level:ERROR</code>). Includes ~500 synthetic events with a simulated 7-minute incident window showing authentication failures and IDP errors.</p>
+        <div style="border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);background:#f8fafc;margin-top:16px;">
+          <iframe src="/mini-kibana/index.html" style="width:100%;height:750px;border:none;display:block;background:#fff;"></iframe>
+        </div>
+        <div style="margin-top:12px;padding:12px 16px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:12px;color:#0c4a6e;">
+          <strong style="color:#075985;">💡 Pro Tip:</strong> Use the histogram to brush and zoom into specific time windows. Try searching for <code style="background:#fff;color:#0ea5e9;padding:1px 5px;border-radius:3px;font-weight:600;">data.tenant_id:tenant-05</code> or <code style="background:#fff;color:#0ea5e9;padding:1px 5px;border-radius:3px;font-weight:600;">data.level:ERROR</code>. Click fields in the sidebar to add them as columns.
+        </div>
+      </div>
+      
+      <div id="tenQuestions" style="margin-top:34px;">
+        <h3 style="margin:10px 0 12px;font-size:18px;color:#0f172a;">Tenant ID Exercise</h3>
+        <ol style="margin:0 0 20px 22px;font-size:13px;line-height:1.55;max-width:920px;">
+          <li style="margin-bottom:14px;">Search the table for tenant ID <strong>8ab93415-5bb1-4fdf-b1dc-2d1174626109</strong> (referenced in Task 4 P1 alert). Record the tenant <strong>ID</strong>, its <strong>Name</strong>, and its <strong>Registration Date</strong> exactly as shown.</li>
+          <li>One of your peers reported a possible data consistency bug involving two specific clients: <strong>NorthPeak Mining</strong> and <strong>Metro Legal Assoc</strong>. Inspect them in the table and explain what you believe the underlying problem is and why it could be risky for downstream systems.</li>
+        </ol>
+        <div class="field-set" style="margin-top:4px;">
+          <div class="field">
+            <label>Question 1 — Tenant ID, Name & Registration Date</label>
+            <textarea id="q1Answer" class="text-box" data-rich="1" data-task-id="tenants.q1" name="q1" placeholder="Format suggestion: ID = ...\nName = ...\nRegistration Date = ..." style="min-height:120px;"></textarea>
+          </div>
+          <div class="field">
+            <label>Question 2 — Bug Analysis (NorthPeak Mining & Metro Legal Assoc)</label>
+            <textarea id="q2Answer" class="text-box" data-rich="1" data-task-id="tenants.q2" name="q2" placeholder="Describe the issue you see between the two tenants, potential root cause (e.g. data ingest, duplication, key collision), risks (reporting, billing, isolation), and suggested remediation." style="min-height:160px;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/header-timer.js" defer></script>
+<script>
+  // VERSION=1 — Task 6 initial version with tenants table
+  const KEY='task6-state-v1';
+  
+  /* ===================== TENANTS TABLE LOGIC ===================== */
+  const TENANTS=(function(){
+    const base=new Date();
+    function daysAgo(n){const d=new Date(base);d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
+    return [
+      {id:'ead9000d-89ea-4d02-922d-518d469e2509',name:'Zenith Health Core',sites:54,inst:{ok:4,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(2)},
+      {id:'f3c1b210-11d4-4f2f-9b2c-01aa3f91d001',name:'Acme Retail East',sites:12,inst:{ok:3,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(1)},
+      {id:'7c2f9d2e-62b5-4b10-8b4f-19bca1a41002',name:'Global EduNet',sites:33,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(5)},
+      {id:'0b9a86d1-6f99-4d8c-9a73-003c56ab1003',name:'FinNova Sandbox',sites:4,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(9)},
+      {id:'f2bfaa7d-5a01-4e8a-9f60-994bc2ba1004',name:'Urban Logistics',sites:21,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(12)},
+      {id:'1c5d5d4f-5c33-4d75-bb8f-af2f39d81005',name:'Skyline Media Group',sites:8,inst:{ok:2,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(4)},
+      {id:'2a7c71be-2e5c-4ac5-a7fd-8cd520d21006',name:'AeroSecure Ops',sites:16,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(14)},
+      {id:'38f0aab2-3d29-4dc7-a7b1-17b6882b1007',name:'Evergreen Bio Labs',sites:5,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(3)},
+      {id:'4d98f4c5-50e3-4c1b-bb8d-7723056e1008',name:'Helios Energy',sites:27,inst:{ok:4,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(20)},
+      // Intentional duplicate ID with NorthPeak Mining below to create a data consistency bug for exercise
+      {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'Metro Legal Assoc',sites:6,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(7)},
+      {id:'6b7b2310-3bcc-4a7a-9ce3-4ca43d341010',name:'NorthPeak Mining',sites:18,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(18)},
+      {id:'73ddf3b4-6c19-4d5d-bd7a-169f84bf1011',name:'Orchid Pharmaceuticals',sites:11,inst:{ok:2,warn:1,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(45)},
+      {id:'8a349bb9-2a2e-4fc3-9dfd-c761ad8a1012',name:'Pioneer Robotics',sites:9,inst:{ok:1,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(6)},
+      {id:'97a3c0c9-dc4b-4e0c-a5ad-3d4f1f801013',name:'Quantum Analytics',sites:14,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(11)},
+      {id:'8ab93415-5bb1-4fdf-b1dc-2d1174626109',name:'Phoenix Cloud Systems',sites:18,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(7)},
+      {id:'a4b5c6d7-e8f9-4010-a1b2-c3d4e5f61014',name:'Riverbend Hospitality',sites:30,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(8)},
+      {id:'b5c6d7e8-f901-4123-a1b2-c3d4e5f61015',name:'Summit Outdoor Gear',sites:7,inst:{ok:1,warn:0,down:0},tenantStatus:'CREATED',regDate:daysAgo(2)},
+      {id:'c6d7e8f9-0123-4234-a1b2-c3d4e5f61016',name:'Terra Agriculture Co',sites:19,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(22)},
+      {id:'d7e8f901-1234-4345-a1b2-c3d4e5f61017',name:'Unity Gaming Cloud',sites:41,inst:{ok:5,warn:1,down:1},tenantStatus:'READY',regDate:daysAgo(16)},
+      {id:'e8f90123-2345-4456-a1b2-c3d4e5f61018',name:'Vista Insurance',sites:13,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(19)},
+      {id:'f9012345-3456-4567-a1b2-c3d4e5f61019',name:'Wave Financial',sites:23,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(10)},
+      {id:'01234567-4567-4678-a1b2-c3d4e5f61020',name:'Xenon Defense R&D',sites:3,inst:{ok:0,warn:1,down:0},tenantStatus:'PRE-TRIAL',regDate:daysAgo(1)},
+      {id:'12234567-5678-4789-a1b2-c3d4e5f61021',name:'YellowBrick Studios',sites:15,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(9)},
+      {id:'23234567-6789-4890-a1b2-c3d4e5f61022',name:'Zephyr Textiles',sites:26,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(24)},
+      {id:'34234567-7890-4901-a1b2-c3d4e5f61023',name:'Atlas Navigation',sites:17,inst:{ok:2,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(13)},
+      {id:'45234567-8901-4a02-a1b2-c3d4e5f61024',name:'Brightline Security',sites:22,inst:{ok:2,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(15)},
+      {id:'56234567-9012-4b03-a1b2-c3d4e5f61025',name:'Celestial Mapping',sites:2,inst:{ok:0,warn:1,down:0},tenantStatus:'CREATED',regDate:daysAgo(5)},
+      {id:'67234567-0123-4c04-a1b2-c3d4e5f61026',name:'DeepWater Research',sites:29,inst:{ok:3,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(27)},
+      {id:'78234567-1234-4d05-a1b2-c3d4e5f61027',name:'Everest Fitness',sites:25,inst:{ok:3,warn:0,down:0},tenantStatus:'READY',regDate:daysAgo(6)},
+      {id:'89234567-2345-4e06-a1b2-c3d4e5f61028',name:'Frost Data Systems',sites:20,inst:{ok:2,warn:0,down:1},tenantStatus:'READY',regDate:daysAgo(30)},
+      {id:'90234567-3456-4f07-a1b2-c3d4e5f61029',name:'Granite Construction IT',sites:10,inst:{ok:2,warn:0,down:0},tenantStatus:'HIBERNATED',regDate:daysAgo(55)},
+      {id:'a0234567-4567-4008-a1b2-c3d4e5f61030',name:'Harbor Freight Logistics',sites:31,inst:{ok:3,warn:1,down:0},tenantStatus:'READY',regDate:daysAgo(17)}
+    ];
+  })();
+  
+  let tenState={sort:'regDate',dir:'desc',page:1,rows:25,search:''};
+  
+  function renderTenants(){
+    const body=document.getElementById('tenBody'); if(!body) return;
+    let data=[...TENANTS];
+    if(tenState.search){ const q=tenState.search.toLowerCase(); data=data.filter(t=>t.name.toLowerCase().includes(q)||t.id.toLowerCase().includes(q)); }
+    data.sort((a,b)=>{
+      const col=tenState.sort; let av, bv;
+      if(col==='instances'){ av=(a.inst.down*100)+(a.inst.warn*10)+a.inst.ok; bv=(b.inst.down*100)+(b.inst.warn*10)+b.inst.ok; }
+      else if(col==='sites'){ av=a.sites; bv=b.sites; }
+      else if(col==='name'){ av=a.name.toLowerCase(); bv=b.name.toLowerCase(); }
+      else if(col==='tenantStatus'){ av=a.tenantStatus; bv=b.tenantStatus; }
+      else if(col==='regDate'){ av=a.regDate; bv=b.regDate; }
+      if(av<bv) return tenState.dir==='asc'? -1:1;
+      if(av>bv) return tenState.dir==='asc'? 1:-1; return 0;
+    });
+    const total=data.length; const start=(tenState.page-1)*tenState.rows; const pageData=data.slice(start,start+tenState.rows);
+    body.innerHTML='';
+    if(pageData.length===0){ document.getElementById('tenEmpty').style.display='block'; }
+    else { document.getElementById('tenEmpty').style.display='none'; pageData.forEach(t=>{
+        const tr=document.createElement('tr');
+        const instClass=t.inst.down>0?'inst-down':(t.inst.warn>0?'inst-warn':'inst-ok');
+        const instLabel=`${t.inst.ok} OK / ${t.inst.warn} Warn / ${t.inst.down} Down`;
+        const pill=`<div class="inst-pill ${instClass}"><span class="inst-dot"></span>${instLabel}</div>`;
+        let tenantStatusHTML='';
+        if(t.tenantStatus==='HIBERNATED') tenantStatusHTML=`<span class="hibernated-status">HIBERNATED<a href="#" data-ten="${t.id}" class="resume-link">resume</a></span>`;
+        else tenantStatusHTML=`<span class="${t.tenantStatus==='READY'?'inst-ok':(t.tenantStatus==='CREATED'?'inst-warn':'')}">${t.tenantStatus}</span>`;
+        tr.innerHTML=`<td style="font-family:ui-monospace,monospace;font-size:11px;color:#64748b;">${esc(t.id)}</td><td>${esc(t.name)}</td><td style="text-align:right;">${t.sites}</td><td>${pill}</td><td>${tenantStatusHTML}</td><td style="white-space:nowrap;">${t.regDate}</td>`;
+        body.appendChild(tr);
+      });
+    }
+    updateCounters();
+    updatePagination(total);
+    updateSortIndicators();
+  }
+  
+  function updateCounters(){
+    const total=TENANTS.length;
+    const created=TENANTS.filter(t=>t.tenantStatus==='CREATED').length;
+    const preTrial=TENANTS.filter(t=>t.tenantStatus==='PRE-TRIAL').length;
+    const ready=TENANTS.filter(t=>t.tenantStatus==='READY').length;
+    const hibernated=TENANTS.filter(t=>t.tenantStatus==='HIBERNATED').length;
+    document.getElementById('ctrTotal').textContent='TOTAL: '+total;
+    document.getElementById('ctrCreated').textContent='CREATED: '+created;
+    document.getElementById('ctrPreTrial').textContent='PRE-TRIAL: '+preTrial;
+    document.getElementById('ctrReady').textContent='READY: '+ready;
+    document.getElementById('ctrHibernated').textContent='HIBERNATED: '+hibernated;
+  }
+  
+  function updatePagination(total){
+    const start=(tenState.page-1)*tenState.rows+1;
+    const end=Math.min(tenState.page*tenState.rows,total);
+    document.getElementById('tenRange').textContent=`${start}–${end} of ${total}`;
+    document.getElementById('tenPrev').disabled=tenState.page===1;
+    document.getElementById('tenNext').disabled=end>=total;
+  }
+  
+  function updateSortIndicators(){
+    ['name','sites','instances','tenantStatus','regDate'].forEach(col=>{
+      const ind=document.getElementById('sortInd-'+col);
+      if(ind) ind.textContent=tenState.sort===col?(tenState.dir==='asc'?'▲':'▼'):'';
+    });
+  }
+  
+  function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  
+  // Event listeners
+  document.getElementById('tenSearch').addEventListener('input',e=>{ tenState.search=e.target.value; tenState.page=1; renderTenants(); });
+  document.getElementById('tenRows').addEventListener('change',e=>{ tenState.rows=parseInt(e.target.value,10); tenState.page=1; renderTenants(); });
+  document.getElementById('tenPrev').addEventListener('click',()=>{ if(tenState.page>1){ tenState.page--; renderTenants(); } });
+  document.getElementById('tenNext').addEventListener('click',()=>{ tenState.page++; renderTenants(); });
+  document.querySelectorAll('.tenants-table th.sortable').forEach(th=>th.addEventListener('click',()=>{
+    const col=th.dataset.sort;
+    if(tenState.sort===col) tenState.dir=tenState.dir==='asc'?'desc':'asc';
+    else { tenState.sort=col; tenState.dir='asc'; }
+    renderTenants();
+  }));
+  
+  // Resume tenant functionality
+  document.getElementById('tenBody').addEventListener('click',e=>{
+    const link=e.target.closest('.resume-link');
+    if(link){ e.preventDefault(); const id=link.dataset.ten; alert(`Resume action for tenant ${id} would be triggered here (not implemented in mock).`); }
+  });
+  
+  // CKEditor initialization
+  const q1Answer=document.getElementById('q1Answer');
+  const q2Answer=document.getElementById('q2Answer');
+  
+  function initCKEditor(){
+    const {ClassicEditor,Essentials,Paragraph,Bold,Italic,Underline,Strikethrough,Code,Link,List,Heading,BlockQuote,Table,TableToolbar,Indent,IndentBlock}=window.CKEDITOR;
+    const config={
+      plugins:[Essentials,Paragraph,Bold,Italic,Underline,Strikethrough,Code,Link,List,Heading,BlockQuote,Table,TableToolbar,Indent,IndentBlock],
+      toolbar:['undo','redo','|','heading','|','bold','italic','underline','strikethrough','code','|','link','bulletedList','numberedList','|','blockQuote','insertTable','|','outdent','indent'],
+      heading:{options:[{model:'paragraph',title:'Paragraph',class:'ck-heading_paragraph'},{model:'heading2',view:'h2',title:'Heading 2',class:'ck-heading_heading2'},{model:'heading3',view:'h3',title:'Heading 3',class:'ck-heading_heading3'}]},
+      table:{contentToolbar:['tableColumn','tableRow','mergeTableCells']},
+      initialData:'',
+      placeholder:'Enter your answer here...'
+    };
+    
+    [q1Answer,q2Answer].forEach(el=>{
+      if(!el) return;
+      const taskId=el.dataset.taskId;
+      ClassicEditor.create(el,config).then(editor=>{
+        el._editorInstance=editor;
+        editor.model.document.on('change:data',()=>{
+          const content=editor.getData();
+          saveAnswer(taskId,content);
+        });
+        loadAnswer(taskId,editor);
+      }).catch(err=>console.error('CKEditor init failed',err));
+    });
+  }
+  
+  function saveAnswer(taskId,content){
+    try{
+      const raw=localStorage.getItem(KEY);
+      const data=raw?JSON.parse(raw):{};
+      data[taskId]=content;
+      localStorage.setItem(KEY,JSON.stringify(data));
+    }catch(e){console.warn('Save failed',e);}
+  }
+  
+  function loadAnswer(taskId,editor){
+    try{
+      const raw=localStorage.getItem(KEY);
+      if(raw){
+        const data=JSON.parse(raw);
+        if(data[taskId]) editor.setData(data[taskId]);
+      }
+    }catch(e){console.warn('Load failed',e);}
+  }
+  
+  // Initialize
+  if(window.CKEDITOR) initCKEditor();
+  else window.addEventListener('load',initCKEditor);
+  renderTenants();
+</script>
+</body>
+</html>

@@ -2,6 +2,9 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
+# Install Docker CLI for terminal access to other containers
+RUN apk add --no-cache docker-cli
+
 # Copy only dependency manifests first for better layer caching
 COPY lab/package*.json ./
 
@@ -10,6 +13,8 @@ RUN npm install --omit=dev && npm cache clean --force
 
 # Copy application source
 COPY lab/src ./src
+# Copy database migrations for runtime application
+COPY lab/db ./db
 # Keep a copy of initial state for seeding named volume on first run
 COPY lab/state /seed-state
 RUN mkdir -p /app/state && cp -R /seed-state/* /app/state/ || true
