@@ -74,8 +74,6 @@ table tbody tr:nth-child(even){background:#fff7fb;}
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Reset</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Delete</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Finish Exam</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Add Time</th>
           </tr>
         </thead>
         <tbody id="candRows"></tbody>
@@ -337,14 +335,7 @@ async function loadCandidates(){
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;" data-rem="'+c.email+'">'+formatRemaining(c)+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-start="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-finish="'+c.email+'" class="finishBtn" title="Force finish exam" style="background:linear-gradient(135deg,#eab308,#ca8a04);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">⏹️ Finish</button></td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+
-        '<div style="display:flex;gap:6px;align-items:center;justify-content:center;">'+
-          '<input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" />'+
-          '<button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button>'+
-        '</div>'+
-  '</td>';
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>';
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
@@ -437,21 +428,6 @@ async function loadCandidates(){
     if(!confirm('Delete candidate '+email+' and all their data?')) return;
     const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email),{method:'DELETE'});
     if(r.ok) loadCandidates();
-  }));
-  tbody.querySelectorAll('.finishBtn').forEach(btn=> btn.addEventListener('click', async e=>{
-    const email=e.target.getAttribute('data-finish');
-    if(!confirm('Force finish exam for '+email+'? This will end their session and redirect them to the finish page.')) return;
-    const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/finish',{method:'POST'});
-    if(r.ok){ alert('Exam finished for '+email); loadCandidates(); }
-    else { alert('Failed to finish exam'); }
-  }));
-  tbody.querySelectorAll('[data-extend]').forEach(btn=> btn.addEventListener('click', async e=>{
-    const email=e.target.getAttribute('data-extend');
-    const inp=tbody.querySelector('[data-extend-input="'+CSS.escape(email)+'"]');
-    const val=parseInt(inp && inp.value,10);
-    if(!val || val<1) { alert('Enter minutes > 0'); return; }
-    const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes:val})});
-    if(r.ok){ inp.value=''; loadCandidates(); }
   }));
   tbody.querySelectorAll('[data-view]').forEach(btn=> btn.addEventListener('click', e=>{
     const email=e.target.getAttribute('data-view');
