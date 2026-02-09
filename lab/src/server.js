@@ -306,15 +306,15 @@ app.get('/c/:slug/:token',(req,res)=>{
   
   // If admin or manager, allow access and set candidate cookies for iframe functionality
   if((admin || manager) && tokenMatches){
-    res.cookie('candidate','1',{httpOnly:false,sameSite:'lax'});
-    res.cookie('candidateSlug',slug,{httpOnly:false,sameSite:'lax'});
+    res.cookie('candidate','1',{httpOnly:false,sameSite:'lax',maxAge:2*60*60*1000});
+    res.cookie('candidateSlug',slug,{httpOnly:false,sameSite:'lax',maxAge:2*60*60*1000});
   }
   // Fallback: if not owner/admin/manager but token matches candidate task tokens, auto-set candidate cookies
   else if(!owner && !admin && !manager){
     if(tokenMatches){
       // Auto-authenticate candidate for convenience (single-link access)
-      res.cookie('candidate','1',{httpOnly:false,sameSite:'lax'});
-      res.cookie('candidateSlug',slug,{httpOnly:false,sameSite:'lax'});
+      res.cookie('candidate','1',{httpOnly:false,sameSite:'lax',maxAge:2*60*60*1000});
+      res.cookie('candidateSlug',slug,{httpOnly:false,sameSite:'lax',maxAge:2*60*60*1000});
     } else {
       return res.status(403).send('Forbidden');
     }
@@ -387,8 +387,8 @@ app.post('/api/candidate/login',(req,res)=>{
   
   const updatedC=findCandidate(updatedSt,email); 
   const rem=computeRemaining(updatedC);
-  res.cookie('candidate','1',{httpOnly:false});
-  if(updatedC.slug) res.cookie('candidateSlug',updatedC.slug,{httpOnly:false,sameSite:'lax'});
+  res.cookie('candidate','1',{httpOnly:false,maxAge:2*60*60*1000});
+  if(updatedC.slug) res.cookie('candidateSlug',updatedC.slug,{httpOnly:false,sameSite:'lax',maxAge:2*60*60*1000});
   res.json({candidate:{email:updatedC.email,name:updatedC.name,startTime:updatedC.startTime,remainingMs:rem.remainingMs,running:rem.running,slug:updatedC.slug,taskTokens:updatedC.taskTokens,staticPath:updatedC.staticPath}});
 });
 
