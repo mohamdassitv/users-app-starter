@@ -2,7 +2,8 @@
 (function(){
   const INDICATOR_ID='syncIndicator';
   const DEBOUNCE_MS=1200;
-  let sessionId=localStorage.getItem('examSessionId')||null;
+  // Try candidateSlug first (set by login), then fall back to examSessionId
+  let sessionId=localStorage.getItem('candidateSlug')||localStorage.getItem('examSessionId')||null;
   let email=localStorage.getItem('candidateEmail')||null;
   let candidateName=localStorage.getItem('candidateName')||null;
   let timers={};
@@ -23,17 +24,28 @@
 
   async function createSession(){
     if(!email) return;
+    // First check if we already have a slug from localStorage
+    const existingSlug = localStorage.getItem('candidateSlug');
+    if(existingSlug) {
+      sessionId = existingSlug;
+      setStatus('Session '+sessionId.slice(0,8),'#0f766e');
+      return;
+    }
     try {
       const r=await fetch('/api/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({candidate_name:candidateName,email})});
       if(!r.ok){ setStatus('Session fail','crimson'); return; }
       const j=await r.json();
-      sessionId=j.session.id; localStorage.setItem('examSessionId',sessionId);
+      sessionId=j.session.id; 
+      localStorage.setItem('examSessionId',sessionId);
+      localStorage.setItem('candidateSlug',sessionId); // Also store as candidateSlug for consistency
       setStatus('Session '+sessionId.slice(0,8),'#0f766e');
     }catch(e){ setStatus('Net err','crimson'); }
   }
 
   async function init(){
     if(!email && document.cookie.includes('admin=1')){ viewerMode=true; await resolveCandidateForViewer(); }
+    // If candidate has candidateSlug cookie but localStorage was cleared, resolve it
+    if(!email && document.cookie.includes('candidateSlug=')){ await resolveCandidateFromSlugCookie(); }
     if(!email){ setStatus('No candidate email'); return; }
     if(!sessionId){ await createSession(); }
     await hydrateExisting();
@@ -58,6 +70,31 @@
       localStorage.setItem('candidateEmail',email);
       localStorage.setItem('candidateName',candidateName);
     }catch(e){ setStatus('Viewer resolve error','crimson'); }
+  }
+
+  // Resolve candidate email when they have candidateSlug cookie but localStorage was cleared
+  async function resolveCandidateFromSlugCookie(){
+    try {
+      const slug=(document.cookie.match(/candidateSlug=([^;]+)/)||[])[1];
+      if(!slug){ console.log('[answer-sync] No candidateSlug cookie found'); return; }
+      console.log('[answer-sync] Resolving candidate from slug cookie:', slug);
+      const r=await fetch('/public/slug/'+encodeURIComponent(slug)+'/info',{cache:'no-store'});
+      if(!r.ok){ 
+        console.log('[answer-sync] Slug lookup failed, status:', r.status);
+        setStatus('Session lookup failed'); 
+        return; 
+      }
+      const j=await r.json();
+      if(j.email){
+        email=j.email; 
+        candidateName=j.email;
+        sessionId=slug;
+        localStorage.setItem('candidateEmail',email);
+        localStorage.setItem('candidateName',candidateName);
+        localStorage.setItem('candidateSlug',slug);
+        console.log('[answer-sync] Resolved candidate email:', email);
+      }
+    }catch(e){ console.error('[answer-sync] Resolve error:', e); setStatus('Session error','crimson'); }
   }
 
   function extractSlugFromLocation(){

@@ -17,68 +17,135 @@
       <h1 class="hero-title" id="heroTitle" aria-label="Tasks">Tasks<span class="hero-caret" aria-hidden="true"></span></h1>
       <p class="hero-sub" id="candidateGreeting" style="margin-top:6px;">Loading session…</p>
       <div style="margin-top:12px;font-size:13px;color:#d0d6e0;" id="switchCandidateWrap"></div>
+      
+      <!-- Progress Bar -->
+      <div style="margin-top:30px;max-width:800px;margin-left:auto;margin-right:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:14px;font-weight:600;color:#94a3b8;">Exam Progress</div>
+          <div style="font-size:14px;font-weight:700;color:#0ea5e9;" id="progressText">0 of 6 tasks completed</div>
+        </div>
+        <div style="position:relative;width:100%;height:24px;background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:12px;overflow:hidden;border:1px solid #334155;box-shadow:inset 0 2px 8px rgba(0,0,0,0.4);">
+          <div id="progressBar" style="position:absolute;top:0;left:0;height:100%;width:0%;background:linear-gradient(90deg,#06b6d4,#0ea5e9,#3b82f6);transition:width 0.6s ease;border-radius:12px;box-shadow:0 0 20px rgba(14,165,233,0.6);"></div>
+          <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);animation:shimmer 2s infinite;"></div>
+          <div id="progressPercent" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.8);z-index:1;">0%</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;">
+          <span>Start</span>
+          <span>Complete</span>
+        </div>
+      </div>
     </div>
+    <style>
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      /* Disabled task styling */
+      .task-row.disabled {
+        opacity: 0.5;
+        background: #f8f9fa;
+        pointer-events: none;
+      }
+      .task-row.disabled h3 {
+        color: #94a3b8;
+      }
+      .task-row.disabled:hover {
+        transform: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+    </style>
     <section class="section hero-grid"></section>
     <section class="section">
       <div class="task-list" role="list" aria-label="Assessment tasks">
-        <div style="background:#132033;border:1px solid #1f2d3d;padding:18px 20px;border-radius:18px;margin:0 0 26px;">
-          <h2 style="margin:0 0 8px;font-size:17px;">Exam Template</h2>
-          <p style="margin:0 0 10px;font-size:13px;color:#cbd5e1;line-height:1.5;" id="templateNotice">Loading template info…</p>
-          <button id="btnDownloadTemplate" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-weight:600;display:none;">Download Exam DOCX</button>
-        </div>
         <div class="task-row" role="listitem">
           <div class="task-badge">Case Study</div>
-          <h3>Task 1 — Branch Performance Degradation</h3>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 1 — Branch Performance Degradation</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-casestudy" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-casestudy" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
           <div class="actions"><a class="btn" href="/task/casestudy.html">Open →</a></div>
         </div>
         <div class="task-row" role="listitem">
           <div class="task-badge">Communication</div>
-          <h3>Task 2 — Customer Escalation Email</h3>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 2 — Customer Escalation Email</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-mail" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-mail" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
           <div class="actions"><a class="btn" href="/task/mail.html">Open →</a></div>
         </div>
         <div class="task-row" role="listitem">
-          <div class="task-badge">Reliability</div>
-          <h3>Task 3 — Shift Alert Correlation & Handover</h3>
+          <div class="task-badge">DevOps</div>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 3 — Shift Alert Correlation & Handover</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-alerts" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-alerts" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
           <div class="actions"><a class="btn" href="/task/alerts.html">Open →</a></div>
         </div>
-        <div class="task-row" role="listitem">
-          <div class="task-badge">Operations</div>
-          <h3>Task 4 — High-Volume User Cleanup</h3>
-          <div class="actions"><a class="btn" href="/task/users.html">Open →</a></div>
+        <div class="task-row" role="listitem" id="wafTaskRow">
+          <div class="task-badge">Infrastructure</div>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 4 — WAF Gateway Incident</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-waf" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-waf" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
+          <div class="actions">
+            <a class="btn" href="/task/waf.html" id="wafTaskBtn">Open →</a>
+          </div>
         </div>
         <div class="task-row" role="listitem">
           <div class="task-badge">Networking</div>
-          <h3>Task 5 — Configure Basic Routing</h3>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 5 — Configure Basic Routing</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-routing" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-routing" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
           <div class="actions"><a class="btn" href="/task/routing-task5.html">Open →</a></div>
         </div>
         <div class="task-row" role="listitem">
-          <div class="task-badge">Analysis</div>
-          <h3>Task 6 — Tenant Data Investigation</h3>
-          <div class="actions"><a class="btn" href="/task/tenants.html">Open →</a></div>
+          <div class="task-badge">Operations</div>
+          <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Task 6 — High-Volume User Cleanup</h3>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div id="progress-users" style="height:100%;width:0%;background:linear-gradient(90deg,#10b981,#059669);transition:width 0.5s ease;"></div>
+              </div>
+              <span id="percent-users" style="font-size:12px;font-weight:700;color:#10b981;min-width:40px;">0%</span>
+            </div>
+          </div>
+          <div class="actions"><a class="btn" href="/task/users.html">Open →</a></div>
         </div>
+      </div>
+      
+      <div style="margin-top:40px;padding:20px;text-align:center;border-top:1px solid #1f2d3d;">
+        <button id="finishExamBtn" class="btn" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;padding:12px 28px;font-size:14px;font-weight:700;">Finish Exam</button>
+        <p style="font-size:12px;color:#94a3b8;margin-top:10px;">Click this button when you have completed all tasks. This will end your exam immediately.</p>
       </div>
     </section>
   </main>
-  <div style="max-width:980px;margin:30px auto 80px;padding:0 40px;">
-    <div id="finalSubmitBox" style="background:#132033;border:1px solid #1f2d3d;padding:20px 24px;border-radius:18px;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Final Submission</h2>
-      <p style="margin:0 0 14px;font-size:13px;color:#cbd5e1;">Upload your final PDF (required) and optional DOCX. Uploading locks your exam and redirects you to the finish page.</p>
-      <h3 style="margin:0 0 10px;font-size:16px;">Upload Final Work</h3>
-      <p style="margin:0 0 10px;font-size:12px;color:#94a3b8;">Ensure all answers from the exam template are included before uploading. This action is irreversible.</p>
-      <form id="finalUploadForm" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
-        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;">
-          <label style="font-size:12px;color:#cbd5e1;">PDF File (required)<br>
-            <input type="file" id="pdfFile" name="pdfFile" accept="application/pdf" required style="margin-top:4px;" />
-          </label>
-          <label style="font-size:12px;color:#cbd5e1;">DOCX File (optional)<br>
-            <input type="file" id="docxFile" name="docxFile" accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" style="margin-top:4px;" />
-          </label>
-          <button type="submit" id="btnUploadFinal" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-weight:600;">Upload & Lock</button>
-        </div>
-        <div id="uploadMsg" style="font-size:12px;color:#cbd5e1;"></div>
-      </form>
-    </div>
-  </div>
   <a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
   <img src="/help-contact.svg" alt="Contact" width="38" height="38">
   <span class="help-label">Questions? Contact on-call.</span>
@@ -96,77 +163,49 @@
         });
       }
       window.addEventListener('scroll',()=>{const y=window.scrollY;header.classList.toggle('shrink', y>16);});
-      const email=localStorage.getItem('candidateEmail');
-      const name=localStorage.getItem('candidateName');
+      let email=localStorage.getItem('candidateEmail');
+      let name=localStorage.getItem('candidateName');
       const greet=document.getElementById('candidateGreeting');
       const wrap=document.getElementById('switchCandidateWrap');
+      
+      // If no localStorage email, try to recover from candidateSlug cookie
+      if(!email){
+        const slugMatch = document.cookie.match(/candidateSlug=([^;]+)/);
+        if(slugMatch && slugMatch[1]){
+          const slug = slugMatch[1];
+          // Show loading state while we recover
+          if(greet) greet.textContent='Recovering session...';
+          if(wrap) wrap.innerHTML='Please wait...';
+          // Fetch email from slug
+          fetch('/public/slug/'+encodeURIComponent(slug)+'/info')
+            .then(r=>r.ok?r.json():null)
+            .then(data=>{
+              if(data && data.email){
+                localStorage.setItem('candidateEmail', data.email);
+                localStorage.setItem('candidateName', data.email);
+                localStorage.setItem('candidateSlug', slug);
+                // Reload to apply the recovered session
+                location.reload();
+              } else {
+                if(greet) greet.textContent='Not logged in';
+                if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>';
+              }
+            })
+            .catch(()=>{
+              if(greet) greet.textContent='Not logged in';
+              if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>';
+            });
+        } else {
+          // No cookie either - truly not logged in
+          if(greet) greet.textContent='Not logged in';
+          if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>';
+        }
+      }
+      
       if(email){
         if(greet) greet.textContent=(name? name+' – ':'')+'Select a task to begin or continue.';
         if(wrap){wrap.innerHTML='Logged in as <strong>'+(name||email)+'</strong>. <a href="#" id="switchCandidateLink">Switch candidate</a>';wrap.querySelector('#switchCandidateLink').addEventListener('click',ev=>{ev.preventDefault();if(confirm('Switch candidate? Timer persists.')){localStorage.removeItem('candidateEmail');localStorage.removeItem('candidateName');document.cookie='cand=; Max-Age=0; path=/';location.href='/login.html';}});} }
-      else { if(greet) greet.textContent='Not logged in'; if(wrap) wrap.innerHTML='No session. <a href="/login.html">Login</a>'; }
 
-      // Final submission logic
-      const box=document.getElementById('finalSubmitBox');
-      const uploadForm=document.getElementById('finalUploadForm');
-      const uploadBtn=document.getElementById('btnUploadFinal');
-      const uploadMsg=document.getElementById('uploadMsg');
-      if(email && localStorage.getItem('candidateSubmitted')==='1'){
-        box.style.opacity='0.75';
-        uploadMsg.textContent='Already submitted. Redirecting…';
-        setTimeout(()=>{ location.href='/finished.html'; },1200);
-        if(uploadBtn) uploadBtn.disabled=true;
-        if(uploadForm) uploadForm.querySelectorAll('input,button').forEach(el=> el.disabled=true);
-      }
-      // File upload submission
-      if(uploadForm && email){
-        uploadForm.addEventListener('submit', async (e)=>{
-          e.preventDefault();
-          if(localStorage.getItem('candidateSubmitted')==='1'){ alert('Already submitted.'); return; }
-          const pdfInput=document.getElementById('pdfFile');
-          if(!pdfInput.files.length){ alert('PDF file required'); return; }
-          const pdfFile=pdfInput.files[0];
-          if(pdfFile.size > 15*1024*1024){ alert('PDF exceeds 15MB limit'); return; }
-          const docxInput=document.getElementById('docxFile');
-          if(docxInput.files[0] && docxInput.files[0].size > 15*1024*1024){ alert('DOCX exceeds 15MB limit'); return; }
-          if(!confirm('Upload now and lock your exam? This cannot be undone.')) return;
-          uploadBtn.disabled=true; uploadBtn.textContent='Uploading...';
-          uploadMsg.textContent='Uploading files...';
-          try {
-            const fd=new FormData();
-            fd.append('email', email);
-            fd.append('pdfFile', pdfFile);
-            if(docxInput.files[0]) fd.append('docxFile', docxInput.files[0]);
-            const r=await fetch('/api/candidate/upload-final',{method:'POST',body:fd});
-            if(!r.ok){
-              uploadBtn.disabled=false; uploadBtn.textContent='Upload & Lock';
-              uploadMsg.textContent='Upload failed ('+r.status+').';
-              return;
-            }
-            const j=await r.json();
-            localStorage.setItem('candidateSubmitted','1');
-            uploadMsg.textContent='Files uploaded and exam locked at '+ (j.uploadedAt? new Date(j.uploadedAt).toLocaleString(): new Date().toLocaleString()) +'. Redirecting...';
-            uploadMsg.textContent+=' Redirecting...';
-            uploadBtn.textContent='Uploaded';
-            box.style.opacity='0.75';
-            uploadForm.querySelectorAll('input,button').forEach(el=> el.disabled=true);
-            setTimeout(()=>{ location.href='/finished.html'; },1500);
-          } catch(err){
-            uploadBtn.disabled=false; uploadBtn.textContent='Upload & Lock';
-            uploadMsg.textContent='Network error uploading';
-          }
-        });
-      }
-
-      // Exam template fetch
-      const templateNotice=document.getElementById('templateNotice');
-      const dlBtn=document.getElementById('btnDownloadTemplate');
-      fetch('/exam-template/meta').then(r=> r.json()).then(j=>{
-        if(!j.available){ templateNotice.textContent='Exam template not yet published. Check back soon.'; return; }
-        templateNotice.innerHTML='Download the DOCX template below. Complete ALL tasks inside that file. When finished, upload your final PDF (and optional DOCX) in the Finalize section below.';
-        dlBtn.style.display='inline-block';
-        dlBtn.addEventListener('click',()=>{ window.open('/exam-template/download','_blank'); });
-      }).catch(()=>{ templateNotice.textContent='Unable to load template status.'; });
-      
       // ---------- Session bootstrap for persistent autosave (candidate side) ----------
       try {
         const email = localStorage.getItem('candidateEmail');
@@ -179,6 +218,161 @@
         }
         createIfNeeded();
       }catch(e){ /* ignore */ }
+      
+      // Progress tracking system
+      const TOTAL_TASKS = 6;
+      const PROGRESS_KEY = 'examTasksCompleted';
+      
+      function updateProgressBar() {
+        const completed = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]');
+        const completedCount = completed.length;
+        const percentage = Math.round((completedCount / TOTAL_TASKS) * 100);
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        
+        if(progressBar) progressBar.style.width = percentage + '%';
+        if(progressText) progressText.textContent = `${completedCount} of ${TOTAL_TASKS} tasks completed`;
+        if(progressPercent) progressPercent.textContent = percentage + '%';
+      }
+      
+      // Initialize progress bar
+      updateProgressBar();
+      
+      // Update individual task progress bars
+      function updateTaskProgressBars() {
+        const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+        const tasks = ['casestudy', 'mail', 'alerts', 'waf', 'routing', 'users'];
+        
+        tasks.forEach(taskId => {
+          const progress = taskProgress[taskId] || 0;
+          const progressBar = document.getElementById('progress-' + taskId);
+          const percentText = document.getElementById('percent-' + taskId);
+          
+          if (progressBar) {
+            progressBar.style.width = progress + '%';
+          }
+          if (percentText) {
+            percentText.textContent = progress + '%';
+          }
+        });
+      }
+      
+      // Initialize task progress bars
+      updateTaskProgressBars();
+      
+      // Listen for storage changes (when tasks are completed in other tabs)
+      window.addEventListener('storage', (e) => {
+        if(e.key === PROGRESS_KEY) {
+          updateProgressBar();
+        }
+        if(e.key === 'taskProgress') {
+          updateTaskProgressBars();
+        }
+      });
+      
+      // Flag to track if exam is finished
+      let examFinished = false;
+      
+      // Prevent navigation when exam is finished
+      window.addEventListener('beforeunload', (e) => {
+        if(examFinished){
+          e.preventDefault();
+          e.returnValue = '';
+          return '';
+        }
+      });
+      
+      // Continuous check to redirect if exam finished
+      window.addEventListener('pageshow', () => {
+        if(examFinished){
+          location.href = '/finished.html';
+        }
+      });
+      
+      // Check if exam is finished and redirect (but allow admin access)
+      async function checkExamStatus(){
+        const email = localStorage.getItem('candidateEmail');
+        if(!email) return;
+        // Check if this is admin viewing (has admin cookie)
+        const hasAdminCookie = document.cookie.split(';').some(c => c.trim().startsWith('admin=') || c.trim().startsWith('manager='));
+        if(hasAdminCookie) return; // Allow admin to view
+        
+        try {
+          const r = await fetch('/api/candidate/' + encodeURIComponent(email));
+          if(r.ok){
+            const data = await r.json();
+            // Only block if exam is explicitly finished (not just not started)
+            if(data.finishedAt || data.submittedAt || data.expiredAt){
+              examFinished = true;
+              localStorage.setItem('candidateSubmitted', '1');
+              alert('Your exam has been finished. You cannot continue.');
+              location.href = '/finished.html';
+              return;
+            }
+            // Additional check: if exam was started but time expired
+            if(data.startTime && !data.running && data.remainingMs !== undefined && data.remainingMs <= 0){
+              examFinished = true;
+              localStorage.setItem('candidateSubmitted', '1');
+              alert('Your exam time has expired. You cannot continue.');
+              location.href = '/finished.html';
+              return;
+            }
+          }
+        } catch(e){ /* ignore */ }
+      }
+      checkExamStatus();
+      setInterval(checkExamStatus, 3000); // Check every 3 seconds (faster)
+      
+      // ---------- Finish Exam Button ----------
+      const finishBtn = document.getElementById('finishExamBtn');
+      if(finishBtn){
+        finishBtn.addEventListener('click', async ()=>{
+          if(!email){
+            alert('You are not logged in. Please login first.');
+            return;
+          }
+          
+          if(!confirm('Are you sure you want to finish the exam? This action cannot be undone and you will not be able to continue.')){
+            return;
+          }
+          
+          try {
+            finishBtn.disabled = true;
+            finishBtn.textContent = 'Finishing...';
+            
+            const r = await fetch('/api/candidate/submit', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({email})
+            });
+            
+            if(r.ok){
+              // Mark as finished immediately
+              examFinished = true;
+              localStorage.setItem('candidateSubmitted', '1');
+              
+              // Clear any intervals
+              window.onbeforeunload = null;
+              
+              alert('Exam finished successfully. You will now be redirected.');
+              
+              // Force redirect with no way back
+              window.location.replace('/finished.html');
+            } else {
+              const err = await r.json().catch(()=>({}));
+              alert('Failed to finish exam: ' + (err.error || 'Unknown error'));
+              finishBtn.disabled = false;
+              finishBtn.textContent = 'Finish Exam';
+            }
+          } catch(e){
+            alert('Error finishing exam: ' + e.message);
+            finishBtn.disabled = false;
+            finishBtn.textContent = 'Finish Exam';
+          }
+        });
+      }
     })();
   </script>
   <script src="/answer-sync.js" defer></script>

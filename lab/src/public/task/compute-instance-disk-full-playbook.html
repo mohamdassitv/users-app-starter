@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Alert | Compute instance health | Disk full (For Gateway Instance)</title>
+<title>Instance | High Disk Usage - var log</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
 :root {
@@ -65,19 +65,19 @@ ul.inline-bullets { list-style:disc; margin-left:20px; }
     <span>Harmony Connect: Playbook Center</span><span class="sep">/</span>
     <span>Compute instance health</span>
   </nav>
-  <h1 class="main-title">Alert | Compute instance health | Disk full (For Gateway Instance)</h1>
-  <p class="link-line print-hide"><a href="#" aria-label="Search for other results matching this alert title">Press here to see other results for "Alert | Compute instance health | Disk full (For Gateway Instance)".</a></p>
+  <h1 class="main-title">Instance | High Disk Usage - var log</h1>
+  <p class="link-line print-hide"><a href="#" aria-label="Search for other results matching this alert title">Press here to see other results for "Instance | High Disk Usage - var log".</a></p>
   <div class="divider" role="separator" aria-hidden="true"></div>
 
   <section aria-labelledby="summary-heading">
     <h2 id="summary-heading" class="visually-hidden">Summary</h2>
     <table class="summary-table" aria-describedby="summary-heading">
       <tbody>
-        <tr><th scope="row">Description</th><td>The instance is running out of storage</td></tr>
-        <tr><th scope="row">Impact</th><td>Gateway instability</td></tr>
-        <tr><th scope="row">Priority</th><td>P3</td></tr>
-        <tr><th scope="row">DUT</th><td>GW</td></tr>
-        <tr><th scope="row">R&amp;D Owner</th><td>SASE Dataplane</td></tr>
+        <tr><th scope="row">Description</th><td>High disk usage detected in /var/log directory</td></tr>
+        <tr><th scope="row">Impact</th><td>System instability, log rotation failures, potential service disruption</td></tr>
+        <tr><th scope="row">Priority</th><td>P2</td></tr>
+        <tr><th scope="row">DUT</th><td>Gateway Instance</td></tr>
+        <tr><th scope="row">R&amp;D Owner</th><td>Platform Operations</td></tr>
       </tbody>
     </table>
   </section>
@@ -94,61 +94,90 @@ ul.inline-bullets { list-style:disc; margin-left:20px; }
           <th scope="col">How</th>
         </tr>
         <tr>
-          <td>Verify which partition is full</td>
+          <td>Verify disk usage</td>
           <td>
             <ol>
               <li>Connect via SSH to the Gateway</li>
-              <li>Run: <code>df -h</code></li>
+              <li>Run: <code>df -h</code> to check overall disk usage</li>
+              <li>Identify if /var/log is consuming excessive space</li>
             </ol>
           </td>
         </tr>
         <tr>
-          <td>Clean Up folders accordingly</td>
+          <td>Investigate /var/log/ directory</td>
           <td>
-            <div class="inner-grid" aria-label="Cleanup directories">
-              <div class="inner-card" aria-label="/var/log/ cleanup card">
-                <h4>/var/log/</h4>
-                <ol>
-                  <li>Check the following folder “/var/log/crash” size</li>
-                  <li>Verify if there are old crash dumps and remove them if there are any</li>
-                  <li>If there are new crash dumps
-                    <ol type="a">
-                      <li>Copy the crash files out from the machine (via SFTP)</li>
-                      <li>Remove the files</li>
-                      <li>Go to Not Resolved</li>
-                    </ol>
-                  </li>
-                </ol>
-                <p class="inline-run">Run: <code>df -h</code></p>
-                <ol type="a">
-                  <li>if there is enough free storage, go to <strong>Resolved</strong></li>
-                  <li>If the disk is still not free – go to <strong>Not Resolved</strong></li>
-                </ol>
-              </div>
-              <div class="inner-card" aria-label="$DLPDIR/ftp cleanup card">
-                <h4>$DLPDIR/ftp:</h4>
-                <ol>
-                  <li>Remove all folders with the following commands:
-                    <ol type="a">
-                      <li><code>rm -r $DLPDIR/ftp/0*</code></li>
-                      <li><code>rm -r $DLPDIR/ftp/1*</code></li>
-                      <li><code>rm -r $DLPDIR/ftp/3*</code></li>
-                    </ol>
-                  </li>
-                </ol>
-              </div>
+            <div class="inner-card" aria-label="/var/log/ cleanup procedure">
+              <h4>/var/log/ Investigation & Cleanup</h4>
+              <ol>
+                <li>Check size of <code>/var/log/crash</code>:
+                  <pre>du -sh /var/log/crash</pre>
+                </li>
+                <li>Remove old crash dumps if present:
+                  <ul class="inline-bullets">
+                    <li>Identify old dumps: <code>ls -lht /var/log/crash/</code></li>
+                    <li>Remove old files: <code>rm /var/log/crash/old_crash_*</code></li>
+                  </ul>
+                </li>
+                <li>If new crash dumps are present:
+                  <ol type="a">
+                    <li>SFTP copy crash files off host for analysis</li>
+                    <li>Remove the files after copying: <code>rm /var/log/crash/crash_*</code></li>
+                    <li>Proceed to <strong>Not Resolved</strong> (new crashes indicate underlying issues)</li>
+                  </ol>
+                </li>
+                <li>Run <code>df -h</code> again to verify free space:
+                  <ul class="inline-bullets">
+                    <li>If enough free storage → Proceed to <strong>Resolved</strong></li>
+                    <li>Still full → Continue to next cleanup step</li>
+                  </ul>
+                </li>
+              </ol>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Clean up $DLPDIR/ftp directory</td>
+          <td>
+            <div class="inner-card" aria-label="$DLPDIR/ftp cleanup procedure">
+              <h4>$DLPDIR/ftp: Bulk Folder Removal</h4>
+              <ol>
+                <li>Remove bulk folders with the following commands:
+                  <pre>rm -r $DLPDIR/ftp/0*
+rm -r $DLPDIR/ftp/1*
+rm -r $DLPDIR/ftp/3*</pre>
+                </li>
+                <li>Verify disk space: <code>df -h</code>
+                  <ul class="inline-bullets">
+                    <li>If storage is freed → Proceed to <strong>Resolved</strong></li>
+                    <li>Still full → Proceed to <strong>Not Resolved</strong></li>
+                  </ul>
+                </li>
+              </ol>
             </div>
           </td>
         </tr>
         <tr class="band band-danger" aria-label="Not resolved stage"><td colspan="2">Not resolved</td></tr>
         <tr>
-          <td>Assign TM</td>
-          <td>&nbsp;</td>
+          <td>Escalate to Engineering</td>
+          <td>
+            <p>If disk usage persists after cleanup:</p>
+            <ul class="inline-bullets">
+              <li>Document current disk usage: <code>df -h</code></li>
+              <li>Check for largest files/directories: <code>du -h /var/log | sort -h | tail -20</code></li>
+              <li>Review running processes: <code>ps aux --sort=-%mem | head -20</code></li>
+              <li>Create incident ticket with findings</li>
+              <li>Assign to Platform Engineering team</li>
+            </ul>
+          </td>
         </tr>
         <tr class="band band-resolved" aria-label="Resolved stage"><td colspan="2">Resolved</td></tr>
       </tbody>
     </table>
   </section>
 </main>
+<a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+  <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+  <span class="help-label">Questions? Contact on-call.</span>
+</a>
 </body>
 </html>

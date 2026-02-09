@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  backend:
+    image: waf-exam-backend:latest
+    container_name: backend
+    networks:
+      - default
+    expose:
+      - "5000"
+
+  waf:
+    image: owasp/modsecurity-crs:nginx
+    container_name: waf
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - BACKEND=http://backend:5001
+      - MODSEC_RULE_ENGINE=On
+      - ALLOWED_REQUEST_CONTENT_TYPE=text/plain|multipart/form-data
+    depends_on:
+      - backend
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

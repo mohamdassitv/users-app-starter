@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+# Remove any default route to ensure network is unreachable initially
 ip route del default 2>/dev/null || true
-ip route add default via 192.168.178.2
-ip route
+echo "leaf-01 initialized - no default route configured"
+ip route show

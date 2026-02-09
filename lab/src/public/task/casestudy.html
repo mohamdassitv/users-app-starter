@@ -13,8 +13,8 @@
 }
 body{font-family:var(--font-stack);background:var(--grad-bg);min-height:100vh;margin:0;color:var(--ink-700);-webkit-font-smoothing:antialiased;}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(45deg,rgba(255,92,168,.05)0 2px,transparent 2px 6px);mix-blend-mode:overlay;opacity:.4;}
-main.pink-app{max-width:1320px;margin:0 auto;padding:28px 28px 140px;}
-@media (max-width:860px){main.pink-app{padding:20px 16px 120px;}}
+main.pink-app{max-width:100%;margin:0;padding:28px 10px 140px;}
+@media (max-width:860px){main.pink-app{padding:20px 10px 120px;}}
 h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;letter-spacing:.02em;font-weight:800;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));-webkit-background-clip:text;background-clip:text;color:transparent;position:relative;}
  p.hero-sub{margin:0 0 34px;font-size:clamp(1rem,1.3vw,1.25rem);line-height:1.5;color:var(--ink-500);max-width:800px;font-weight:500;}
  .sparkles{position:absolute;inset:0;pointer-events:none;}
@@ -36,7 +36,7 @@ h1.hero{margin:32px 0 14px;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;l
 .tab-panel.active{display:block;}
 
 /* Chat - Professional Style */
-.chat-wrap{background:#f8f9fa;border:1px solid #d1d5db;border-radius:8px;padding:18px 0 12px;display:flex;flex-direction:column;max-height:none;min-height:380px;}
+.chat-wrap{background:#f8f9fa;border:1px solid #d1d5db;border-radius:8px;padding:18px 0 12px;display:flex;flex-direction:column;max-height:none;min-height:auto;}
 .chat-scroll{overflow:auto;padding:0 24px 12px;list-style:none;margin:0;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;}
 .msg{display:flex;gap:16px;line-height:1.6;font-size:15px;margin-bottom:12px;font-weight:400;}
 .msg.left{flex-direction:row;}
@@ -130,7 +130,24 @@ body.high-contrast .pill-btn{box-shadow:none;}
 /* Progress bar */
 .progress-bar{position:fixed;top:0;left:0;height:5px;background:linear-gradient(90deg,var(--pink-600),var(--pink-400));width:0%;transition:width .4s ease;z-index:50;}
 
-/* (Former CKEditor styles removed) */
+/* CKEditor full width styling */
+.ck-editor{width:100% !important;max-width:100% !important;}
+.ck-editor__editable{width:100% !important;max-width:100% !important;box-sizing:border-box !important;}
+.ck.ck-editor__main>.ck-editor__editable{width:100% !important;max-width:100% !important;}
+.ck-content{width:100% !important;max-width:100% !important;overflow-wrap:break-word !important;word-wrap:break-word !important;}
+#editor-diagram, #editor-investigation{width:100% !important;max-width:100% !important;box-sizing:border-box !important;}
+
+/* Manager view - read-only editors, everything else clickable */
+body.manager-view .ck-editor__editable {
+  background-color: #f9fafb !important;
+  cursor: not-allowed !important;
+}
+body.manager-view button,
+body.manager-view .tablist button,
+body.manager-view a {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
 
 /* Reduced motion */
 @media (prefers-reduced-motion:reduce){
@@ -143,8 +160,23 @@ body.high-contrast .pill-btn{box-shadow:none;}
     <img src="/logo.svg" alt="Logo" class="logo-img">
   <span class="brand-hacker" id="brandNav">CHECK POINT</span>
   </div>
+  <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,78,59,0.9);color:#86efac;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #86efac;transition:all 0.3s;" onmouseover="this.style.background='#047857';this.style.color='#fff'" onmouseout="this.style.background='rgba(6,78,59,0.9)';this.style.color='#86efac'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Main Tasks
+  </a>
 </header>
-<!-- Progress bar removed -->
+<!-- Progress bar -->
+<div style="max-width:1400px;margin:20px auto;padding:0 80px;">
+  <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:600;color:#0f172a;">Progress</span>
+      <span id="progressText" style="font-size:12px;color:#64748b;">0/2 Questions Saved</span>
+    </div>
+    <div style="background:#e2e8f0;border-radius:8px;height:12px;overflow:hidden;">
+      <div id="progressBar" style="background:linear-gradient(90deg,#10b981,#059669);height:100%;width:0%;transition:width 0.5s ease;"></div>
+    </div>
+  </div>
+</div>
 <main class="pink-app fade-in" id="appRoot" data-task="task1">
   <h1 class="hero">Know Your Network. Own Your Shift.
     <span class="sparkles" aria-hidden="true">
@@ -159,25 +191,105 @@ body.high-contrast .pill-btn{box-shadow:none;}
     <div class="task-head" style="justify-content:flex-end;">
       <!-- Removed in-browser Save button (editor removed) -->
     </div>
-    <!-- Removed 1.1 Diagram & Notes header wrapper -->
-    <div class="chat-wrap" id="chatWrap">
-      <ol class="chat-scroll" id="chatLog" aria-live="polite"></ol>
-      <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:22px;margin:24px 24px 8px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
-        <p style="margin:0 0 14px;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
-          <strong>Task Instruction 1.1:</strong>
-          Add a clear network diagram showing the branch traffic flow and include a concise note describing the direction of user web traffic — <span style="text-decoration:underline;">like your manager requested</span>.
-        </p>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <label style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Network Diagram & Traffic Flow</label>
-          <div id="editor-diagram" data-task-id="task1.q1" style="min-height:160px;"></div>
+    <!-- Task Slider Container -->
+    <div style="margin-top:30px;">
+      <!-- Slide Navigation -->
+      <div style="display:flex;justify-content:flex-start;gap:12px;margin-bottom:20px;padding-left:80px;">
+        <button onclick="goToTaskSlide(0)" id="taskSlideBtn0" style="padding:12px 28px;border-radius:10px;border:2px solid #86efac;background:#dcfce7;color:#047857;font-weight:700;cursor:pointer;transition:all 0.25s;font-size:16px;box-shadow:0 2px 8px rgba(16,185,129,0.2);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.35)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(16,185,129,0.2)'">📝 Question 1</button>
+        <button onclick="goToTaskSlide(1)" id="taskSlideBtn1" style="padding:12px 28px;border-radius:10px;border:2px solid #cbd5e1;background:#f1f5f9;color:#64748b;font-weight:700;cursor:pointer;transition:all 0.25s;font-size:16px;box-shadow:0 2px 8px rgba(100,116,139,0.15);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(100,116,139,0.25)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(100,116,139,0.15)'">🔍 Question 2</button>
+      </div>
+      
+      <!-- Slides Container -->
+      <div id="taskSliderContainer" style="position:relative;overflow:visible;width:100%;padding-bottom:40px;">
+        <div id="taskSlidesWrapper" style="display:flex;transition:transform 0.5s ease;width:200%;align-items:flex-start;">
+          
+          <!-- Slide 1: Question 1 with Topology Chat -->
+          <div class="task-slide" style="width:100%;flex-shrink:0;box-sizing:border-box;padding-bottom:30px;">
+            <div class="chat-wrap" id="chatWrap" style="margin-bottom:16px;min-height:auto;padding:10px 0 6px;">
+              <ol class="chat-scroll" id="chatLog" aria-live="polite"></ol>
+            </div>
+            <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 24px;border-radius:16px;margin:0 auto 0 80px;max-width:1200px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <p style="margin:0;font-size:17px;line-height:1.6;color:#064e3b;font-weight:700;">
+                  <strong>Question 1:</strong>
+                  Add a clear network diagram showing the branch traffic flow and include a concise note describing the direction of user web traffic — <span style="text-decoration:underline;">like your manager requested</span>.
+                </p>
+                <button class="save-progress-btn" data-question="1" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Network Diagram & Traffic Flow</label>
+                <div id="editor-diagram" data-task-id="task1.q1" style="min-height:140px;width:100%;box-sizing:border-box;"></div>
+              </div>
+              <div style="margin-top:6px;font-size:10px;color:#065f46;">Autosaves locally + to server (versioned). Include the same content in your final PDF if required.</div>
+            </div>
+          </div>
+          
+          <!-- Slide 2: Question 2 with Osaka Slowdown Chat and Terminals -->
+          <div class="task-slide" style="width:100%;flex-shrink:0;box-sizing:border-box;min-height:auto;padding-bottom:30px;">
+            <div id="nocChat" class="chat-wrap" style="margin-bottom:20px;min-height:auto;">
+              <ol class="chat-scroll" id="nocChatLog" aria-live="polite"></ol>
+            </div>
+
+            <div style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:30px;">
+              <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                <button onclick="switchTerminal('tokyo')" id="tab-tokyo" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Tokyo Branch</button>
+                <button onclick="switchTerminal('osaka')" id="tab-osaka" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Osaka Branch</button>
+                <button onclick="switchTerminal('kyoto')" id="tab-kyoto" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Kyoto Branch</button>
+              </div>
+              <div style="position:relative;height:500px;">
+                <iframe id="term-tokyo" src="/api/terminal/branch-tokyo" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:block;"></iframe>
+                <iframe id="term-osaka" src="/api/terminal/branch-osaka" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
+                <iframe id="term-kyoto" src="/api/terminal/branch-kyoto" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
+              </div>
+              <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+                <button onclick="downloadTerminalHistory('tokyo')" id="download-tokyo" style="background:#047857;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:all 0.3s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#047857'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download Tokyo History
+                </button>
+                <button onclick="downloadTerminalHistory('osaka')" id="download-osaka" style="background:#047857;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;display:none;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:all 0.3s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#047857'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download Osaka History
+                </button>
+                <button onclick="downloadTerminalHistory('kyoto')" id="download-kyoto" style="background:#047857;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;display:none;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:all 0.3s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#047857'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download Kyoto History
+                </button>
+              </div>
+            </div>
+
+            <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 24px;border-radius:18px;margin:40px auto 20px 80px;max-width:1200px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <p style="margin:0;font-size:18px;line-height:1.6;color:#064e3b;font-weight:700;flex:1;">
+                  <strong>Question 2:</strong>
+                  Document your branch performance investigation. Capture key command outputs for <strong>Tokyo</strong>, <strong>Kyoto</strong>, and <strong>Osaka</strong>, summarize what each shows, and state the most likely cause of the Osaka slowdown.
+                </p>
+                <button class="save-progress-btn" data-question="2" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;margin-left:12px;">Save Progress</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <label style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Branch Performance Investigation</label>
+                <div id="editor-investigation" data-task-id="task1.investigation" style="min-height:350px;width:100%;box-sizing:border-box;"></div>
+              </div>
+              <div style="margin-top:10px;font-size:11px;color:#065f46;">Autosaves locally + to server. Include the same content in your consolidated DOCX/PDF.</div>
+            </div>
+          </div>
+          
         </div>
-        <div style="margin-top:10px;font-size:11px;color:#065f46;">Autosaves locally + to server (versioned). Include the same content in your final PDF if required.</div>
+        
+        <!-- Arrow Navigation -->
+        <button onclick="previousTaskSlide()" style="position:absolute;left:10px;top:40%;transform:translateY(-50%);background:rgba(6,78,59,0.9);color:#fff;border:2px solid #86efac;width:50px;height:50px;border-radius:50%;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.3s;z-index:10;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='rgba(6,78,59,0.9)'">‹</button>
+        <button onclick="nextTaskSlide()" style="position:absolute;right:10px;top:40%;transform:translateY(-50%);background:rgba(6,78,59,0.9);color:#fff;border:2px solid #86efac;width:50px;height:50px;border-radius:50%;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.3s;z-index:10;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='rgba(6,78,59,0.9)'">›</button>
+      </div>
+      
+      <!-- Slide Indicator -->
+      <div style="text-align:center;margin-top:20px;font-size:14px;color:#047857;font-weight:600;">
+        <span id="taskSlideIndicator">1 / 2</span>
       </div>
     </div>
     <!-- Removed notes/checklist/export section -->
   </section>
 </main>
 <!-- CKEditor script removed -->
+<script src="/exam-protection.js"></script>
 <script>
 // --- Data Keys ---
 const STORAGE_KEY='task1_state_v1';
@@ -277,44 +389,218 @@ function restore(){
 // --- Init ---
 load();restore();
 // ---------------- Branch Terminal Simulation ----------------
-// Inject after main content (below notes section) for clarity
-const terminalSection=document.createElement('section');
-terminalSection.id='branchTerminals';
-terminalSection.style.marginTop='110px'; // added spacing between main task shell and terminals section
-terminalSection.innerHTML=`
-  <!-- Removed 1.2 Branch Terminals — Live Checks header -->
-  <div id="nocChat" class="chat-wrap" style="margin-bottom:20px;min-height:auto;">
-    <ol class="chat-scroll" id="nocChatLog" aria-live="polite"></ol>
-  </div>
+// Terminal switching function
+function switchTerminal(branch){
+  const tabs=['tokyo','osaka','kyoto'];
+  tabs.forEach(t=>{
+    const tab=document.getElementById('tab-'+t);
+    const term=document.getElementById('term-'+t);
+    const downloadBtn=document.getElementById('download-'+t);
+    if(t===branch){
+      tab.style.background='#4ec9b0';
+      tab.style.color='#1e1e1e';
+      tab.style.border='none';
+      term.style.display='block';
+      if(downloadBtn) downloadBtn.style.display='flex';
+    }else{
+      tab.style.background='#2d2d2d';
+      tab.style.color='#ccc';
+      tab.style.border='1px solid #444';
+      term.style.display='none';
+      if(downloadBtn) downloadBtn.style.display='none';
+    }
+  });
+}
 
-  <div style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:20px;margin-bottom:30px;">
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-      <button onclick="switchTerminal('tokyo')" id="tab-tokyo" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Tokyo Branch</button>
-      <button onclick="switchTerminal('osaka')" id="tab-osaka" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Osaka Branch</button>
-      <button onclick="switchTerminal('kyoto')" id="tab-kyoto" style="background:#2d2d2d;color:#ccc;border:1px solid #444;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">Kyoto Branch</button>
-    </div>
-    <div style="position:relative;height:500px;">
-      <iframe id="term-tokyo" src="/api/terminal/branch-tokyo" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:block;"></iframe>
-      <iframe id="term-osaka" src="/api/terminal/branch-osaka" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
-      <iframe id="term-kyoto" src="/api/terminal/branch-kyoto" style="width:100%;height:100%;border:1px solid #333;border-radius:8px;background:#0a0a0a;display:none;"></iframe>
-    </div>
-  </div>
+// Terminal history storage
+const terminalHistory = {
+  tokyo: [],
+  osaka: [],
+  kyoto: []
+};
 
-  <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:22px;margin:70px 4px 10px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);">
-    <p style="margin:0 0 14px;font-size:18px;line-height:1.55;color:#064e3b;font-weight:700;">
-      <strong>Task Instruction 1.2:</strong>
-  Document your branch performance investigation. Capture key command outputs for <strong>Tokyo</strong>, <strong>Kyoto</strong>, and <strong>Osaka</strong>, summarize what each shows, and state the most likely cause of the Osaka slowdown.
-    </p>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <label style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#047857;">Branch Performance Investigation</label>
-      <div id="editor-investigation" data-task-id="task1.investigation" style="min-height:300px;"></div>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:#065f46;">Autosaves locally + to server. Include the same content in your consolidated DOCX/PDF.</div>
-  </div>`;
-document.querySelector('main').appendChild(terminalSection);
+// Function to capture terminal output
+function captureTerminalOutput(branch, content) {
+  if (!terminalHistory[branch]) terminalHistory[branch] = [];
+  const timestamp = new Date().toISOString();
+  terminalHistory[branch].push({ timestamp, content });
+}
+
+// Download terminal history
+function downloadTerminalHistory(branch) {
+  // First try to get server-side history via API
+  fetch(`/api/terminal/${branch}/history`)
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      }
+      throw new Error('Server history not available');
+    })
+    .then(serverHistory => {
+      // Download server history
+      const blob = new Blob([serverHistory], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `terminal-history-${branch}-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showDownloadConfirmation(branch);
+    })
+    .catch(err => {
+      // Fallback to client-side history
+      const history = terminalHistory[branch] || [];
+      let content = `=== Terminal History for ${branch.toUpperCase()} Branch ===\n`;
+      content += `Downloaded: ${new Date().toLocaleString()}\n`;
+      content += `Total entries: ${history.length}\n`;
+      content += `${'='.repeat(60)}\n\n`;
+      
+      if (history.length === 0) {
+        content += 'No terminal commands recorded yet.\n\n';
+        content += 'TIP: The terminal history will capture commands and outputs as you interact with the terminal.\n';
+        content += 'NOTE: If the terminal is on a different server, history may need to be downloaded directly from the terminal.\n';
+      } else {
+        history.forEach((entry, index) => {
+          content += `[${index + 1}] ${new Date(entry.timestamp).toLocaleString()}\n`;
+          content += `${entry.content}\n`;
+          content += `${'-'.repeat(60)}\n\n`;
+        });
+      }
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `terminal-history-${branch}-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showDownloadConfirmation(branch);
+    });
+}
+
+function showDownloadConfirmation(branch) {
+  const btn = document.getElementById('download-' + branch);
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Downloaded!';
+  btn.style.background = '#10b981';
+  setTimeout(() => {
+    btn.innerHTML = originalText;
+    btn.style.background = '#047857';
+  }, 2000);
+}
+
+// Slider functionality
+let currentTaskSlide = 0;
+const totalTaskSlides = 2;
+
+function updateTaskSlider() {
+  const wrapper = document.getElementById('taskSlidesWrapper');
+  const indicator = document.getElementById('taskSlideIndicator');
+  
+  // Update transform
+  wrapper.style.transform = `translateX(-${currentTaskSlide * 100}%)`;
+  
+  // Update indicator
+  indicator.textContent = `${currentTaskSlide + 1} / ${totalTaskSlides}`;
+  
+  // Update button styles with enhanced active state
+  for(let i = 0; i < totalTaskSlides; i++) {
+    const btn = document.getElementById(`taskSlideBtn${i}`);
+    if(i === currentTaskSlide) {
+      // Active button - vibrant green with animation
+      btn.style.background = 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)';
+      btn.style.border = '3px solid #10b981';
+      btn.style.color = '#047857';
+      btn.style.boxShadow = '0 4px 16px rgba(16,185,129,0.4), 0 0 0 3px rgba(16,185,129,0.1)';
+      btn.style.fontWeight = '800';
+      btn.style.transform = 'scale(1.05)';
+    } else {
+      // Inactive button - neutral gray
+      btn.style.background = '#f1f5f9';
+      btn.style.border = '2px solid #cbd5e1';
+      btn.style.color = '#64748b';
+      btn.style.boxShadow = '0 2px 8px rgba(100,116,139,0.15)';
+      btn.style.fontWeight = '700';
+      btn.style.transform = 'scale(1)';
+    }
+  }
+}
+
+function goToTaskSlide(index) {
+  currentTaskSlide = index;
+  updateTaskSlider();
+}
+
+function nextTaskSlide() {
+  currentTaskSlide = (currentTaskSlide + 1) % totalTaskSlides;
+  updateTaskSlider();
+}
+
+function previousTaskSlide() {
+  currentTaskSlide = (currentTaskSlide - 1 + totalTaskSlides) % totalTaskSlides;
+  updateTaskSlider();
+}
+
+// Initialize slider
+updateTaskSlider();
+
+// Listen for messages from parent window (manager view)
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'switchSlide') {
+    const slideIndex = event.data.slideIndex;
+    if (typeof slideIndex === 'number' && slideIndex >= 0 && slideIndex < totalTaskSlides) {
+      goToTaskSlide(slideIndex);
+    }
+  }
+});
+
+// Save Progress functionality
+function saveTaskProgress() {
+  // Get current completed tasks
+  let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+  
+  // Add task1 if not already completed
+  if (!completedTasks.includes('task1')) {
+    completedTasks.push('task1');
+    localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+    
+    // Show success message
+    const msg1 = document.getElementById('progressMessage');
+    const msg2 = document.getElementById('progressMessage2');
+    if (msg1) msg1.textContent = '✓ Progress saved! Task 1 marked as complete.';
+    if (msg2) msg2.textContent = '✓ Progress saved! Task 1 marked as complete.';
+    
+    // Hide message after 3 seconds
+    setTimeout(() => {
+      if (msg1) msg1.textContent = '';
+      if (msg2) msg2.textContent = '';
+    }, 3000);
+    
+    // Trigger storage event for other tabs
+    window.dispatchEvent(new Event('storage'));
+  } else {
+    // Already completed
+    const msg1 = document.getElementById('progressMessage');
+    const msg2 = document.getElementById('progressMessage2');
+    if (msg1) msg1.textContent = '✓ Task already marked as complete.';
+    if (msg2) msg2.textContent = '✓ Task already marked as complete.';
+    
+    setTimeout(() => {
+      if (msg1) msg1.textContent = '';
+      if (msg2) msg2.textContent = '';
+    }, 3000);
+  }
+}
+
 // Analysis editor removed.
 
-// Add NOC conversation to terminal section
+// Add NOC conversation messages for slide 2
 const nocMessages = [
   {role:'client',time:'09:01',text:'Users in Osaka report slow web browsing. Tokyo and Kyoto are normal.',name:'Kenji (Japan Bank IT)'},
   {role:'teammate',time:'09:02',text:'No planned changes on our side. All three branches share the same upstream.',name:'Ava (Teammate)'},
@@ -327,26 +613,6 @@ nocMessages.forEach((msg, index) => {
   nocChatLog.appendChild(renderMsg(msg, index));
 });
 nocChatLog.scrollTop = nocChatLog.scrollHeight;
-
-// Terminal switching function
-function switchTerminal(branch) {
-  const terminals = ['tokyo', 'osaka', 'kyoto'];
-  terminals.forEach(t => {
-    const iframe = document.getElementById('term-' + t);
-    const tab = document.getElementById('tab-' + t);
-    if (t === branch) {
-      iframe.style.display = 'block';
-      tab.style.background = '#4ec9b0';
-      tab.style.color = '#1e1e1e';
-      tab.style.border = 'none';
-    } else {
-      iframe.style.display = 'none';
-      tab.style.background = '#2d2d2d';
-      tab.style.color = '#ccc';
-      tab.style.border = '1px solid #444';
-    }
-  });
-}
 
 // (Analysis editor code removed)
 </script>
@@ -372,61 +638,288 @@ function switchTerminal(branch) {
 <script>
 // Initialize CKEditor for Task 1 investigation fields
 (function(){
-  const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code } = window.CKEDITOR;
+  // Wait for CKEditor to load with timeout
+  let attempts = 0;
+  const maxAttempts = 50; // 5 seconds max wait
+  
+  // Check if viewing as manager and edit mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isManagerView = urlParams.get('view') === 'manager';
+  const editMode = urlParams.get('edit') === '1';
+  
+  // Check parent window for edit mode if in iframe
+  let parentEditMode = false;
+  try {
+    if (window.parent && window.parent !== window) {
+      const parentParams = new URLSearchParams(window.parent.location.search);
+      parentEditMode = parentParams.get('edit') === '1';
+    }
+  } catch (e) {
+    // Cross-origin, ignore
+  }
+  
+  const isEditMode = editMode || parentEditMode;
+  
+  // Add body class for manager view styling
+  if (isManagerView) {
+    document.body.classList.add('manager-view');
+    console.log('Manager view mode activated', isEditMode ? '(EDIT MODE)' : '(READ-ONLY)');
+  }
+  
+  function initEditors() {
+    if (window.CKEDITOR && window.CKEDITOR.ClassicEditor) {
+      const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code } = window.CKEDITOR;
 
-  const editorConfigs = [
-    { id: 'editor-diagram', taskId: 'task1.q1', placeholder: 'Describe topology and user traffic direction...' },
-    { id: 'editor-investigation', taskId: 'task1.investigation', placeholder: 'Document your findings for Tokyo, Kyoto, and Osaka branches. Include command outputs, observations, and root cause analysis...' }
-  ];
+      const editorConfigs = [
+        { id: 'editor-diagram', taskId: 'task1.q1', placeholder: 'Describe topology and user traffic direction...' },
+        { id: 'editor-investigation', taskId: 'task1.investigation', placeholder: 'Document your findings for Tokyo, Kyoto, and Osaka branches. Include command outputs, observations, and root cause analysis...' }
+      ];
 
-  editorConfigs.forEach(config => {
-    ClassicEditor
-      .create(document.getElementById(config.id), {
-        plugins: [
-          Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
-          Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
-        ],
-        toolbar: [
-          'heading', '|',
-          'bold', 'italic', 'underline', 'code', '|',
-          'link', 'bulletedList', 'numberedList', '|',
-          'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
-          'undo', 'redo'
-        ],
-        heading: {
-          options: [
-            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-          ]
-        },
-        image: {
-          toolbar: ['imageTextAlternative']
-        },
-        codeBlock: {
-          languages: [
-            { language: 'plaintext', label: 'Plain text' },
-            { language: 'bash', label: 'Bash' },
-            { language: 'python', label: 'Python' },
-            { language: 'json', label: 'JSON' }
-          ]
-        },
-        placeholder: config.placeholder
-      })
-      .then(editor => {
-        console.log('CKEditor initialized:', config.id);
-        window[config.id] = editor;
-      })
-      .catch(error => {
-        console.error('CKEditor initialization error for', config.id, error);
+      editorConfigs.forEach(config => {
+        ClassicEditor
+          .create(document.getElementById(config.id), {
+            plugins: [
+              Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+              Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+            ],
+            toolbar: [
+              'heading', '|',
+              'bold', 'italic', 'underline', 'code', '|',
+              'link', 'bulletedList', 'numberedList', '|',
+              'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+              'undo', 'redo'
+            ],
+            heading: {
+              options: [
+                { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+              ]
+            },
+            image: {
+              toolbar: ['imageTextAlternative']
+            },
+            codeBlock: {
+              languages: [
+                { language: 'plaintext', label: 'Plain text' },
+                { language: 'bash', label: 'Bash' },
+                { language: 'python', label: 'Python' },
+                { language: 'json', label: 'JSON' }
+              ]
+            },
+            placeholder: config.placeholder
+          })
+          .then(editor => {
+            console.log('CKEditor initialized:', config.id);
+            window[config.id] = editor;
+            
+            // Make read-only in manager view ONLY if not in edit mode
+            if (isManagerView && !isEditMode) {
+              editor.enableReadOnlyMode(config.id);
+              console.log('Editor set to read-only for manager view:', config.id);
+            } else if (isEditMode) {
+              console.log('Editor editable (edit mode active):', config.id);
+            }
+          })
+          .catch(error => {
+            console.error('CKEditor initialization error for', config.id, error);
+            fallbackToTextarea(config);
+          });
       });
-  });
+    } else if (attempts < maxAttempts) {
+      attempts++;
+      setTimeout(initEditors, 100);
+    } else {
+      // Fallback to textareas after timeout
+      console.warn('CKEditor failed to load, using simple textareas');
+      [
+        { id: 'editor-diagram', placeholder: 'Describe topology and user traffic direction...' },
+        { id: 'editor-investigation', placeholder: 'Document your findings for Tokyo, Kyoto, and Osaka branches...' }
+      ].forEach(fallbackToTextarea);
+    }
+  }
+  
+  function fallbackToTextarea(config) {
+    const el = document.getElementById(config.id);
+    if (el) {
+      const textarea = document.createElement('textarea');
+      textarea.id = config.id;
+      textarea.name = config.id;
+      textarea.placeholder = config.placeholder;
+      textarea.style.cssText = 'width:100%;min-height:200px;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:14px;line-height:1.6;';
+      el.parentNode.replaceChild(textarea, el);
+    }
+  }
+  
+  // Start initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEditors);
+  } else {
+    initEditors();
+  }
 })();
+
+// Terminal history capture via postMessage
+window.addEventListener('message', function(event) {
+  // Listen for terminal output from iframe terminals
+  if (event.data && event.data.type === 'terminal-output') {
+    const branch = event.data.branch;
+    const content = event.data.content;
+    if (branch && content) {
+      captureTerminalOutput(branch, content);
+    }
+  }
+});
+
+// Clear all terminals on page load
+function clearAllTerminals() {
+  const branches = ['tokyo', 'osaka', 'kyoto'];
+  branches.forEach(branch => {
+    const iframe = document.getElementById('term-' + branch);
+    if (iframe && iframe.contentWindow) {
+      // Send clear command via postMessage to the terminal iframe
+      iframe.contentWindow.postMessage({ type: 'terminal-command', command: 'clear\n' }, '*');
+    }
+  });
+  // Clear local history as well
+  terminalHistory.tokyo = [];
+  terminalHistory.osaka = [];
+  terminalHistory.kyoto = [];
+  console.log('Clear command sent to all terminals');
+}
+
+// Clear local history on page load and send clear command
+window.addEventListener('load', function() {
+  // Wait for iframes to fully load before sending clear
+  setTimeout(() => {
+    clearAllTerminals();
+  }, 1500);
+});
+
+// Periodic capture from terminal iframes (fallback method)
+setInterval(() => {
+  ['tokyo', 'osaka', 'kyoto'].forEach(branch => {
+    try {
+      const iframe = document.getElementById('term-' + branch);
+      if (iframe && iframe.contentWindow) {
+        // Try to get terminal content if accessible
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (doc && doc.body) {
+          const text = doc.body.innerText || doc.body.textContent;
+          if (text && text.trim().length > 0) {
+            const lastEntry = terminalHistory[branch].length > 0 
+              ? terminalHistory[branch][terminalHistory[branch].length - 1].content 
+              : '';
+            if (text !== lastEntry) {
+              captureTerminalOutput(branch, text);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Cross-origin access blocked - terminals are on different origin
+      // History will need to be captured server-side or via API
+    }
+  });
+}, 5000);
+</script>
+<script>
+// Progress tracking for Task 1
+const savedQuestions = new Set();
+
+function updateProgressBar() {
+  const total = 2;
+  const saved = savedQuestions.size;
+  const percentage = (saved / total) * 100;
+  
+  document.getElementById('progressBar').style.width = percentage + '%';
+  document.getElementById('progressText').textContent = saved + '/' + total + ' Questions Saved';
+  
+  // Update task progress when all questions are completed
+  if (saved === total) {
+    updateMainTaskProgress('casestudy', 100);
+    markTaskComplete('task1');
+  }
+}
+
+function updateMainTaskProgress(taskId, progressPercentage) {
+  try {
+    // Get current task progress
+    const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+    
+    // Update this task's progress to 100%
+    taskProgress[taskId] = progressPercentage;
+    
+    // Save back to localStorage
+    localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+    
+    console.log('Task progress updated:', taskId, progressPercentage + '%');
+  } catch (e) {
+    console.error('Error updating task progress:', e);
+  }
+}
+
+function markTaskComplete(taskId) {
+  try {
+    // Get current completed tasks
+    let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+    
+    // Add this task if not already completed
+    if (!completedTasks.includes(taskId)) {
+      completedTasks.push(taskId);
+      localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+      console.log('Task marked complete:', taskId);
+      
+      // Trigger storage event for other tabs/windows
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'examTasksCompleted',
+        newValue: JSON.stringify(completedTasks)
+      }));
+    }
+  } catch (e) {
+    console.error('Error marking task complete:', e);
+  }
+}
+
+// Save progress button handlers
+document.querySelectorAll('.save-progress-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const questionNum = this.getAttribute('data-question');
+    savedQuestions.add(questionNum);
+    updateProgressBar();
+    
+    // Visual feedback
+    this.textContent = '✓ Saved';
+    this.style.background = '#059669';
+    setTimeout(() => {
+      this.textContent = 'Save Progress';
+      this.style.background = '#10b981';
+    }, 2000);
+  });
+});
+
+// Load saved progress from localStorage
+const storedProgress = localStorage.getItem('task1Progress');
+if (storedProgress) {
+  try {
+    const progress = JSON.parse(storedProgress);
+    progress.forEach(q => savedQuestions.add(q));
+    updateProgressBar();
+  } catch (e) {
+    console.error('Error loading progress:', e);
+  }
+}
+
+// Save progress to localStorage on change
+window.addEventListener('beforeunload', function() {
+  localStorage.setItem('task1Progress', JSON.stringify([...savedQuestions]));
+});
 </script>
 <script>
 // Task 1 in-page submission UI removed; candidates now submit only final consolidated document elsewhere.
 </script>
+<script src="/simple-autosave.js?v=8" data-task-id="casestudy"></script>
 <a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer.">
   <img src="/help-contact.svg" width="38" height="38" alt="Contact" />
   <span class="help-label">Questions? Contact on-call.</span>

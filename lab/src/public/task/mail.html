@@ -10,7 +10,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f9fafb;
   color: #1f2937;
   line-height: 1.5;
 }
@@ -76,17 +76,18 @@ body {
 .email-main {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
 }
 
 /* Email list pane */
 .email-list-pane {
-  width: 380px;
-  border-right: 1px solid #d1d5db;
+  width: 420px;
+  border-right: 2px solid #d1d5db;
   display: flex;
   flex-direction: column;
   background: #f3f4f6;
+  flex-shrink: 0;
 }
 
 .list-header {
@@ -133,15 +134,16 @@ body {
 }
 
 .email-item {
-  padding: 18px 20px;
+  padding: 18px 16px;
   border-bottom: 1px solid #e5e7eb;
   cursor: pointer;
   transition: all 0.15s;
   position: relative;
   margin: 0;
+  text-align: left;
 }
-.email-item:hover { background: #e5e7eb; transform: translateX(2px); }
-.email-item.active { background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%); border-left: 2px solid #9ca3af; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+.email-item:hover { background: #e5e7eb; }
+.email-item.active { background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%); border-left: 3px solid #667eea; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
 .email-item.unread { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
 .email-item.unread .email-subject { font-weight: 700; }
 
@@ -150,16 +152,22 @@ body {
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 4px;
+  text-align: left;
+}
+  align-items: baseline;
+  margin-bottom: 4px;
 }
 .email-sender {
   font-weight: 600;
   font-size: 14px;
   color: #111827;
+  text-align: left;
 }
 .email-item.unread .email-sender { font-weight: 700; }
 .email-time {
   font-size: 12px;
   color: #6b7280;
+  text-align: right;
 }
 .email-subject {
   font-size: 13px;
@@ -168,6 +176,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 .email-preview {
   font-size: 12px;
@@ -175,6 +184,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
 .label-badge {
@@ -465,173 +475,195 @@ body {
   <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/tasks.html'">
     <img src="/logo.svg" alt="Logo" class="logo-img">
     <span class="brand-hacker">CHECK POINT</span>
-  </div>
-</header>
+  </div>  <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,78,59,0.9);color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #86efac;transition:all 0.3s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='rgba(6,78,59,0.9)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Main Tasks
+  </a></header>
 
-<!-- Scenario Header -->
-<div style="background: linear-gradient(135deg, #4b5563 0%, #374151 100%); color: white; padding: 24px 32px; margin-top: 60px; border-bottom: 1px solid #9ca3af;">
-  <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; color: #fff;">📧 Task 2: Customer Email Response</h1>
-  <p style="font-size: 16px; line-height: 1.6; color: #d1d5db; margin: 0;">
-    <strong>Scenario:</strong> You're starting your shift as a Technical Support Engineer. You open your email inbox and find two messages that require your immediate attention. Read each email carefully and compose professional responses addressing the customers' concerns.
-  </p>
+<!-- Progress bar -->
+<div style="max-width:1400px;margin:20px auto;padding:0 40px;">
+  <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:12px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:600;color:#0f172a;">Progress</span>
+      <span id="progressText" style="font-size:12px;color:#64748b;">0/2 Questions Saved</span>
+    </div>
+    <div style="background:#e2e8f0;border-radius:8px;height:12px;overflow:hidden;">
+      <div id="progressBar" style="background:linear-gradient(90deg,#10b981,#059669);height:100%;width:0%;transition:width 0.5s ease;"></div>
+    </div>
+  </div>
 </div>
 
-<div class="email-app-container" style="height: calc(100vh - 200px); margin-top: 0;">
-  <!-- Sidebar -->
-  <aside class="email-sidebar">
-    <nav class="folder-list">
-      <div class="folder-item active">
-        <span class="folder-icon">📥</span>
-        <span>Inbox</span>
-        <span class="folder-count">2</span>
-      </div>
-      <div class="folder-item">
-        <span class="folder-icon">⭐</span>
-        <span>Starred</span>
-      </div>
-      <div class="folder-item">
-        <span class="folder-icon">📤</span>
-        <span>Sent</span>
-      </div>
-      <div class="folder-item">
-        <span class="folder-icon">📝</span>
-        <span>Drafts</span>
-      </div>
-      <div class="folder-item">
-        <span class="folder-icon">🗑️</span>
-        <span>Trash</span>
-      </div>
-    </nav>
-  </aside>
-
-  <!-- Email List -->
-  <div class="email-list-pane">
-    <div class="list-header">
-      <h2>Inbox</h2>
-    </div>
-    <div class="search-box">
-      <input type="text" class="search-input" placeholder="Search messages...">
-    </div>
-    <div class="email-list">
-      <div class="email-item active unread" data-email="1">
-        <div class="email-item-header">
-          <span class="email-sender">Othman Kharoubi</span>
-          <span class="email-time">8:34 AM</span>
-        </div>
-        <div class="email-subject">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</div>
-        <div class="email-preview">We opened a Service Request 847291 7 days ago. Since then – no response!!!!</div>
-        <span class="label-badge label-urgent">Urgent</span>
-        <span class="label-badge label-support">SR 847291</span>
-      </div>
-      <div class="email-item unread" data-email="2">
-        <div class="email-item-header">
-          <span class="email-sender">Othman Kharoubi (Japan Bank)</span>
-          <span class="email-time">2:17 PM</span>
-        </div>
-        <div class="email-subject">FW: Urgent VPN Token Validation Required - Action Needed</div>
-        <div class="email-preview">We just received this from "Check Point Validation." Can you please confirm whether it's legit?</div>
-        <span class="label-badge label-external">External</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Email Detail -->
-  <div class="email-detail-pane">
-    <!-- Email 1 Detail -->
-    <div class="email-detail" id="email-1" style="display: flex; flex-direction: column; height: 100%;">
-      <div class="detail-header">
-        <h1 class="email-subject-line">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</h1>
-        <div class="detail-labels">
-          <span class="label-badge label-urgent">Urgent</span>
-          <span class="label-badge label-support">SR 847291</span>
+<div class="email-app-container" style="height: auto; min-height: calc(100vh - 100px); margin-top: 0; display: flex; background: #fff;">
+  
+  <!-- Main Content Area -->
+  <div class="email-main" style="flex: 1; display: flex;">
+    
+    <!-- Email List Pane -->
+    <div class="email-list-pane">
+      <div class="list-header">
+        <h2>Inbox</h2>
+        <div class="list-tools">
+          <button class="tool-btn" style="pointer-events: none;">🔄</button>
         </div>
       </div>
       
-      <div class="detail-body">
-        <div class="message-card">
-          <div class="message-header">
-            <div class="sender-avatar">OK</div>
-            <div class="message-meta">
-              <div class="message-from">Othman Kharoubi</div>
-              <div class="message-to"><strong>To:</strong> support@support.support</div>
-              <div class="message-to"><strong>Ticket:</strong> SR 847291</div>
-            </div>
-            <div class="message-timestamp">Today 8:34 AM</div>
+      <div class="email-list">
+        <!-- Email 1 Item -->
+        <div class="email-item active unread" data-email="email-1">
+          <div class="email-item-header">
+            <span class="email-sender">Othman Kharoubi</span>
+            <span class="email-time">8:34 AM</span>
           </div>
-          <div class="message-content">
-            <p>We opened a Service Request 847291 7 days ago. Since then – no response!!!!</p>
-            <p>The support level we receive for the amount of money we pay is outrageous!</p>
-            <p>Our users suffer from frequent connectivity issues!</p>
-            <p>Please respond ASAP!!!</p>
-            <p style="margin-top: 20px;">B.R.<br>Othman Kharoubi<br>CTO - Mycompany</p>
+          <div class="email-subject">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</div>
+          <div class="email-preview">We opened a Service Request 847291 7 days ago. Since then – no response!!!!</div>
+          <div>
+            <span class="label-badge label-urgent">URGENT</span>
+            <span class="label-badge label-support">SR 847291</span>
           </div>
         </div>
         
-        <div class="response-area">
-          <div class="task-instructions">
-            <strong>📋 Task 2.1: Customer Escalation Response</strong>
-            Write a concise, professional response to the client. Address their concerns about the delayed SR, acknowledge their frustration, and provide clear next steps. Compose your full email in the editor below.
+        <!-- Email 2 Item -->
+        <div class="email-item unread" data-email="email-2">
+          <div class="email-item-header">
+            <span class="email-sender">Othman Kharoubi</span>
+            <span class="email-time">2:17 PM</span>
           </div>
-          <div class="response-label">Your Email Response</div>
-          <div id="editor-task21" data-task-id="mail.task21Response"></div>
+          <div class="email-subject">FW: Urgent VPN Token Validation Required</div>
+          <div class="email-preview">We just received this from "Check Point Validation." Can you please confirm...</div>
+          <div>
+            <span class="label-badge label-external">EXTERNAL</span>
+            <span class="label-badge label-urgent">SUSPICIOUS</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Email 2 Detail (Phishing) -->
-    <div class="email-detail" id="email-2" style="display: none; flex-direction: column; height: 100%;">
-      <div class="detail-header">
-        <h1 class="email-subject-line">FW: Urgent VPN Token Validation Required - Action Needed</h1>
-        <div class="detail-labels">
-          <span class="label-badge label-external">External Sender</span>
+    <!-- Email Detail Pane -->
+    <div class="email-detail-pane" style="flex: 1; overflow-y: auto; background: #f9fafb; display: flex; flex-direction: column;">
+      
+      <!-- Email 1 Detail -->
+      <div id="email-1" style="display: block; padding: 32px; max-width: 100%; margin: 0 auto;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e5e7eb;">
+          
+          <!-- Email header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 28px 32px; border-bottom: 3px solid #5a67d8;">
+            <div style="display: flex; align-items: start; gap: 16px; margin-bottom: 16px;">
+              <div style="width: 54px; height: 54px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #667eea; font-weight: 800; font-size: 22px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">OK</div>
+              <div style="flex: 1;">
+                <h2 style="font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 10px 0; line-height: 1.3;">Harmony Connect NOT WORKING - PLEASE HELP HERE !!!!!!!!!!!</h2>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                  <span style="background: #ef4444; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">URGENT</span>
+                  <span style="background: #fff; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">SR 847291</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 14px;">
+              <div><strong>From:</strong> Othman Kharoubi (CTO, Mycompany)</div>
+              <div><strong>To:</strong> support@support.support</div>
+              <div><strong>Time:</strong> Today 8:34 AM</div>
+              <div><strong>Ticket:</strong> SR 847291</div>
+            </div>
+          </div>
+
+          <!-- Email body -->
+          <div style="padding: 32px;">
+            <div style="background: #f9fafb; border-left: 4px solid #667eea; padding: 24px; border-radius: 8px; margin-bottom: 32px;">
+              <div style="font-size: 15px; line-height: 1.8; color: #374151;">
+                <p style="margin: 0 0 16px 0;">We opened a Service Request 847291 7 days ago. Since then – no response!!!!</p>
+                <p style="margin: 0 0 16px 0;">The support level we receive for the amount of money we pay is outrageous!</p>
+                <p style="margin: 0 0 16px 0;">Our users suffer from frequent connectivity issues!</p>
+                <p style="margin: 0 0 16px 0;">Please respond ASAP!!!</p>
+                <p style="margin: 24px 0 0 0; color: #6b7280;">B.R.<br>Othman Kharoubi<br>CTO - Mycompany</p>
+              </div>
+            </div>
+
+            <!-- Response area -->
+            <div>
+              <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 4px solid #10b981; padding: 20px 24px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(16,185,129,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span style="font-size: 24px;">✍️</span>
+                  <strong style="font-size: 18px; color: #065f46;">Question 3: Compose Your Response</strong>
+                </div>
+                <p style="margin: 0; line-height: 1.7; color: #047857;">Write a concise, professional response to the client. Address their concerns about the delayed SR, acknowledge their frustration, and provide clear next steps.</p>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">📝 Your Email Response</div>
+              <div id="editor-task21" data-task-id="mail.task21Response" style="min-height: 300px;"></div>
+              <div style="text-align: left; margin-top: 16px;">
+                <button onclick="saveTask2Progress('q3')" id="saveQ3Btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:#fff;border:none;padding:12px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
+                  ✓ Save Progress
+                </button>
+                <div id="progressMessageQ3" style="margin-top:10px;font-size:13px;font-weight:600;color:#059669;min-height:20px;"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="detail-body">
-        <!-- Client context message -->
-        <div class="message-card" style="background: #f0f9ff; border-bottom: 2px solid #0066ff;">
-          <div class="message-header">
-            <div class="sender-avatar" style="background: linear-gradient(135deg, #0ea5e9 0%, #0066ff 100%);">OK</div>
-            <div class="message-meta">
-              <div class="message-from">Othman Kharoubi (CTO, Japan Bank)</div>
-              <div class="message-to"><strong>To:</strong> Support Team</div>
-            </div>
-            <div class="message-timestamp">Today 2:17 PM</div>
-          </div>
-          <div class="message-content">
-            <p>We just received this from "Check Point Validation." Can you please confirm whether it's legit? If it is, we'll follow the steps. If not, tell us what to do next. Forwarding the mail now.</p>
-          </div>
-        </div>
 
-        <!-- Forwarded suspicious email -->
-        <div class="message-card">
-          <div class="message-warning">
-            <span>External sender — exercise caution with links and attachments</span>
-          </div>
-          <div class="header-toggle-bar">
-            <button type="button" class="toggle-btn active" data-view="plain">📄 Plain Text</button>
-            <button type="button" class="toggle-btn" data-view="headers">🔍 View Headers</button>
-          </div>
-          <div class="message-header">
-            <div class="sender-avatar" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">⚠</div>
-            <div class="message-meta">
-              <div class="message-from">"Check Point Validation" &lt;support@checkp0int-security.com&gt;</div>
-              <div class="message-to"><strong>To:</strong> you@company.com</div>
-              <div class="message-to"><strong>Date:</strong> Mon, 14 Oct 2024 09:12:08 +0000</div>
-              <div class="message-to"><strong>Msg-ID:</strong> &lt;98345723.validation@checkp0int-security.com&gt;</div>
-            </div>
-            <div class="message-timestamp">Oct 14, 9:12 AM</div>
-          </div>
+      <!-- Email 2 Detail -->
+      <div id="email-2" style="display: none; padding: 32px; max-width: 100%; margin: 0 auto;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e5e7eb;">
           
-          <div class="message-content" id="t22Plain">
-            <p>Dear User,</p>
-            <p>Our automated security gateway detected an issue validating your Harmony VPN token. To avoid service interruption, you must re-validate within 1 hour.</p>
-            <p><strong>Please follow the secure validation portal here:</strong> hxxps://validate-checkp0int.com/harmony/token?id=98345723</p>
-            <p>If you do not act, your remote access will be suspended.</p>
-            <p style="margin-top: 20px;">Regards,<br>Security Validation Robot<br>Check Point Software</p>
+          <!-- Email header -->
+          <div style="background: linear-gradient(135deg, #0ea5e9 0%, #0066ff 100%); color: #fff; padding: 28px 32px; border-bottom: 3px solid #0284c7;">
+            <div style="display: flex; align-items: start; gap: 16px; margin-bottom: 16px;">
+              <div style="width: 54px; height: 54px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0ea5e9; font-weight: 800; font-size: 22px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">OK</div>
+              <div style="flex: 1;">
+                <h2 style="font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 10px 0; line-height: 1.3;">FW: Urgent VPN Token Validation Required</h2>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                  <span style="background: #ef4444; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">⚠ SUSPICIOUS</span>
+                  <span style="background: #fff; color: #0ea5e9; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">EXTERNAL</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 14px;">
+              <div><strong>From:</strong> Othman Kharoubi (CTO, Japan Bank)</div>
+              <div><strong>To:</strong> Support Team</div>
+              <div><strong>Time:</strong> Today 2:17 PM</div>
+            </div>
           </div>
 
-          <div class="headers-view" id="t22Headers" style="display: none;">Return-Path: &lt;mailer@validate-checkp0int.com&gt;
+          <!-- Email body -->
+          <div style="padding: 32px;">
+            <!-- Customer's question -->
+            <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+              <div style="font-size: 15px; line-height: 1.8; color: #374151;">
+                <p style="margin: 0;">We just received this from "Check Point Validation." Can you please confirm whether it's legit? If it is, we'll follow the steps. If not, tell us what to do next. Forwarding the mail now.</p>
+              </div>
+            </div>
+
+            <!-- Forwarded suspicious email -->
+            <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 10px; padding: 24px; margin-bottom: 32px;">
+              <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">⚠️</span>
+                <span>External sender — exercise caution with links and attachments</span>
+              </div>
+              
+              <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <button type="button" class="toggle-btn active" data-view="plain" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">📄 Plain Text</button>
+                <button type="button" class="toggle-btn" data-view="headers" style="padding: 8px 16px; border: 1px solid #e5e7eb; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">🔍 View Headers</button>
+              </div>
+
+              <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #fecaca;">
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #fecaca;">
+                  <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; flex-shrink: 0;">⚠</div>
+                  <div style="flex: 1; font-size: 13px;">
+                    <div style="font-weight: 700; color: #991b1b; margin-bottom: 4px;">"Check Point Validation" &lt;support@checkp0int-security.com&gt;</div>
+                    <div style="color: #6b7280;"><strong>To:</strong> you@company.com</div>
+                    <div style="color: #6b7280;"><strong>Date:</strong> Mon, 14 Oct 2024 09:12:08 +0000</div>
+                    <div style="color: #6b7280;"><strong>Msg-ID:</strong> &lt;98345723.validation@checkp0int-security.com&gt;</div>
+                  </div>
+                  <div style="text-align: right; font-size: 13px; color: #6b7280;">Oct 14, 9:12 AM</div>
+                </div>
+                
+                <div class="message-content" id="t22Plain" style="font-size: 14px; line-height: 1.8; color: #374151;">
+                  <p style="margin: 0 0 12px 0;">Dear User,</p>
+                  <p style="margin: 0 0 12px 0;">Our automated security gateway detected an issue validating your Harmony VPN token. To avoid service interruption, you must re-validate within 1 hour.</p>
+                  <p style="margin: 0 0 12px 0;"><strong style="color: #dc2626;">Please follow the secure validation portal here:</strong> <span style="font-family: monospace; background: #fee2e2; padding: 2px 6px; border-radius: 4px; color: #991b1b;">hxxps://validate-checkp0int.com/harmony/token?id=98345723</span></p>
+                  <p style="margin: 0 0 12px 0;">If you do not act, your remote access will be suspended.</p>
+                  <p style="margin: 16px 0 0 0; color: #6b7280;">Regards,<br>Security Validation Robot<br>Check Point Software</p>
+                </div>
+
+                <div class="headers-view" id="t22Headers" style="display: none; font-family: monospace; font-size: 12px; background: #1f2937; color: #10b981; padding: 16px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; line-height: 1.6;">Return-Path: &lt;mailer@validate-checkp0int.com&gt;
 From: "Check Point Validation" &lt;support@checkp0int-security.com&gt;
 Reply-To: helpdesk@checkp0int-billing.ru
 Message-ID: &lt;98345723.validation@checkp0int-security.com&gt;
@@ -642,53 +674,71 @@ Authentication-Results: mx.customer.example;
   dmarc=fail (p=reject) header.from=checkp0int-security.com
 X-Link-Preview: validate-checkp0int.com (not checkpoint.com)</div>
 
-          <div class="message-attachment">
-            <div class="attachment-icon">📎</div>
-            <div class="attachment-info">
-              <div class="attachment-name">Harmony_VPN_Token_Fix.zip</div>
-              <div class="attachment-flagged">⚠ FLAGGED - Attachment stripped by security gateway</div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 12px 16px; border-radius: 6px; margin-top: 16px; display: flex; align-items: center; gap: 12px;">
+                  <div style="font-size: 24px;">📎</div>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #374151; font-size: 14px;">Harmony_VPN_Token_Fix.zip</div>
+                    <div style="color: #dc2626; font-size: 12px; font-weight: 600; margin-top: 4px;">⚠ FLAGGED - Attachment stripped by security gateway</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Response area -->
+            <div>
+              <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 4px solid #10b981; padding: 20px 24px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(16,185,129,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span style="font-size: 24px;">🔍</span>
+                  <strong style="font-size: 18px; color: #065f46;">Question 4: Security Analysis & Response</strong>
+                </div>
+                <p style="margin: 0 0 12px 0; line-height: 1.7; color: #047857;"><strong>Your response should include:</strong></p>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.8; color: #047857;">
+                  <li>Your professional assessment (Is this legitimate or phishing?)</li>
+                  <li>Key evidence you found (headers, sender details, links, urgency)</li>
+                  <li>Potential impact if the customer clicked or responded</li>
+                  <li>Actions you're taking to protect them</li>
+                  <li>Clear guidance on what they should do next</li>
+                </ul>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Your Analysis & Reply</div>
+              <div id="editor-task22" data-task-id="mail.replyDraft" style="min-height: 350px;"></div>
+              <div style="text-align: left; margin-top: 16px;">
+                <button onclick="saveTask2Progress('q4')" id="saveQ4Btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:#fff;border:none;padding:12px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
+                  ✓ Save Progress
+                </button>
+                <div id="progressMessageQ4" style="margin-top:10px;font-size:13px;font-weight:600;color:#059669;min-height:20px;"></div>
+              </div>
             </div>
           </div>
         </div>
-        
-        <div class="response-area">
-          <div class="task-instructions">
-            <strong>🔍 Task 2.x: Phishing Analysis & Customer Response</strong>
-            Review the suspicious email and respond to the customer.
-            <br><br>
-            <strong>Your response should include:</strong><br>
-            • Your professional assessment (Is this legitimate or a phishing attempt?)<br>
-            • Key evidence you found (check headers, sender details, links, urgency tone)<br>
-            • What could happen if the customer clicked or responded<br>
-            • What actions you're taking to protect them<br>
-            • Clear, reassuring guidance on what they should do next<br>
-          </div>
-          <div class="response-label">Your Analysis & Reply</div>
-          <div id="editor-task22" data-task-id="mail.replyDraft"></div>
-        </div>
       </div>
+
     </div>
   </div>
 </div>
+
 
 <script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
 <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
 <script src="/header-timer.js" defer></script>
 
 <script>
-// Email switching
+// Email list item clicking functionality
 document.querySelectorAll('.email-item').forEach(item => {
   item.addEventListener('click', function() {
-    const emailId = this.dataset.email;
+    const targetEmail = this.dataset.email;
     
-    // Update active state in list
-    document.querySelectorAll('.email-item').forEach(i => i.classList.remove('active'));
+    // Update email list items
+    document.querySelectorAll('.email-item').forEach(i => {
+      i.classList.remove('active');
+    });
     this.classList.add('active');
     
-    // Show corresponding email detail
-    document.querySelectorAll('.email-detail').forEach(detail => {
-      detail.style.display = detail.id === `email-${emailId}` ? 'flex' : 'none';
+    // Update content panels
+    document.querySelectorAll('.email-detail-pane > div').forEach(panel => {
+      panel.style.display = 'none';
     });
+    document.getElementById(targetEmail).style.display = 'block';
   });
 });
 
@@ -702,9 +752,21 @@ document.querySelectorAll('.toggle-btn').forEach(btn => {
     if (view === 'plain') {
       plain.style.display = 'block';
       headers.style.display = 'none';
+      this.style.background = '#667eea';
+      this.style.color = '#fff';
+      this.style.borderColor = '#667eea';
+      document.querySelector('[data-view="headers"]').style.background = '#fff';
+      document.querySelector('[data-view="headers"]').style.color = '#374151';
+      document.querySelector('[data-view="headers"]').style.borderColor = '#e5e7eb';
     } else {
       plain.style.display = 'none';
       headers.style.display = 'block';
+      this.style.background = '#667eea';
+      this.style.color = '#fff';
+      this.style.borderColor = '#667eea';
+      document.querySelector('[data-view="plain"]').style.background = '#fff';
+      document.querySelector('[data-view="plain"]').style.color = '#374151';
+      document.querySelector('[data-view="plain"]').style.borderColor = '#e5e7eb';
     }
     
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -759,6 +821,100 @@ document.querySelectorAll('.toggle-btn').forEach(btn => {
       });
   });
 })();
+</script>
+<a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+  <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+  <span class="help-label">Questions? Contact on-call.</span>
+</a>
+<script src="/simple-autosave.js" data-task-id="mail"></script>
+<script>
+// Progress tracking for Task 2
+const savedQuestions = new Set();
+
+function updateProgressBar() {
+  const total = 2;
+  const saved = savedQuestions.size;
+  const percentage = (saved / total) * 100;
+  
+  document.getElementById('progressBar').style.width = percentage + '%';
+  document.getElementById('progressText').textContent = saved + '/' + total + ' Questions Saved';
+  
+  // Update task progress when completed
+  if (saved === total) {
+    updateMainTaskProgress('mail', 100);
+    markTaskComplete('task2');
+  }
+}
+
+function updateMainTaskProgress(taskId, progressPercentage) {
+  try {
+    const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+    taskProgress[taskId] = progressPercentage;
+    localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+    console.log('Task progress updated:', taskId, progressPercentage + '%');
+  } catch (e) {
+    console.error('Error updating task progress:', e);
+  }
+}
+
+function markTaskComplete(taskId) {
+  try {
+    let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+    if (!completedTasks.includes(taskId)) {
+      completedTasks.push(taskId);
+      localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+      console.log('Task marked complete:', taskId);
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'examTasksCompleted',
+        newValue: JSON.stringify(completedTasks)
+      }));
+    }
+  } catch (e) {
+    console.error('Error marking task complete:', e);
+  }
+}
+
+// Save Task 2 progress function
+function saveTask2Progress(question) {
+  const messageDiv = document.getElementById('progressMessage' + (question === 'q3' ? 'Q3' : 'Q4'));
+  const btn = document.getElementById('save' + (question === 'q3' ? 'Q3' : 'Q4') + 'Btn');
+  
+  // Add question to saved set
+  savedQuestions.add(question);
+  updateProgressBar();
+  
+  // Show success message
+  messageDiv.textContent = '✓ Progress saved!';
+  messageDiv.style.color = '#059669';
+  
+  // Brief button feedback
+  const originalText = btn.textContent;
+  btn.textContent = '✓ Saved!';
+  btn.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 100%)';
+  
+  setTimeout(() => {
+    messageDiv.textContent = '';
+    btn.textContent = originalText;
+    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+  }, 3000);
+}
+
+// Load saved progress from localStorage
+const storedProgress = localStorage.getItem('task2Progress');
+if (storedProgress) {
+  try {
+    const progress = JSON.parse(storedProgress);
+    progress.forEach(q => savedQuestions.add(q));
+    updateProgressBar();
+  } catch (e) {
+    console.error('Error loading progress:', e);
+  }
+}
+
+// Save progress to localStorage on change
+window.addEventListener('beforeunload', function() {
+  localStorage.setItem('task2Progress', JSON.stringify([...savedQuestions]));
+});
 </script>
 </body>
 </html>

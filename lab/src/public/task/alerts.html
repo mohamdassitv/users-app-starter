@@ -126,19 +126,34 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
     <img src="/logo.svg" alt="Logo" class="logo-img">
     <span class="brand-hacker">CHECK POINT</span>
   </div>
+  <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,78,59,0.9);color:#86efac;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #86efac;transition:all 0.3s;" onmouseover="this.style.background='#047857';this.style.color='#fff'" onmouseout="this.style.background='rgba(6,78,59,0.9)';this.style.color='#86efac'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Main Tasks
+  </a>
 </header>
 <main class="page fade-in">
   <section class="hero-box">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h1>Task 4 — Shift Alert Correlation & Handover</h1>
+        <h1>Task 3 — Shift Alert Correlation & Handover</h1>
         <p class="hero-desc">Scenario: You are in the <strong>middle of an ongoing shift</strong>. A noisy burst of alerts has just landed in the last few minutes while other engineers are tied up. You have to rapidly: isolate the first alert to tackle, articulate why, collapse duplicates/noise, map dependencies, and outline impact — all while preparing a succinct handover for the next shift. Work the panels in order; do not assume any alert text is trustworthy without validation.<span class="badge-inline">Critical</span></p>
       </div>
       <button onclick="resetGateway()" style="background:#dc2626;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(220,38,38,0.3);font-size:14px;">Reset Gateway</button>
     </div>
+    <!-- Progress Bar -->
+    <div style="margin-top:20px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:12px;padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:600;color:#0f172a;">Progress</span>
+        <span id="progressText" style="font-size:12px;color:#64748b;">0/4 Questions Saved</span>
+      </div>
+      <div style="background:#e2e8f0;border-radius:8px;height:12px;overflow:hidden;">
+        <div id="progressBar" style="background:linear-gradient(90deg,#10b981,#059669);height:100%;width:0%;transition:width 0.5s ease;"></div>
+      </div>
+    </div>
   </section>
   <div class="tabs-bar" role="tablist">
     <button class="tab-btn active" data-tab="alerts" role="tab" aria-selected="true">Active Alerts</button>
+    <button class="tab-btn" data-tab="portal" role="tab" aria-selected="false" style="background:linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);color:#fff;">Infinity Portal</button>
   </div>
   <section class="panels">
     <!-- Active Alerts Panel -->
@@ -158,11 +173,17 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       <div id="alertDetail" aria-live="polite"></div>
       <div id="prioritizationBlock" style="margin-top:34px;">
         <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:0 0 20px;">
-          <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Given the current alert snapshot above, which single alert would you triage first and why?</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:700;color:#064e3b;">Question 5: Given the current alert snapshot above, which single alert would you triage first and why?</div>
+            <button class="save-progress-btn" data-question="5" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+          </div>
           <div id="triageAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
         </div>
         <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
-          <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Describe the selected alert and its impact on the tenant's environment.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:700;color:#064e3b;">Question 6: Describe the selected alert and its impact on the tenant's environment.</div>
+            <button class="save-progress-btn" data-question="6" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+          </div>
           <div id="alertDescriptionAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
         </div>
         
@@ -176,9 +197,15 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
           </div>
           <div id="tenantVerifyMsg" style="margin-top:10px;font-size:12px;min-height:18px;"></div>
         </div>
-        
-        <!-- Hidden until tenant ID verified -->
-        <div id="portalAndQuestionsSection" style="display:none;">
+      </div>
+    </div>
+    
+    <!-- Infinity Portal Panel -->
+    <div class="panel" id="panel-portal" data-panel="portal" style="display:none;">
+      <h2>Infinity Portal - Gateway Management</h2>
+      <p class="small-hint">Access gateway terminals and execute remediation tasks.</p>
+      
+      <div id="portalAndQuestionsSection">
           <!-- Portal with All Gateways Section -->
           <div style="background:#e0f2fe;border:1px solid #0ea5e9;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(14,165,233,.25);margin:26px 0 20px;">
             <div style="font-size:15px;font-weight:700;color:#075985;margin-bottom:12px;">Infinity Portal - Gateway Access</div>
@@ -187,18 +214,27 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
             
             <!-- Gateway Terminal Section (appears when gateway is clicked) -->
             <div id="gatewayTerminalSectionMain" style="display:none;margin-top:16px;border:1px solid #7dd3fc;border-radius:14px;background:#f0f9ff;padding:16px;">
-              <h4 id="gatewayTerminalTitle" style="margin:0 0 10px;font-size:14px;color:#075985;">Gateway Terminal: <span id="gatewayNameDisplay"></span></h4>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <h4 id="gatewayTerminalTitle" style="margin:0;font-size:14px;color:#075985;">Gateway Terminal: <span id="gatewayNameDisplay"></span></h4>
+                <button id="downloadTerminalBtn" style="background:#10b981;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">Download Terminal Log</button>
+              </div>
               <div id="gatewayTerminal" style="background:#000;border-radius:8px;padding:0;height:420px;overflow:hidden;"></div>
             </div>
           </div>
           
           <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
-            <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Compare the affected gateway vs. a healthy gateway</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div style="font-size:15px;font-weight:700;color:#064e3b;">Question 7: Compare the affected gateway vs. a healthy gateway</div>
+              <button class="save-progress-btn" data-question="7" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+            </div>
             <div style="margin-top:10px;font-size:13px;color:#065f46;margin-bottom:12px;">Provide two screenshots (affected vs healthy) and a brief description of the differences.</div>
             <div id="gatewayComparisonAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
           </div>
           <div style="background:#dcfce7;border:1px solid #86efac;padding:18px 22px;border-radius:20px;box-shadow:0 4px 14px -6px rgba(16,185,129,.25);margin:26px 0 20px;">
-            <div style="font-size:15px;font-weight:700;color:#064e3b;margin-bottom:12px;">Follow the playbook step by step and document each stage.</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div style="font-size:15px;font-weight:700;color:#064e3b;">Question 8: Follow the playbook step by step and document each stage.</div>
+              <button class="save-progress-btn" data-question="8" style="background:#10b981;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+            </div>
             <div style="margin-top:10px;font-size:13px;color:#065f46;margin-bottom:12px;">Execute the investigation/cleanup part of the playbook exactly in order and document:<br>Provide screenshots for each step and a final summary screenshot of the final disk state.</div>
             <div id="playbookExecutionAnswer" style="border:1px solid #cbd5e1;border-radius:14px;background:#fff;min-height:200px;"></div>
           </div>
@@ -329,7 +365,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
       raw:a
     }));
     // Inject tenant/account details for P1 alert
-    alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='Mitsubishi HC Capital BO'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
+    alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='CloudSync International Corp'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
   repositionP1();
     renderAlerts();
     updateCounters();
@@ -339,7 +375,11 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   const panels=[...document.querySelectorAll('.panel')];
   function activate(tab){
     tabButtons.forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');});
-    panels.forEach(p=> p.classList.toggle('active', p.dataset.panel===tab));
+    panels.forEach(p=> {
+      const isActive = p.dataset.panel===tab;
+      p.classList.toggle('active', isActive);
+      p.style.display = isActive ? 'block' : 'none';
+    });
   }
   tabButtons.forEach(btn=> btn.addEventListener('click',()=>{
     const heroBox = document.querySelector('.hero-box');
@@ -633,7 +673,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
         raw:a
       }));
       // Inject tenant/account details for P1 alert
-      alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='Mitsubishi HC Capital BO'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
+      alerts.forEach(a=>{ if(a.id==='ALRT-MEM-20250917-053802'){ a.raw.tenant_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; a.raw.account_name='CloudSync International Corp'; a.raw.account_id='8ab93415-5bb1-4fdf-b1dc-2d1174626109'; } });
       // If P3 exporter-not-enabled alert missing, append it
       if(!alerts.find(x=>x.id==='ALRT-LAAS-20250205-EXPNOTENABLED')){
         alerts.push({
@@ -701,6 +741,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   
   // Tenant ID verification
   let currentTerminal = null;
+  let terminalBuffer = ''; // Store all terminal output
   const validTenantId = '8ab93415-5bb1-4fdf-b1dc-2d1174626109';
   
   document.getElementById('verifyTenantBtn').addEventListener('click', function() {
@@ -716,13 +757,12 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
     
     if (enteredId === validTenantId) {
       msg.style.color = '#059669';
-      msg.textContent = '✅ Tenant ID verified! Portal and investigation tools are now accessible.';
-      document.getElementById('portalAndQuestionsSection').style.display = 'block';
+      msg.textContent = '✅ Tenant ID verified! Switching to Infinity Portal...';
       
-      // Scroll to portal section
+      // Switch to portal tab after 1 second
       setTimeout(() => {
-        document.getElementById('portalAndQuestionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
+        activate('portal');
+      }, 1000);
     } else {
       msg.style.color = '#dc2626';
       msg.textContent = '❌ Invalid tenant ID. Please check the alert details and try again.';
@@ -743,6 +783,7 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
         if (currentTerminal) {
           currentTerminal.dispose();
           currentTerminal = null;
+          terminalBuffer = ''; // Clear buffer when switching terminals
         }
         terminalDiv.innerHTML = '';
         
@@ -777,10 +818,20 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
         
         ws.onopen = () => {
           term.write('\\r\\n\\x1b[32mConnected to ' + gatewayName + '\\x1b[0m\\r\\n\\r\\n');
+          terminalBuffer += 'Connected to ' + gatewayName + '\n\n';
+          
+          // Send clear command when terminal opens
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send('clear\r');
+            }
+          }, 500);
         };
         
         ws.onmessage = (event) => {
           term.write(event.data);
+          // Store output in buffer (strip ANSI codes for clean log)
+          terminalBuffer += event.data.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
         };
         
         term.onData((data) => {
@@ -800,6 +851,22 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
         currentTerminal = term;
         mainSection.style.display = 'block';
         
+        // Add download button handler
+        const downloadBtn = document.getElementById('downloadTerminalBtn');
+        if (downloadBtn) {
+          downloadBtn.onclick = function() {
+            const blob = new Blob([terminalBuffer], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = gatewayName + '_terminal_log_' + new Date().toISOString().replace(/[:.]/g, '-') + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          };
+        }
+        
         setTimeout(() => {
           mainSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
@@ -808,37 +875,243 @@ table.tenants-table tbody tr:hover{background:#f1faff;}
   };
   
   // Initialize CKEditor for triage answer
-  const { ClassicEditor, Essentials, Bold, Italic, Paragraph, List, Link, Heading } = window.CKEDITOR;
+  const { ClassicEditor, Essentials, Bold, Italic, Underline, Paragraph, List, Link, Heading, Image, ImageUpload, Base64UploadAdapter, BlockQuote, Table, MediaEmbed, CodeBlock, Code } = window.CKEDITOR;
+  
   ClassicEditor.create(document.querySelector('#triageAnswer'), {
-    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
-    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    plugins: [
+      Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+      Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+    ],
+    toolbar: [
+      'heading', '|',
+      'bold', 'italic', 'underline', 'code', '|',
+      'link', 'bulletedList', 'numberedList', '|',
+      'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+      'undo', 'redo'
+    ],
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    image: {
+      toolbar: ['imageTextAlternative']
+    },
+    codeBlock: {
+      languages: [
+        { language: 'plaintext', label: 'Plain text' },
+        { language: 'bash', label: 'Bash' },
+        { language: 'python', label: 'Python' },
+        { language: 'json', label: 'JSON' }
+      ]
+    },
     placeholder: 'Type your answer here... Explain which alert you would prioritize and your reasoning.'
+  }).then(editor => {
+    window.editor_triageAnswer = editor;
+    console.log('✓ Editor triageAnswer ready');
   }).catch(error => console.error('CKEditor initialization error:', error));
   
   // Initialize CKEditor for alert description answer
   ClassicEditor.create(document.querySelector('#alertDescriptionAnswer'), {
-    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
-    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    plugins: [
+      Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+      Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+    ],
+    toolbar: [
+      'heading', '|',
+      'bold', 'italic', 'underline', 'code', '|',
+      'link', 'bulletedList', 'numberedList', '|',
+      'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+      'undo', 'redo'
+    ],
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    image: {
+      toolbar: ['imageTextAlternative']
+    },
+    codeBlock: {
+      languages: [
+        { language: 'plaintext', label: 'Plain text' },
+        { language: 'bash', label: 'Bash' },
+        { language: 'python', label: 'Python' },
+        { language: 'json', label: 'JSON' }
+      ]
+    },
     placeholder: 'Describe the selected alert and its impact on the tenant environment...'
+  }).then(editor => {
+    window.editor_alertDescriptionAnswer = editor;
+    console.log('✓ Editor alertDescriptionAnswer ready');
   }).catch(error => console.error('CKEditor initialization error:', error));
   
   // Initialize CKEditor for gateway comparison answer
   ClassicEditor.create(document.querySelector('#gatewayComparisonAnswer'), {
-    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
-    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    plugins: [
+      Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+      Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+    ],
+    toolbar: [
+      'heading', '|',
+      'bold', 'italic', 'underline', 'code', '|',
+      'link', 'bulletedList', 'numberedList', '|',
+      'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+      'undo', 'redo'
+    ],
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    image: {
+      toolbar: ['imageTextAlternative']
+    },
+    codeBlock: {
+      languages: [
+        { language: 'plaintext', label: 'Plain text' },
+        { language: 'bash', label: 'Bash' },
+        { language: 'python', label: 'Python' },
+        { language: 'json', label: 'JSON' }
+      ]
+    },
     placeholder: 'Compare affected gateway vs. healthy gateway with screenshots and descriptions...'
+  }).then(editor => {
+    window.editor_gatewayComparisonAnswer = editor;
+    console.log('✓ Editor gatewayComparisonAnswer ready');
   }).catch(error => console.error('CKEditor initialization error:', error));
   
   // Initialize CKEditor for playbook execution answer
   ClassicEditor.create(document.querySelector('#playbookExecutionAnswer'), {
-    plugins: [Essentials, Bold, Italic, Paragraph, List, Link, Heading],
-    toolbar: ['undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'link'],
+    plugins: [
+      Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+      Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+    ],
+    toolbar: [
+      'heading', '|',
+      'bold', 'italic', 'underline', 'code', '|',
+      'link', 'bulletedList', 'numberedList', '|',
+      'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+      'undo', 'redo'
+    ],
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]
+    },
+    image: {
+      toolbar: ['imageTextAlternative']
+    },
+    codeBlock: {
+      languages: [
+        { language: 'plaintext', label: 'Plain text' },
+        { language: 'bash', label: 'Bash' },
+        { language: 'python', label: 'Python' },
+        { language: 'json', label: 'JSON' }
+      ]
+    },
     placeholder: 'Document each playbook step with screenshots and final disk state summary...'
+  }).then(editor => {
+    window.editor_playbookExecutionAnswer = editor;
+    console.log('✓ Editor playbookExecutionAnswer ready');
   }).catch(error => console.error('CKEditor initialization error:', error));
+
+  // Progress tracking
+  const savedQuestions = new Set();
+  
+  function updateProgressBar() {
+    const total = 4;
+    const saved = savedQuestions.size;
+    const percentage = (saved / total) * 100;
+    
+    document.getElementById('progressBar').style.width = percentage + '%';
+    document.getElementById('progressText').textContent = saved + '/' + total + ' Questions Saved';
+    
+    // Update task progress when completed
+    if (saved === total) {
+      updateMainTaskProgress('alerts', 100);
+      markTaskComplete('task3');
+    }
+  }
+  
+  function updateMainTaskProgress(taskId, progressPercentage) {
+    try {
+      const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+      taskProgress[taskId] = progressPercentage;
+      localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+      console.log('Task progress updated:', taskId, progressPercentage + '%');
+    } catch (e) {
+      console.error('Error updating task progress:', e);
+    }
+  }
+  
+  function markTaskComplete(taskId) {
+    try {
+      let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+      if (!completedTasks.includes(taskId)) {
+        completedTasks.push(taskId);
+        localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+        console.log('Task marked complete:', taskId);
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'examTasksCompleted',
+          newValue: JSON.stringify(completedTasks)
+        }));
+      }
+    } catch (e) {
+      console.error('Error marking task complete:', e);
+    }
+  }
+  
+  // Save progress button handlers
+  document.querySelectorAll('.save-progress-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const questionNum = this.getAttribute('data-question');
+      savedQuestions.add(questionNum);
+      updateProgressBar();
+      
+      // Visual feedback
+      this.textContent = '✓ Saved';
+      this.style.background = '#059669';
+      setTimeout(() => {
+        this.textContent = 'Save Progress';
+        this.style.background = '#10b981';
+      }, 2000);
+    });
+  });
+  
+  // Load saved progress from localStorage
+  const storedProgress = localStorage.getItem('alertsProgress');
+  if (storedProgress) {
+    try {
+      const progress = JSON.parse(storedProgress);
+      progress.forEach(q => savedQuestions.add(q));
+      updateProgressBar();
+    } catch (e) {
+      console.error('Error loading progress:', e);
+    }
+  }
+  
+  // Save progress to localStorage on change
+  window.addEventListener('beforeunload', function() {
+    localStorage.setItem('alertsProgress', JSON.stringify([...savedQuestions]));
+  });
   
   // Legacy embedded log explorer removed; Mini Kibana iframe now provides advanced analytics & quiz.
 })();
 </script>
+<script src="/simple-autosave.js" data-task-id="alerts"></script>
 <a href="/contact.html" class="help-fab" title="Questions? Reach the on-call engineer.">
   <img src="/help-contact.svg" width="38" height="38" alt="Contact">
   <span class="help-label">Questions? Contact on-call.</span>

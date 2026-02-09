@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # WAF / Reverse Proxy (NGINX)
+  waf-nginx:
+    image: nginx:alpine
+    container_name: waf-nginx
+    ports:
+      - "8090:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - waf-network
+    depends_on:
+      - upstream-app
+    restart: unless-stopped
+
+  # Upstream Application
+  upstream-app:
+    build:
+      context: ./upstream
+      dockerfile: Dockerfile
+    container_name: upstream-app
+    environment:
+      - PORT=3000
+      - EXPECTED_HOST=bayer.quanthealth.ai
+    networks:
+      - waf-network
+    restart: unless-stopped
+
+networks:
+  waf-network:
+    driver: bridge

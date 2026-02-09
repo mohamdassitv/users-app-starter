@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 4 — WAF Gateway Incident</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; height: 100%; overflow-y: auto; }
+    
+    .page-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-top: 60px;
+    }
+    
+    .terminal-section {
+      height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .terminal-header {
+      background: #1e293b;
+      padding: 10px 16px;
+      border-bottom: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    
+    .terminal-title {
+      color: #f9a8d4;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .terminal-dots { display: flex; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+    
+    .terminal-container {
+      flex: 1;
+      background: #0a0e14;
+      overflow: hidden;
+    }
+    
+    #terminal {
+      height: 100%;
+      width: 100%;
+    }
+    
+    .grade-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .grade-btn:hover { filter: brightness(1.1); }
+
+    /* Documentation section below terminal */
+    .docs-section {
+      background: #1e293b;
+      padding: 30px;
+      border-top: 2px solid #ec4899;
+    }
+
+    .docs-section h2 {
+      color: #f9a8d4;
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .docs-section h3 {
+      color: #ec4899;
+      font-size: 14px;
+      margin: 24px 0 12px 0;
+    }
+
+    .docs-section p, .docs-section li {
+      color: #e2e8f0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .docs-section ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .docs-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+
+    .docs-section th, .docs-section td {
+      border: 1px solid #475569;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .docs-section th {
+      background: #0f172a;
+      color: #f9a8d4;
+      font-weight: 700;
+    }
+
+    .docs-section td {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .docs-section code {
+      background: #0f172a;
+      color: #10b981;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .docs-section pre {
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .docs-section pre code {
+      background: none;
+      padding: 0;
+      color: #10b981;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid #f59e0b;
+      border-left: 4px solid #f59e0b;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: #fcd34d;
+      font-size: 13px;
+    }
+
+    .hint-box {
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid #ec4899;
+      border-left: 4px solid #ec4899;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: #f9a8d4;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader" style="position:fixed;top:0;left:0;right:0;z-index:100;background:#1e293b;border-bottom:2px solid #ec4899;">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="window.location='/tasks.html'">
+      <img src="/logo.svg" alt="logo" class="logo-img" style="height:28px;" />
+      <span style="color:#f9a8d4;font-weight:800;">CHECK POINT</span>
+    </div>
+    <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;text-decoration:none;border-radius:8px;font-size:12px;font-weight:700;">
+      ← Back to Tasks
+    </a>
+  </header>
+
+  <div class="page-container">
+    <!-- Full-screen Terminal -->
+    <div class="terminal-section">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <div class="terminal-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <span>waf-terminal — Task 4: WAF Gateway Incident</span>
+        </div>
+        <button class="grade-btn" onclick="runGrade()">▶ Run Grade Script</button>
+      </div>
+      <div class="terminal-container">
+        <div id="terminal"></div>
+      </div>
+    </div>
+
+    <!-- Documentation Section (scroll down to see) -->
+    <div class="docs-section">
+      <h2>✅ Success Criteria</h2>
+      <p>Your fixes are successful when all of the following pass:</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Test</th>
+            <th>Endpoint</th>
+            <th>Expected Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A</td>
+            <td><code>GET /api/health</code></td>
+            <td>HTTP 200, body contains <code>backend-ok</code></td>
+          </tr>
+          <tr>
+            <td>B</td>
+            <td><code>POST /api/login</code> (JSON)</td>
+            <td>HTTP 200, body contains <code>{"status":"ok",...}</code></td>
+          </tr>
+          <tr>
+            <td>C</td>
+            <td><code>GET /api/search?q=&lt;script&gt;</code></td>
+            <td>HTTP 403 (WAF blocks XSS)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        <strong>⚠️ Important:</strong> Test C must return 403. The WAF must remain active and enforcing. Disabling the WAF engine (e.g., setting <code>MODSEC_RULE_ENGINE=Off</code>) is NOT an acceptable solution.
+      </div>
+
+      <h3>🧪 Test Commands</h3>
+      <pre><code># Test A: Health check
+curl -v http://localhost:8080/api/health
+
+# Test B: Login with JSON
+curl -v -X POST -H "Content-Type: application/json" \
+  -d '{"username":"testuser"}' \
+  http://localhost:8080/api/login
+
+# Test C: XSS probe (must be blocked)
+curl -v "http://localhost:8080/api/search?q=%3Cscript%3Ealert(1)%3C/script%3E"
+
+# Run automated grading
+/opt/waf-exam/scripts/grade.sh</code></pre>
+
+      <h3>🛠️ Allowed Tools</h3>
+      <ul>
+        <li><code>curl</code> - HTTP requests</li>
+        <li><code>docker ps</code> - List containers</li>
+        <li><code>docker logs &lt;container&gt;</code> - View container logs</li>
+        <li><code>docker exec -it &lt;container&gt; &lt;cmd&gt;</code> - Execute commands inside containers</li>
+        <li><code>grep</code>, <code>tail</code>, <code>cat</code>, <code>less</code> - Log analysis</li>
+        <li>Text editors (<code>vi</code>, <code>nano</code>) for configuration changes</li>
+      </ul>
+
+      <h3>📋 Investigation Checklist</h3>
+      <ul>
+        <li><strong>Reproduce the issue</strong> - Run the test commands above and observe the errors</li>
+        <li><strong>Check container status</strong> - Are all containers running? (<code>docker ps</code>)</li>
+        <li><strong>Examine WAF logs</strong> - Look for error messages (<code>docker logs waf</code>)</li>
+        <li><strong>Examine backend logs</strong> - Is the backend receiving requests? (<code>docker logs backend</code>)</li>
+        <li><strong>Test internal connectivity</strong> - Can the WAF reach the backend? (Use <code>docker exec</code>)</li>
+        <li><strong>Review WAF configuration</strong> - Check environment variables and docker-compose.yml</li>
+        <li><strong>Identify the block reason</strong> - For 403 errors, WAF audit logs show why requests are blocked</li>
+        <li><strong>Apply fixes</strong> - Modify configuration as needed</li>
+        <li><strong>Restart services</strong> - Apply changes with <code>docker compose up -d</code></li>
+        <li><strong>Verify all tests pass</strong> - Run <code>/opt/waf-exam/scripts/grade.sh</code></li>
+      </ul>
+
+      <h3>💡 Hints</h3>
+      <div class="hint-box">
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>The WAF container uses environment variables for configuration</li>
+          <li>ModSecurity audit logs are written to stdout (visible in <code>docker logs waf</code>)</li>
+          <li>The backend listens on a specific port - verify the WAF can reach it</li>
+          <li>Content-Type restrictions are configurable in ModSecurity/CRS</li>
+          <li>The docker-compose.yml is located at <code>/opt/waf-exam/docker-compose.yml</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+      theme: {
+        background: '#0a0e14',
+        foreground: '#e2e8f0',
+        cursor: '#10b981',
+        selection: 'rgba(236, 72, 153, 0.3)',
+      },
+      scrollback: 5000
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal'));
+    
+    setTimeout(() => fitAddon.fit(), 100);
+
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let ws = null;
+    let connected = false;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    function connect() {
+      ws = new WebSocket(`${protocol}//${location.host}/api/terminal-ws/waf-terminal`);
+      
+      ws.onopen = () => {
+        connected = true;
+        reconnectAttempts = 0;
+        term.writeln('\x1b[1;32m✓ Connected to WAF terminal\x1b[0m');
+        term.writeln('\x1b[36m════════════════════════════════════════════════════════════════\x1b[0m');
+        term.writeln('\x1b[33mTask 4: Fix the WAF configuration issues\x1b[0m');
+        term.writeln('\x1b[90mScroll down for documentation, hints, and test commands\x1b[0m');
+        term.writeln('\x1b[36m════════════════════════════════════════════════════════════════\x1b[0m');
+        term.writeln('');
+      };
+
+      ws.onmessage = (event) => {
+        term.write(event.data);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+
+      ws.onclose = () => {
+        connected = false;
+        term.writeln('\r\n\x1b[1;33m[Connection closed]\x1b[0m');
+        
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          term.writeln(`\x1b[90m[Reconnecting in 3s... attempt ${reconnectAttempts}/${maxReconnectAttempts}]\x1b[0m`);
+          setTimeout(connect, 3000);
+        } else {
+          term.writeln('\x1b[1;31m[Container stopped. Please start the exam from the admin panel, then refresh this page.]\x1b[0m');
+        }
+      };
+    }
+
+    connect();
+
+    term.onData(data => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+      }
+    });
+
+    term.attachCustomKeyEventHandler((event) => {
+      if (event.ctrlKey && event.key === 'c' && term.hasSelection()) {
+        navigator.clipboard.writeText(term.getSelection());
+        return false;
+      }
+      if (event.ctrlKey && event.key === 'v') {
+        navigator.clipboard.readText().then(text => {
+          if (text && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(text);
+          }
+        });
+        return false;
+      }
+      return true;
+    });
+
+    function runGrade() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('/opt/waf-exam/scripts/grade.sh\r');
+      }
+    }
+
+    window.addEventListener('resize', () => fitAddon.fit());
+  </script>
+</body>
+</html>

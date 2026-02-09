@@ -30,7 +30,7 @@ a { color: var(--magenta); text-decoration:none; }
 a:hover { text-decoration:underline; }
 
 /* Header */
-.site-header {position:sticky;top:0;z-index:50;background:#fff;display:flex;align-items:center;gap:16px;padding:2px 28px;height:86px;border-bottom:1px solid var(--border);transition:height var(--transition), box-shadow var(--transition);}
+.site-header {position:sticky;top:0;z-index:50;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:2px 28px;height:86px;border-bottom:1px solid var(--border);transition:height var(--transition), box-shadow var(--transition);}
 .site-header.shrink {height:72px;box-shadow:0 4px 14px -6px rgba(0,0,0,0.08);}
 .logo {font-weight:600;font-size:20px;background:var(--bg-accent);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .brand {display:flex;align-items:center;gap:12px;text-decoration:none;}

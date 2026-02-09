@@ -8,9 +8,9 @@ mkdir -p /var/log/crash
 cd /var/log/crash
 
 echo "Creating crash dump files..."
-# Create multiple crash files to fill up space
-for i in $(seq 1 50); do
-    dd if=/dev/zero of="crash_dump_2025_01_${i}.log" bs=1M count=10 2>/dev/null
+# Create crash files (small size - just enough to simulate the scenario)
+for i in $(seq 1 5); do
+    dd if=/dev/zero of="crash_dump_2025_01_${i}.log" bs=1K count=100 2>/dev/null
 done
 
 # Create DLPDIR/ftp structure with subdirectories
@@ -20,16 +20,16 @@ mkdir -p $DLPDIR/ftp
 cd $DLPDIR/ftp
 
 echo "Creating FTP transfer directories..."
-# Create directories that match the cleanup patterns in the playbook
-for i in $(seq 0 9); do
+# Create directories that match the cleanup patterns in the playbook (minimal files)
+for i in $(seq 0 3); do
     mkdir -p "0${i}_transfer"
     mkdir -p "1${i}_backup"
     mkdir -p "3${i}_temp"
-    # Add some dummy files in each directory
-    for j in $(seq 1 5); do
-        dd if=/dev/zero of="0${i}_transfer/file_${j}.dat" bs=1M count=5 2>/dev/null
-        dd if=/dev/zero of="1${i}_backup/backup_${j}.dat" bs=1M count=5 2>/dev/null
-        dd if=/dev/zero of="3${i}_temp/temp_${j}.dat" bs=1M count=5 2>/dev/null
+    # Add small dummy files in each directory
+    for j in $(seq 1 2); do
+        dd if=/dev/zero of="0${i}_transfer/file_${j}.dat" bs=1K count=10 2>/dev/null
+        dd if=/dev/zero of="1${i}_backup/backup_${j}.dat" bs=1K count=10 2>/dev/null
+        dd if=/dev/zero of="3${i}_temp/temp_${j}.dat" bs=1K count=10 2>/dev/null
     done
 done
 

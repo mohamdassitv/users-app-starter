@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 4 — WAF Gateway Incident</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+  <script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; min-height: 100%; overflow-y: auto; }
+    
+    .page-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-top: 60px;
+    }
+
+    /* Scenario Section */
+    .scenario-section {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 30px;
+      border-bottom: 2px solid #ec4899;
+    }
+
+    .scenario-section h1 {
+      color: #f9a8d4;
+      font-size: 28px;
+      margin: 0 0 8px 0;
+      font-weight: 800;
+    }
+
+    .scenario-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ec4899, #db2777);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .scenario-section h2 {
+      color: #ec4899;
+      font-size: 16px;
+      margin: 20px 0 12px 0;
+    }
+
+    .scenario-section p {
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 0 0 12px 0;
+    }
+
+    .scenario-section ul {
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.8;
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .alert-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      border-left: 4px solid #ef4444;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 16px 0;
+      color: #fca5a5;
+      font-size: 13px;
+    }
+
+    .customer-quote {
+      background: rgba(236, 72, 153, 0.1);
+      border-left: 4px solid #ec4899;
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      color: #f9a8d4;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* Progress Bar */
+    .progress-section {
+      background: #1e293b;
+      padding: 16px 30px;
+      border-bottom: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .progress-label {
+      color: #f9a8d4;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      background: #0f172a;
+      border-radius: 10px;
+      height: 20px;
+      overflow: hidden;
+      border: 1px solid #475569;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-text {
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .progress-save-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .progress-save-btn:hover { filter: brightness(1.1); }
+    
+    .terminal-section {
+      height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .terminal-header {
+      background: #1e293b;
+      padding: 10px 16px;
+      border-bottom: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    
+    .terminal-title {
+      color: #f9a8d4;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .terminal-dots { display: flex; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+    
+    .terminal-container {
+      flex: 1;
+      background: #0a0e14;
+      overflow: hidden;
+    }
+    
+    #terminal {
+      height: 100%;
+      width: 100%;
+    }
+    
+    .grade-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .grade-btn:hover { filter: brightness(1.1); }
+
+    /* Paste input for HTTP compatibility */
+    .paste-section {
+      background: #1e293b;
+      padding: 8px 16px;
+      border-bottom: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .paste-input {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #e2e8f0;
+      font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      font-size: 13px;
+    }
+    
+    .paste-input:focus {
+      outline: none;
+      border-color: #ec4899;
+    }
+    
+    .paste-btn {
+      background: linear-gradient(135deg, #ec4899, #db2777);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    .paste-btn:hover { filter: brightness(1.1); }
+    
+    .paste-hint {
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    /* Documentation section below terminal */
+    .docs-section {
+      background: #1e293b;
+      padding: 30px;
+      border-top: 2px solid #ec4899;
+    }
+
+    .docs-section h2 {
+      color: #f9a8d4;
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .docs-section h3 {
+      color: #ec4899;
+      font-size: 14px;
+      margin: 24px 0 12px 0;
+    }
+
+    .docs-section p, .docs-section li {
+      color: #e2e8f0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .docs-section ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .docs-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+
+    .docs-section th, .docs-section td {
+      border: 1px solid #475569;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .docs-section th {
+      background: #0f172a;
+      color: #f9a8d4;
+      font-weight: 700;
+    }
+
+    .docs-section td {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .docs-section code {
+      background: #0f172a;
+      color: #10b981;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid #f59e0b;
+      border-left: 4px solid #f59e0b;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: #fcd34d;
+      font-size: 13px;
+    }
+
+    .hint-box {
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid #ec4899;
+      border-left: 4px solid #ec4899;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: #f9a8d4;
+      font-size: 13px;
+    }
+
+    /* Questions Section */
+    .questions-section {
+      background: #0f172a;
+      padding: 30px;
+      border-top: 2px solid #10b981;
+    }
+
+    .questions-section h2 {
+      color: #10b981;
+      font-size: 20px;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .question-block {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-block label {
+      display: block;
+      color: #f9a8d4;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .editor-container {
+      border: 1px solid #475569;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .ck-editor__editable {
+      min-height: 120px !important;
+    }
+
+    .save-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .save-btn:hover { filter: brightness(1.1); }
+
+    .save-status {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-left: 12px;
+    }
+
+    .autosave-notice {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid #10b981;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-top: 20px;
+      color: #10b981;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader" style="position:fixed;top:0;left:0;right:0;z-index:100;background:#1e293b;border-bottom:2px solid #ec4899;">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="window.location='/tasks.html'">
+      <img src="/logo.svg" alt="logo" class="logo-img" style="height:28px;" />
+      <span style="color:#f9a8d4;font-weight:800;">CHECK POINT</span>
+    </div>
+    <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#ec4899,#db2777);color:white;text-decoration:none;border-radius:8px;font-size:12px;font-weight:700;">
+      ← Back to Tasks
+    </a>
+  </header>
+
+  <div class="page-container">
+    <!-- Scenario Section -->
+    <div class="scenario-section">
+      <h1>Task 4 — WAF Gateway Incident</h1>
+      <div class="scenario-badge">INFRASTRUCTURE / SECURITY</div>
+
+      <h2>📋 Scenario</h2>
+      <p>
+        You are an on-call security operations engineer. At 02:15 AM, the monitoring system fired alerts for a customer running <strong>CloudGuard WAF as a Service</strong>:
+      </p>
+      
+      <div class="alert-box">
+        <strong>⚠️ Alert #1 (Critical):</strong> Application health endpoint returning errors - customers cannot access the service<br><br>
+        <strong>⚠️ Alert #2 (High):</strong> After initial triage, login functionality reported broken - JSON API calls are being rejected
+      </div>
+
+      <p>The application architecture consists of:</p>
+      <ul>
+        <li>A <strong>WAF (Web Application Firewall)</strong> running NGINX with ModSecurity + OWASP CRS</li>
+        <li>A <strong>Backend API</strong> service behind the WAF</li>
+      </ul>
+      <p>
+        Your task is to diagnose and fix the issues so the application functions correctly <strong>while maintaining WAF protection</strong>.
+      </p>
+
+      <h2>🎫 Customer Report</h2>
+      <div class="customer-quote">
+        "Hi Support Team,<br><br>
+        We're experiencing critical issues with our application behind the WAF. The health endpoint is returning 502 Bad Gateway errors, and after some changes were made, our login API started returning 403 Forbidden for JSON requests.<br><br>
+        Please investigate the WAF configuration and help us restore service. Note: We cannot disable WAF protection as this is a security requirement.<br><br>
+        Thank you"
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <span class="progress-label">📊 Task Progress:</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar" style="width: 0%;">
+          <span class="progress-text" id="progressText">0%</span>
+        </div>
+      </div>
+      <button class="progress-save-btn" onclick="updateProgress()">💾 Save Progress</button>
+    </div>
+
+    <!-- Full-screen Terminal -->
+    <div class="terminal-section">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <div class="terminal-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <span>waf-terminal — Task 4: WAF Gateway Incident</span>
+        </div>
+        <button class="grade-btn" onclick="runGrade()">▶ Run Grade Script</button>
+      </div>
+      <div class="paste-section">
+        <span class="paste-hint">📋 Paste here (Ctrl+V) then press Enter to send to terminal:</span>
+        <input type="text" id="pasteInput" class="paste-input" placeholder="Paste text here and press Enter..." />
+        <button class="paste-btn" onclick="sendPaste()">Send to Terminal</button>
+      </div>
+      <div class="terminal-container">
+        <div id="terminal"></div>
+      </div>
+    </div>
+
+    <!-- Documentation Section -->
+    <div class="docs-section">
+      <h2>✅ Success Criteria</h2>
+      <p>Your fixes are successful when all of the following pass:</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Test</th>
+            <th>Endpoint</th>
+            <th>Expected Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A</td>
+            <td><code>GET /api/health</code></td>
+            <td>HTTP 200, body contains <code>backend-ok</code></td>
+          </tr>
+          <tr>
+            <td>B</td>
+            <td><code>POST /api/login</code> (JSON)</td>
+            <td>HTTP 200, body contains <code>{"status":"ok",...}</code></td>
+          </tr>
+          <tr>
+            <td>C</td>
+            <td><code>GET /api/search?q=&lt;script&gt;</code></td>
+            <td>HTTP 403 (WAF blocks XSS)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warning-box">
+        <strong>⚠️ Important:</strong> Test C must return 403. The WAF must remain active and enforcing. Disabling the WAF engine (e.g., setting <code>MODSEC_RULE_ENGINE=Off</code>) is NOT an acceptable solution.
+      </div>
+
+      <h3>💡 Suggested Tools</h3>
+      <ul>
+        <li><code>curl</code> - HTTP requests</li>
+        <li><code>docker ps</code> - List containers</li>
+        <li><code>docker logs &lt;container&gt;</code> - View container logs</li>
+        <li><code>docker exec -it &lt;container&gt; &lt;cmd&gt;</code> - Execute commands inside containers</li>
+        <li><code>grep</code>, <code>tail</code>, <code>cat</code>, <code>less</code> - Log analysis</li>
+        <li>Text editors (<code>vi</code>, <code>nano</code>) for configuration changes</li>
+      </ul>
+
+      <h3>💡 Hints</h3>
+      <div class="hint-box">
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>The WAF container uses environment variables for configuration</li>
+          <li>ModSecurity audit logs are written to stdout (visible in <code>docker logs waf</code>)</li>
+          <li>The backend listens on a specific port - verify the WAF can reach it</li>
+          <li>Content-Type restrictions are configurable in ModSecurity/CRS</li>
+          <li>The docker-compose.yml is located at <code>/opt/waf-exam/docker-compose.yml</code></li>
+          <li>Use <code>vi</code>, <code>vim</code>, or <code>nano</code> to edit configuration files</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Questions Section -->
+    <div class="questions-section">
+      <h2>📝 Your Answers</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">Document your investigation findings and the changes you made. Include detailed descriptions and screenshots where applicable.</p>
+
+      <div class="question-block">
+        <label>1. What commands did you run to diagnose the issues? Describe what each command showed you.</label>
+        <div id="q1" class="editor-container"></div>
+        <button class="save-btn" onclick="saveAnswer('q1')">💾 Save Answer</button>
+        <span id="q1-status" class="save-status"></span>
+      </div>
+
+      <div class="question-block">
+        <label>2. What were the root causes of the 502 and 403 errors? Explain in detail.</label>
+        <div id="q2" class="editor-container"></div>
+        <button class="save-btn" onclick="saveAnswer('q2')">💾 Save Answer</button>
+        <span id="q2-status" class="save-status"></span>
+      </div>
+
+      <div class="question-block">
+        <label>3. What configuration changes did you make to fix the issues? Include the exact changes and file paths.</label>
+        <div id="q3" class="editor-container"></div>
+        <button class="save-btn" onclick="saveAnswer('q3')">💾 Save Answer</button>
+        <span id="q3-status" class="save-status"></span>
+      </div>
+
+      <div class="question-block">
+        <label>4. Paste the output of <code>/opt/waf-exam/scripts/grade.sh</code> showing all tests passing:</label>
+        <div id="q4" class="editor-container"></div>
+        <button class="save-btn" onclick="saveAnswer('q4')">💾 Save Answer</button>
+        <span id="q4-status" class="save-status"></span>
+      </div>
+
+      <div class="autosave-notice">
+        <strong>✓ Auto-Save Enabled:</strong> Your answers are automatically saved as you type.
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    // Progress bar functionality (NO localStorage - simple-autosave handles storage)
+    let currentProgress = 0;
+    
+    function updateProgressBar() {
+      const bar = document.getElementById('progressBar');
+      const text = document.getElementById('progressText');
+      bar.style.width = currentProgress + '%';
+      text.textContent = currentProgress + '%';
+    }
+    
+    function updateProgress() {
+      // Calculate progress based on filled editor content
+      let filled = 0;
+      const fields = ['q1', 'q2', 'q3', 'q4'];
+      fields.forEach(f => {
+        const editor = window['editor_' + f];
+        if (editor && editor.getData && editor.getData().length > 10) filled++;
+      });
+      currentProgress = Math.round((filled / 4) * 100);
+      updateProgressBar();
+      
+      // Notify tasks.html by dispatching custom event
+      window.dispatchEvent(new CustomEvent('waf-progress-update', {
+        detail: { progress: currentProgress }
+      }));
+    }
+    
+    // Initialize progress bar
+    updateProgressBar();
+
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+      theme: {
+        background: '#0a0e14',
+        foreground: '#e2e8f0',
+        cursor: '#10b981',
+        selection: 'rgba(236, 72, 153, 0.3)',
+      },
+      scrollback: 5000
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal'));
+    
+    setTimeout(() => fitAddon.fit(), 100);
+
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let ws = null;
+    let connected = false;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    function connect() {
+      ws = new WebSocket(`${protocol}//${location.host}/api/terminal-ws/waf-terminal`);
+      
+      ws.onopen = () => {
+        connected = true;
+        reconnectAttempts = 0;
+        term.writeln('\x1b[1;32m✓ Connected to WAF terminal\x1b[0m');
+        term.writeln('\x1b[36m════════════════════════════════════════════════════════════════\x1b[0m');
+        term.writeln('\x1b[33mTask 4: Fix the WAF configuration issues\x1b[0m');
+        term.writeln('\x1b[90mScroll down for documentation, hints, and answer questions\x1b[0m');
+        term.writeln('\x1b[36m════════════════════════════════════════════════════════════════\x1b[0m');
+        term.writeln('');
+      };
+
+      ws.onmessage = (event) => {
+        term.write(event.data);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+
+      ws.onclose = () => {
+        connected = false;
+        term.writeln('\r\n\x1b[1;33m[Connection closed]\x1b[0m');
+        
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          term.writeln(`\x1b[90m[Reconnecting in 3s... attempt ${reconnectAttempts}/${maxReconnectAttempts}]\x1b[0m`);
+          setTimeout(connect, 3000);
+        } else {
+          term.writeln('\x1b[1;31m[Container stopped. Please start the exam from the admin panel, then refresh this page.]\x1b[0m');
+        }
+      };
+    }
+
+    connect();
+
+    term.onData(data => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+      }
+    });
+
+    term.attachCustomKeyEventHandler((event) => {
+      if (event.ctrlKey && event.key === 'c' && term.hasSelection()) {
+        navigator.clipboard.writeText(term.getSelection());
+        return false;
+      }
+      return true;
+    });
+
+    function runGrade() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('/opt/waf-exam/scripts/grade.sh\r');
+      }
+    }
+
+    // Paste functionality for HTTP sites
+    const pasteInput = document.getElementById('pasteInput');
+    
+    function sendPaste() {
+      const text = pasteInput.value;
+      if (text && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(text);
+        pasteInput.value = '';
+        pasteInput.focus();
+      }
+    }
+    
+    pasteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendPaste();
+      }
+    });
+
+    window.addEventListener('resize', () => fitAddon.fit());
+  </script>
+
+  <!-- CKEditor -->
+  <script>
+    const { ClassicEditor, Essentials, Bold, Italic, Underline, Paragraph, List, Link, Heading, Image, ImageUpload, Base64UploadAdapter, BlockQuote, Table, MediaEmbed, CodeBlock, Code } = window.CKEDITOR;
+
+    const editorConfig = {
+      plugins: [
+        Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
+        Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed, CodeBlock, Code
+      ],
+      toolbar: [
+        'heading', '|',
+        'bold', 'italic', 'underline', 'code', '|',
+        'link', 'bulletedList', 'numberedList', '|',
+        'imageUpload', 'blockQuote', 'codeBlock', 'insertTable', '|',
+        'undo', 'redo'
+      ],
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+          { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+        ]
+      },
+      image: {
+        toolbar: ['imageTextAlternative']
+      },
+      codeBlock: {
+        languages: [
+          { language: 'plaintext', label: 'Plain text' },
+          { language: 'bash', label: 'Bash' },
+          { language: 'yaml', label: 'YAML' },
+          { language: 'json', label: 'JSON' }
+        ]
+      }
+    };
+
+    const editors = {};
+    const fields = ['q1', 'q2', 'q3', 'q4'];
+    const placeholders = [
+      'Describe the diagnostic commands you ran and what each one revealed...',
+      'Explain the root causes of the 502 and 403 errors in detail...',
+      'List the configuration changes you made, including file paths and exact modifications...',
+      'Paste the grade.sh output showing all tests passing...'
+    ];
+    
+    fields.forEach((fieldId, index) => {
+      ClassicEditor.create(document.querySelector('#' + fieldId), {
+        ...editorConfig,
+        placeholder: placeholders[index]
+      }).then(editor => {
+        editors[fieldId] = editor;
+        window['editor_' + fieldId] = editor;
+        console.log('✓ Editor ' + fieldId + ' ready');
+        
+        // NOTE: Content loading handled by simple-autosave.js automatically
+        // This ensures session isolation - each candidate sees only their answers
+        
+        // Update progress whenever content changes
+        editor.model.document.on('change:data', () => {
+          updateProgress();
+          // simple-autosave.js automatically saves to server with correct candidate email
+        });
+      }).catch(error => console.error('CKEditor initialization error:', error));
+    });
+
+    // Save function for manual save button (simple-autosave.js handles actual saving)
+    window.saveAnswer = function(fieldId) {
+      const editor = editors[fieldId];
+      if (editor) {
+        // Trigger manual save via simple-autosave.js
+        if (window.manualSave) {
+          window.manualSave();
+        }
+        const status = document.getElementById(fieldId + '-status');
+        if (status) {
+          status.textContent = '✓ Saved at ' + new Date().toLocaleTimeString();
+          status.style.color = '#10b981';
+        }
+        // Update progress after save
+        window.updateProgress();
+      }
+    };
+  </script>
+  
+  <!-- Auto-save integration -->
+  <script src="/simple-autosave.js" data-task-id="waf"></script>
+</body>
+</html>

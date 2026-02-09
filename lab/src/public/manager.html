@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Manager Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/theme.css" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+body{background:#fff;color:#222;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;}
+.manager-wrap{max-width:1200px;margin:34px auto 90px;padding:0 34px;}
+.panel{background:#ffffff;border:1px solid #bfdbfe;padding:26px 30px;border-radius:28px;margin-bottom:34px;box-shadow:0 6px 28px -10px rgba(59,130,246,.25),0 0 0 1px rgba(59,130,246,.25);} 
+.panel h2{margin:0 0 14px;font-size:21px;letter-spacing:.04em;color:#1e40af;font-weight:700;}
+.badge{display:inline-block;background:#3b82f6;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.6px;color:#fff;margin-left:10px;border:1px solid #60a5fa;}
+.badge.finished{background:#10b981;border-color:#34d399;}
+.badge.in-progress{background:#f59e0b;border-color:#fbbf24;}
+.badge.not-started{background:#6b7280;border-color:#9ca3af;}
+button.primary{background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;border:none;padding:10px 22px;font-weight:700;border-radius:999px;cursor:pointer;letter-spacing:.8px;font-size:13px;box-shadow:0 4px 18px -6px rgba(59,130,246,.55);} 
+button.primary:hover{filter:brightness(1.06);} 
+button.ghost{background:transparent;border:1px solid #cbd5e1;color:#475569;padding:9px 20px;font-weight:600;border-radius:999px;cursor:pointer;letter-spacing:.6px;font-size:13px;}
+button.ghost:hover{background:#f1f5f9;}
+.actions-line{display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+table thead{background:#eff6ff;position:sticky;top:0;}
+table thead th{text-align:left;padding:10px 12px;border-bottom:2px solid #3b82f6;font-weight:700;color:#1e40af;}
+table tbody tr{border-bottom:1px solid #e5e7eb;}
+table tbody tr:hover{background:#f8fafc;}
+table tbody td{padding:10px 12px;}
+.time-info{font-size:11px;color:#64748b;margin-top:2px;}
+.view-btn{background:#3b82f6;color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;}
+.view-btn:hover{background:#2563eb;}
+.empty-state{text-align:center;padding:60px 20px;color:#64748b;font-size:14px;}
+
+/* Loading Modal */
+.loading-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn 0.3s ease-out;}
+.loading-modal.show{display:flex;}
+.loading-content{background:linear-gradient(135deg,#fff,#eff6ff);border:2px solid #3b82f6;border-radius:28px;padding:50px 60px;text-align:center;box-shadow:0 20px 60px -10px rgba(59,130,246,0.5);animation:slideUp 0.4s ease-out;}
+.loading-spinner{width:80px;height:80px;margin:0 auto 24px;border:6px solid #bfdbfe;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;}
+.loading-text{font-size:18px;font-weight:700;color:#1e40af;margin-bottom:12px;letter-spacing:0.5px;}
+.loading-subtext{font-size:13px;color:#475569;line-height:1.6;max-width:380px;}
+.loading-steps{margin-top:20px;text-align:left;font-size:12px;color:#64748b;line-height:1.8;}
+.loading-step{padding:6px 0;opacity:0.5;transition:opacity 0.3s ease;}
+.loading-step.active{opacity:1;font-weight:600;color:#3b82f6;}
+.loading-step.done{opacity:0.7;}
+.loading-step.done::before{content:'✓ ';color:#10b981;font-weight:700;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="location.href='/'">
+    <img src="/logo.svg" alt="Logo" class="logo-img">
+    <span class="brand-hacker">CHECK POINT</span>
+  </div>
+</header>
+<main class="manager-wrap fade-in container">
+  <h1 class="page-title">Manager Dashboard <span class="spark">📊</span></h1>
+  <p class="muted" style="max-width:760px;">View completed exams and results. Access is read-only. You can review any finished exam at any time.</p>
+
+  <div class="panel card" id="sessionPanel" style="display:none;">
+    <h2>Manager Session <span class="badge" id="authState">CHECK</span></h2>
+    <p style="font-size:13px;line-height:1.5;" id="sessionMsg">Verifying session…</p>
+    <div class="actions-line" id="sessionActions" style="display:none;">
+      <button class="primary" id="btnManagerLogout">Logout</button>
+    </div>
+  </div>
+
+  <div class="panel card" id="candidatesPanel" style="display:none;">
+    <h2>Active Candidates <span class="badge" id="candCount">0</span></h2>
+    <div style="overflow:auto;max-height:400px;border:1px solid #e5e7eb;border-radius:14px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate Name</th>
+            <th>Email</th>
+            <th>Status / Remaining</th>
+            <th>Start</th>
+            <th>Reset</th>
+            <th>Delete</th>
+            <th>Finish Exam</th>
+            <th>Add Time</th>
+          </tr>
+        </thead>
+        <tbody id="candRows"></tbody>
+      </table>
+    </div>
+    <div class="actions-line" style="margin-top:14px;">
+      <button class="ghost" id="btnReloadCandidates">Refresh</button>
+      <button class="primary" id="btnShowCreate" type="button">New Candidate</button>
+      <button class="ghost" id="btnDeleteAll" type="button" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;">Delete All Candidates</button>
+    </div>
+    <form id="createCandidateForm" style="display:none;margin-top:8px;padding:18px 20px;background:rgba(255,255,255,.75);border:1px solid #3b82f6;border-radius:20px;backdrop-filter:blur(4px);">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <input id="newCandName" class="input" placeholder="Full Name" required style="flex:1;min-width:160px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;" />
+        <input id="newCandEmail" class="input" type="email" placeholder="email@example.com" required style="flex:1;min-width:200px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;" />
+        <button type="submit" class="primary">Save</button>
+        <button type="button" id="btnCreateAndOpen" class="primary">Save & Open Login</button>
+        <button type="button" id="btnCancelCreate" class="ghost" style="padding:0 18px;">Cancel</button>
+      </div>
+      <small id="createCandMsg" style="margin-top:6px;display:block;color:#64748b;"></small>
+    </form>
+    <small style="display:block;margin-top:8px;font-size:12px;color:#64748b;">Starts are idempotent; if a candidate already began their 3h window it will not reset.</small>
+  </div>
+
+  <div class="panel card" id="finishedExamsPanel" style="display:none;">
+    <h2>Finished Exams <span class="badge finished" id="finishedCount">0</span></h2>
+    <div style="overflow:auto;max-height:500px;border:1px solid #e5e7eb;border-radius:14px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Started At</th>
+            <th>Finished At</th>
+            <th>Duration</th>
+            <th>Final Score</th>
+            <th>Actions</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody id="finishedRows"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <p>No finished exams yet. Exams will appear here after candidates complete or time expires.</p>
+    </div>
+    <div class="actions-line" style="margin-top:14px;">
+      <button class="ghost" id="btnReloadFinished">Refresh</button>
+    </div>
+  </div>
+
+  <div class="panel card" id="systemLogsPanel" style="display:none;">
+    <h2>System Logs <span class="badge" id="logsCount">0</span></h2>
+    <div style="overflow:auto;max-height:400px;border:1px solid #e5e7eb;border-radius:14px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>Candidate</th>
+            <th>Performed By</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="logsRows"></tbody>
+      </table>
+    </div>
+    <div class="actions-line" style="margin-top:14px;">
+      <button class="ghost" id="btnReloadLogs">Refresh</button>
+      <button class="primary" id="btnDownloadLogs">Download Logs</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- Loading Modal for Exam Initialization -->
+<div class="loading-modal" id="loadingModal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Initializing Exam Environment</div>
+    <div class="loading-subtext">Setting up isolated Docker containers with network configurations and troubleshooting scenarios...</div>
+    <div class="loading-steps">
+      <div class="loading-step active" id="step1">Cleaning up previous sessions</div>
+      <div class="loading-step" id="step2">Creating isolated network</div>
+      <div class="loading-step" id="step3">Spawning 13 containers</div>
+      <div class="loading-step" id="step4">Installing tools and packages</div>
+      <div class="loading-step" id="step5">Configuring WAF and upstream services</div>
+      <div class="loading-step" id="step6">Applying network delays and disk simulations</div>
+      <div class="loading-step" id="step7">Finalizing exam environment</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let managerEmail = '';
+
+  async function checkManagerAuth(){
+    const panel=document.getElementById('sessionPanel');
+    const msg=document.getElementById('sessionMsg');
+    const badge=document.getElementById('authState');
+    const actions=document.getElementById('sessionActions');
+    
+    try {
+      const r=await fetch('/api/manager/check');
+      if(r.ok){
+        const data=await r.json();
+        managerEmail = data.email || '';
+        msg.textContent=`Logged in as ${data.name || managerEmail}`;
+        badge.textContent='✓ ACTIVE';
+        badge.style.background='#10b981';
+        actions.style.display='flex';
+        panel.style.display='block';
+        loadCandidates();
+        loadFinishedExams();
+        loadSystemLogs();
+        startTimerUpdates();
+      } else {
+        location.href='/admin-login.html';
+      }
+    } catch(e){
+      msg.textContent='Auth check failed';
+      badge.textContent='ERROR';
+      badge.style.background='#dc2626';
+      panel.style.display='block';
+    }
+  }
+
+  async function loadCandidates(){
+    const panel=document.getElementById('candidatesPanel');
+    const tbody=document.getElementById('candRows');
+    const countBadge=document.getElementById('candCount');
+    
+    try {
+      const r=await fetch('/api/admin/candidates');
+      if(!r.ok){
+        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#dc2626;">Failed to load candidates</td></tr>';
+        panel.style.display='block';
+        return;
+      }
+      
+      const data=await r.json();
+      const candidates=data.candidates||[];
+      candidatesCache = candidates;
+      
+      // Filter only active candidates (not finished/expired)
+      const active=candidates.filter(c=>!c.finishedAt && !c.expiredAt);
+      
+      tbody.innerHTML=active.map(c=>{
+        const remaining = c.startedAt ? calculateRemaining(c.startedAt, c.duration || 240, c.finishedAt) : 'Not started';
+        const statusClass = c.startedAt ? 'in-progress' : 'not-started';
+        
+        return '<tr>'+
+          '<td><strong>'+(c.name||'Unknown')+'</strong></td>'+
+          '<td>'+(c.email||'')+'</td>'+
+          '<td><span class="badge '+statusClass+'">'+remaining+'</span></td>'+
+          '<td style="text-align:center;"><button data-start="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button></td>'+
+          '<td style="text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
+          '<td style="text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
+          '<td style="text-align:center;"><button data-finish="'+c.email+'" class="finishBtn" title="Force finish exam" style="background:linear-gradient(135deg,#eab308,#ca8a04);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">⏹️ Finish</button></td>'+
+          '<td>'+
+            '<div style="display:flex;gap:6px;align-items:center;justify-content:center;">'+
+              '<input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #3b82f6;border-radius:8px;" />'+
+              '<button data-extend="'+c.email+'" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:4px 8px;border-radius:14px;font-size:11px;cursor:pointer;">Add</button>'+
+            '</div>'+
+          '</td>'+
+        '</tr>';
+      }).join('');
+      
+      if(active.length===0){
+        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No active candidates</td></tr>';
+      }
+      
+      countBadge.textContent=active.length;
+      panel.style.display='block';
+      
+      // Event handlers
+      tbody.querySelectorAll('.startBtn').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-start');
+        
+        // Show loading modal with step animation
+        const modal = document.getElementById('loadingModal');
+        modal.classList.add('show');
+        
+        // Animate through steps
+        const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7'];
+        let currentStep = 0;
+        
+        const stepInterval = setInterval(() => {
+          if (currentStep > 0) {
+            document.getElementById(steps[currentStep - 1]).classList.remove('active');
+            document.getElementById(steps[currentStep - 1]).classList.add('done');
+          }
+          if (currentStep < steps.length) {
+            document.getElementById(steps[currentStep]).classList.add('active');
+            currentStep++;
+          }
+        }, 5000); // Update every 5 seconds
+        
+        try {
+          const r = await fetch('/api/candidate/'+encodeURIComponent(email)+'/start',{method:'POST'});
+          
+          clearInterval(stepInterval);
+          
+          if(r.ok){
+            // Mark all steps as done
+            steps.forEach(step => {
+              document.getElementById(step).classList.remove('active');
+              document.getElementById(step).classList.add('done');
+            });
+            
+            // Wait a moment to show completion
+            await new Promise(resolve => setTimeout(resolve, 800));
+            modal.classList.remove('show');
+            
+            // Reset steps for next time
+            setTimeout(() => {
+              steps.forEach((step, idx) => {
+                const el = document.getElementById(step);
+                el.classList.remove('done', 'active');
+                if (idx === 0) el.classList.add('active');
+              });
+            }, 500);
+            
+            alert('✅ Exam started successfully for '+email+'!\n\nAll 13 containers are running with troubleshooting scenarios.');
+            loadCandidates();
+          } else {
+            modal.classList.remove('show');
+            const errorData = await r.json().catch(() => ({}));
+            if(r.status === 409) {
+              alert('⚠️ Cannot start exam\\n\\nAnother candidate is currently taking the exam: ' + (errorData.runningCandidate || 'Unknown') + '\\n\\nOnly one candidate can take the exam at a time.');
+            } else {
+              alert('Failed to start exam: ' + (errorData.error || 'Unknown error'));
+            }
+            // Reset steps
+            steps.forEach((step, idx) => {
+              const el = document.getElementById(step);
+              el.classList.remove('done', 'active');
+              if (idx === 0) el.classList.add('active');
+            });
+          }
+        } catch (error) {
+          clearInterval(stepInterval);
+          modal.classList.remove('show');
+          alert('Error starting exam: ' + error.message);
+          // Reset steps
+          steps.forEach((step, idx) => {
+            const el = document.getElementById(step);
+            el.classList.remove('done', 'active');
+            if (idx === 0) el.classList.add('active');
+          });
+        }
+      }));
+      
+      tbody.querySelectorAll('.resetBtn').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-reset');
+        if(!confirm('Reset '+email+'? This will clear their progress.'))return;
+        const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email)+'/reset',{method:'POST'});
+        if(r.ok)loadCandidates();
+      }));
+      
+      tbody.querySelectorAll('.delBtn').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-delete');
+        if(!confirm('Delete candidate '+email+'? This cannot be undone.'))return;
+        const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email),{method:'DELETE'});
+        if(r.ok)loadCandidates();
+      }));
+      
+      tbody.querySelectorAll('.finishBtn').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-finish');
+        if(!confirm('Force finish exam for '+email+'?'))return;
+        const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email)+'/finish',{method:'POST'});
+        if(r.ok)loadCandidates();
+      }));
+      
+      tbody.querySelectorAll('[data-extend]').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-extend');
+        const inp=tbody.querySelector('[data-extend-input="'+CSS.escape(email)+'"]');
+        const val=parseInt(inp && inp.value,10);
+        if(!val || val<1){alert('Enter minutes > 0');return;}
+        const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email)+'/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes:val})});
+        if(r.ok){inp.value='';loadCandidates();}
+      }));
+      
+    } catch(e){
+      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#dc2626;">Error loading candidates</td></tr>';
+      panel.style.display='block';
+    }
+  }
+
+  function calculateRemaining(startTime, durationMin, isFinished){
+    const now = Date.now();
+    const elapsed = now - startTime;
+    const total = durationMin * 60 * 1000;
+    const remaining = total - elapsed;
+    if(remaining <= 0 || isFinished) return '0:00';
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m left`;
+  }
+
+  let timerInterval = null;
+  let candidatesCache = [];
+
+  function startTimerUpdates(){
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(async ()=>{
+      if(candidatesCache.length === 0) return;
+      
+      let needsReload = false;
+      candidatesCache.forEach(async (c)=>{
+        if(!c.startedAt || c.finishedAt) return;
+        
+        const now = Date.now();
+        const elapsed = now - c.startedAt;
+        const total = (c.duration || 240) * 60 * 1000;
+        const remaining = total - elapsed;
+        
+        // Auto-finish when time expires
+        if(remaining <= 0 && !c._autoFinishing){
+          c._autoFinishing = true;
+          needsReload = true;
+          try {
+            await fetch('/api/admin/candidate/'+encodeURIComponent(c.email)+'/finish',{method:'POST'});
+          } catch(e){
+            console.error('Auto-finish failed:', e);
+          }
+        }
+      });
+      
+      // Reload after auto-finishing to move to Finished Exams section
+      if(needsReload){
+        setTimeout(() => {
+          loadCandidates();
+          loadFinishedExams();
+        }, 1000);
+      }
+    }, 1000);
+  }
+
+  async function loadFinishedExams(){
+    const panel=document.getElementById('finishedExamsPanel');
+    const tbody=document.getElementById('finishedRows');
+    const countBadge=document.getElementById('finishedCount');
+    const emptyState=document.getElementById('emptyState');
+    
+    try {
+      const r=await fetch('/api/manager/finished-exams');
+      if(!r.ok){
+        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#dc2626;">Failed to load exams</td></tr>';
+        panel.style.display='block';
+        return;
+      }
+      
+      const data=await r.json();
+      const finished=data.candidates||[];
+      
+      if(finished.length===0){
+        tbody.innerHTML='';
+        emptyState.style.display='block';
+      } else {
+        emptyState.style.display='none';
+        tbody.innerHTML=finished.map(c=>{
+          const startTime = c.startedAt ? new Date(c.startedAt).toLocaleString() : 'Not started';
+          const finishTime = c.finishedAt ? new Date(c.finishedAt).toLocaleString() : (c.expiredAt ? new Date(c.expiredAt).toLocaleString() + ' (Expired)' : '-');
+          const duration = calculateDuration(c.startedAt, c.finishedAt || c.expiredAt);
+          const status = c.finishedAt ? 'Finished' : (c.expiredAt ? 'Expired' : 'In Progress');
+          const statusClass = c.finishedAt ? 'finished' : (c.expiredAt ? 'not-started' : 'in-progress');
+          const scoreDisplay = c.totalScore !== undefined ? 
+            `<span style="font-weight:700;color:#16a34a;">${c.totalScore.toFixed(2)}%</span>` : 
+            '<span style="color:#9ca3af;">Not scored</span>';
+          
+          return `<tr>
+            <td><strong>${c.name||'Unknown'}</strong></td>
+            <td>${c.email||''}</td>
+            <td><span class="badge ${statusClass}">${status}</span></td>
+            <td>${startTime}</td>
+            <td>${finishTime}</td>
+            <td>${duration}</td>
+            <td>${scoreDisplay}</td>
+            <td>
+              <button class="view-btn" onclick="viewCandidateExam('${c.email}','${c.slug||''}')">View & Score</button>
+            </td>            <td>
+              <button class="delFinishedBtn" data-email="${c.email}" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button>
+            </td>          </tr>`;
+        }).join('');
+      }
+      
+      countBadge.textContent=finished.length;
+      panel.style.display='block';
+      
+      // Add delete handlers for finished exams
+      tbody.querySelectorAll('.delFinishedBtn').forEach(btn=>btn.addEventListener('click',async e=>{
+        const email=e.target.getAttribute('data-email');
+        if(!confirm('Delete finished exam for '+email+'? This cannot be undone.'))return;
+        const r=await fetch('/api/admin/candidate/'+encodeURIComponent(email),{method:'DELETE'});
+        if(r.ok){
+          loadFinishedExams();
+          loadCandidates();
+        } else {
+          alert('Failed to delete candidate');
+        }
+      }));
+      
+    } catch(e){
+      tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:#dc2626;">Error loading exams</td></tr>';
+      panel.style.display='block';
+    }
+  }
+
+  function calculateDuration(start, end){
+    if(!start || !end) return '-';
+    const diff = end - start;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  }
+
+  window.viewCandidateExam = function(email, slug){
+    if(!slug) {
+      alert('No exam session found for this candidate');
+      return;
+    }
+    // Open candidate monitor view for this specific candidate
+    window.open(`/candidate-monitor.html?email=${encodeURIComponent(email)}&slug=${slug}&v=${Date.now()}`, '_blank');
+  };
+
+  document.getElementById('btnManagerLogout').addEventListener('click', async ()=>{
+    try {
+      await fetch('/api/auth/manager-logout',{method:'POST'});
+      location.href='/admin-login.html';
+    } catch(e){
+      alert('Logout failed');
+    }
+  });
+
+  document.getElementById('btnReloadCandidates').addEventListener('click', ()=>{
+    loadCandidates();
+  });
+
+  document.getElementById('btnReloadFinished').addEventListener('click', ()=>{
+    loadFinishedExams();
+  });
+
+  async function loadSystemLogs(){
+    const panel=document.getElementById('systemLogsPanel');
+    const tbody=document.getElementById('logsRows');
+    const countBadge=document.getElementById('logsCount');
+    
+    try {
+      const r=await fetch('/api/admin/system-logs');
+      if(!r.ok){
+        tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#dc2626;">Failed to load logs</td></tr>';
+        panel.style.display='block';
+        return;
+      }
+      
+      const data=await r.json();
+      const logs=data.logs||[];
+      
+      tbody.innerHTML=logs.map(log=>{
+        const timestamp = new Date(log.timestamp).toLocaleString();
+        const actionClass = log.action === 'start' ? 'in-progress' : 
+                           log.action === 'finish' ? 'finished' : 
+                           log.action === 'delete' ? 'not-started' : 'in-progress';
+        
+        return '<tr>'+
+          '<td style="font-size:11px;">'+timestamp+'</td>'+
+          '<td><span class="badge '+actionClass+'">'+log.action.toUpperCase()+'</span></td>'+
+          '<td><strong>'+(log.candidateEmail||'Unknown')+'</strong></td>'+
+          '<td>'+(log.performedBy||'System')+'</td>'+
+          '<td style="font-size:11px;color:#64748b;">'+(log.details||'-')+'</td>'+
+        '</tr>';
+      }).join('');
+      
+      if(logs.length===0){
+        tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No system logs yet</td></tr>';
+      }
+      
+      countBadge.textContent=logs.length;
+      panel.style.display='block';
+      
+    } catch(e){
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#dc2626;">Error loading logs</td></tr>';
+      panel.style.display='block';
+    }
+  }
+
+  function downloadLogs(){
+    fetch('/api/admin/system-logs')
+      .then(r=>r.json())
+      .then(data=>{
+        const logs=data.logs||[];
+        const csv='Timestamp,Action,Candidate,Performed By,Details\n'+
+          logs.map(l=>[
+            new Date(l.timestamp).toISOString(),
+            l.action,
+            l.candidateEmail||'',
+            l.performedBy||'System',
+            (l.details||'').replace(/,/g,';')
+          ].join(',')).join('\n');
+        
+        const blob=new Blob([csv],{type:'text/csv'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download='system-logs-'+Date.now()+'.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      })
+      .catch(e=>alert('Failed to download logs'));
+  }
+
+  document.getElementById('btnReloadLogs').addEventListener('click', ()=>{
+    loadSystemLogs();
+  });
+
+  document.getElementById('btnDownloadLogs').addEventListener('click', ()=>{
+    downloadLogs();
+  });
+
+  // New Candidate / Delete All handlers
+  document.getElementById('btnShowCreate').addEventListener('click', ()=>{
+    document.getElementById('createCandidateForm').style.display='block';
+  });
+
+  document.getElementById('btnCancelCreate').addEventListener('click', ()=>{
+    document.getElementById('createCandidateForm').style.display='none';
+    document.getElementById('newCandName').value='';
+    document.getElementById('newCandEmail').value='';
+  });
+
+  document.getElementById('createCandidateForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name=document.getElementById('newCandName').value.trim();
+    const email=document.getElementById('newCandEmail').value.trim();
+    if(!email){ alert('Email required'); return; }
+    try {
+      const r=await fetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+      if(r.ok){
+        alert('Candidate created successfully');
+        document.getElementById('createCandidateForm').style.display='none';
+        document.getElementById('newCandName').value='';
+        document.getElementById('newCandEmail').value='';
+        loadCandidates();
+      } else {
+        const err=await r.json().catch(()=>({error:'Unknown error'}));
+        alert('Failed to create candidate: '+(err.error||'Unknown error'));
+      }
+    } catch(e){
+      alert('Error creating candidate: '+e.message);
+    }
+  });
+
+  document.getElementById('btnCreateAndOpen').addEventListener('click', async ()=>{
+    const name=document.getElementById('newCandName').value.trim();
+    const email=document.getElementById('newCandEmail').value.trim();
+    if(!email){ alert('Email required'); return; }
+    try {
+      const r=await fetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+      if(r.ok){
+        alert('Candidate created successfully');
+        document.getElementById('createCandidateForm').style.display='none';
+        document.getElementById('newCandName').value='';
+        document.getElementById('newCandEmail').value='';
+        loadCandidates();
+        window.open('/login.html?email='+encodeURIComponent(email)+'&name='+encodeURIComponent(name),'_blank');
+      } else {
+        const err=await r.json().catch(()=>({error:'Unknown error'}));
+        alert('Failed to create candidate: '+(err.error||'Unknown error'));
+      }
+    } catch(e){
+      alert('Error creating candidate: '+e.message);
+    }
+  });
+
+  document.getElementById('btnDeleteAll').addEventListener('click', async ()=>{
+    if(!confirm('Delete ALL candidates and their data? This cannot be undone!')) return;
+    try {
+      const r=await fetch('/api/admin/candidates/all',{method:'DELETE'});
+      if(r.ok){
+        const j=await r.json();
+        alert('Deleted '+j.deleted+' candidate(s)');
+        loadCandidates();
+      } else {
+        const err=await r.json().catch(()=>({error:'Unknown error'}));
+        alert('Failed to delete candidates: '+(err.error||'Unknown error'));
+      }
+    } catch(e){
+      alert('Error deleting candidates: '+e.message);
+    }
+  });
+
+  checkManagerAuth();
+})();
+</script>
+</body>
+</html>

@@ -29,12 +29,31 @@
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     status.textContent='Authenticating…';
-  const pwd=document.getElementById('adminPwd').value.trim();
-  const username=document.getElementById('adminUser').value.trim();
+    const pwd=document.getElementById('adminPwd').value.trim();
+    const username=document.getElementById('adminUser').value.trim();
     try {
-  const r=await fetch('/api/auth/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,username})});
-      if(r.ok){ status.textContent='Success. Redirecting…'; setTimeout(()=>location.href='/admin.html',400); }
-      else { status.textContent='Invalid password'; }
+      // Check if user is a manager first
+      const managerUsernames = ['nastasyan', 'shayn', 'othmank'];
+      const isManager = managerUsernames.some(m => username.toLowerCase().startsWith(m));
+      
+      const endpoint = isManager ? '/api/auth/manager-login' : '/api/auth/admin-login';
+      const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,username})});
+      if(r.ok){ 
+        const data = await r.json();
+        status.textContent='Success. Redirecting…'; 
+        
+        setTimeout(()=>{
+          if(isManager){
+            location.href='/manager.html?v=' + Date.now();
+          } else {
+            location.href='/admin.html?v=' + Date.now();
+          }
+        },400); 
+      }
+      else { 
+        const errorData = await r.json().catch(() => ({}));
+        status.textContent = errorData.error || 'Login failed'; 
+      }
     } catch(err){ status.textContent='Network error'; }
   });
 })();

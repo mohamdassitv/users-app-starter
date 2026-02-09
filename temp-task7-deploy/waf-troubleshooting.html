@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 7 — WAF Reverse-Proxy Troubleshooting | Ops 101</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .waf-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .task-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    @media (max-width: 1024px) {
+      .task-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .panel {
+      background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #2d3748;
+    }
+    
+    .panel-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .panel-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 0;
+    }
+    
+    .scenario-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    
+    .objective-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+    }
+    
+    .objective-list li {
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid #3b82f6;
+      border-radius: 4px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+    
+    .objective-list li strong {
+      color: #60a5fa;
+    }
+    
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      color: #fbbf24;
+      font-size: 13px;
+    }
+    
+    .warning-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #f59e0b;
+      font-size: 14px;
+    }
+    
+    .info-box {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      color: #93c5fd;
+      font-size: 13px;
+    }
+    
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #60a5fa;
+      font-size: 14px;
+    }
+    
+    .command-box {
+      background: #0a0e14;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #10b981;
+      position: relative;
+      overflow-x: auto;
+    }
+    
+    .command-box::before {
+      content: '$ ';
+      color: #60a5fa;
+      font-weight: bold;
+    }
+    
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    
+    .terminal-section {
+      background: #0a0e14;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #cbd5e1;
+      min-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2d3748;
+    }
+    
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .terminal-dot.red { background: #ef4444; }
+    .terminal-dot.yellow { background: #f59e0b; }
+    .terminal-dot.green { background: #10b981; }
+    
+    .terminal-title {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .answer-section {
+      margin-top: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      background: #0a0e14;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .submit-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .submit-btn:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .status-message {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10b981;
+      color: #10b981;
+    }
+    
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    
+    .topology-diagram {
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px dashed #3b82f6;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+      font-family: monospace;
+      color: #93c5fd;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="brand" style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="brandNav">
+      <img src="/logo.svg" alt="logo" class="logo-img" />
+      <span class="brand-hacker" title="Return to hub">CHECK POINT</span>
+    </div>
+  </header>
+
+  <main class="waf-container fade-in">
+    <div style="padding: 40px 0 20px;">
+      <a href="/tasks.html" style="color:#60a5fa;text-decoration:none;font-size:13px;">← Back to Tasks</a>
+      <h1 style="margin:20px 0 10px;font-size:32px;color:#f1f5f9;font-weight:800;">
+        Task 7 — WAF Reverse-Proxy Troubleshooting
+      </h1>
+      <div class="scenario-badge">Infrastructure / Debugging</div>
+    </div>
+
+    <div class="task-grid">
+      <!-- LEFT PANEL: Instructions -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon">📋</div>
+          <h2 class="panel-title">Scenario</h2>
+        </div>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:16px;">
+          You are a NOC engineer supporting <strong>Harmony SASE</strong> infrastructure. A customer 
+          (<strong>Bayer QuantHealth</strong>) has reported that their web application is completely 
+          inaccessible through the WAF gateway. Users attempting to reach the site receive HTTP error 
+          responses instead of the expected application.
+        </p>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:16px;">
+          The environment consists of:
+        </p>
+
+        <div class="topology-diagram">
+          User Browser<br>
+          &nbsp;&nbsp;&nbsp;↓<br>
+          WAF Pod (NGINX Reverse Proxy)<br>
+          &nbsp;&nbsp;&nbsp;↓<br>
+          Upstream Application Server
+        </div>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:16px;">
+          The WAF container acts as a reverse proxy and forwards requests to the upstream application. 
+          The upstream application is multi-tenant and serves different deployments based on the 
+          <code style="background:#0a0e14;padding:2px 6px;border-radius:3px;color:#10b981;">Host</code> 
+          header it receives.
+        </p>
+
+        <div class="info-box">
+          <strong>💡 Context</strong>
+          The customer's production domain is <code>bayer.quanthealth.ai</code>. Due to a recent 
+          configuration change, the WAF may not be forwarding requests properly.
+        </div>
+
+        <div class="warning-box">
+          <strong>⚠️ Current Symptom</strong>
+          When users try to access the site, they receive an error similar to:<br>
+          <code style="background:#0a0e14;padding:4px 8px;border-radius:3px;display:inline-block;margin-top:8px;color:#ef4444;">
+            DEPLOYMENT_NOT_FOUND
+          </code>
+        </div>
+
+        <h3 style="color:#f1f5f9;font-size:18px;font-weight:700;margin:24px 0 12px;">Your Objectives</h3>
+        
+        <ul class="objective-list">
+          <li><span class="step-number">1</span> Access the WAF container using the terminal</li>
+          <li><span class="step-number">2</span> Inspect the NGINX configuration file for the domain</li>
+          <li><span class="step-number">3</span> Identify the root cause of the error</li>
+          <li><span class="step-number">4</span> Fix the configuration issue</li>
+          <li><span class="step-number">5</span> Reload or restart NGINX to apply changes</li>
+          <li><span class="step-number">6</span> Verify that the website becomes accessible</li>
+        </ul>
+
+        <div class="info-box">
+          <strong>🎯 Success Criteria</strong>
+          After your fix, accessing the site should return a successful response 
+          (HTTP 200) with the application's welcome page instead of the error.
+        </div>
+
+        <h3 style="color:#f1f5f9;font-size:18px;font-weight:700;margin:24px 0 12px;">Getting Started</h3>
+        
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:12px;">
+          <strong>Step 1:</strong> Start the lab environment
+        </p>
+        <div class="command-box">cd waf-lab && docker-compose up -d</div>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin:20px 0 12px;">
+          <strong>Step 2:</strong> Access the WAF container
+        </p>
+        <div class="command-box">docker exec -it waf-nginx /bin/sh</div>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin:20px 0 12px;">
+          <strong>Step 3:</strong> Locate and inspect NGINX configuration
+        </p>
+        <div class="command-box">cat /etc/nginx/conf.d/default.conf</div>
+
+        <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin:20px 0 12px;">
+          <strong>Hint:</strong> Pay close attention to:
+        </p>
+        <ul style="color:#94a3b8;font-size:13px;padding-left:24px;line-height:1.8;">
+          <li>The <code>proxy_set_header Host</code> directive</li>
+          <li>The upstream server configuration</li>
+          <li>Any domain names or hostnames in the config</li>
+        </ul>
+      </div>
+
+      <!-- RIGHT PANEL: Answer Submission -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon">📝</div>
+          <h2 class="panel-title">Your Investigation & Solution</h2>
+        </div>
+
+        <form id="answerForm" class="answer-section">
+          <div class="form-group">
+            <label class="form-label" for="rootCause">
+              1. Root Cause Identification
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(What was wrong?)</span>
+            </label>
+            <textarea 
+              id="rootCause" 
+              class="form-textarea" 
+              placeholder="Describe the exact issue you found in the NGINX configuration..."
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="incorrectValue">
+              2. Incorrect Configuration Value
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(What was the typo/mistake?)</span>
+            </label>
+            <input 
+              type="text" 
+              id="incorrectValue" 
+              class="form-input" 
+              placeholder="e.g., bayer.quanthealh.ai"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="correctValue">
+              3. Corrected Configuration Value
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(What should it be?)</span>
+            </label>
+            <input 
+              type="text" 
+              id="correctValue" 
+              class="form-input" 
+              placeholder="e.g., bayer.quanthealth.ai"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="fixCommands">
+              4. Commands Used to Fix
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(List each command)</span>
+            </label>
+            <textarea 
+              id="fixCommands" 
+              class="form-textarea" 
+              placeholder="# Edit config&#10;vi /etc/nginx/conf.d/default.conf&#10;# Reload NGINX&#10;nginx -s reload"
+              rows="6"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="verification">
+              5. Verification Steps
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(How did you confirm it works?)</span>
+            </label>
+            <textarea 
+              id="verification" 
+              class="form-textarea" 
+              placeholder="Describe the tests you performed to verify the fix..."
+              rows="5"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="preventionSteps">
+              6. Prevention Recommendations
+              <span style="color:#94a3b8;font-weight:400;font-size:12px;">(How to avoid this in the future?)</span>
+            </label>
+            <textarea 
+              id="preventionSteps" 
+              class="form-textarea" 
+              placeholder="Suggest 3-5 measures to prevent similar issues (e.g., config validation, automated testing, IaC, peer review...)"
+              rows="5"
+            ></textarea>
+          </div>
+
+          <div id="statusMessage"></div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Submit Solution
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Header navigation
+    const brand = document.getElementById('brandNav');
+    if (brand) {
+      brand.addEventListener('click', () => {
+        window.location = '/tasks.html';
+      });
+    }
+
+    // Scroll header effect
+    const header = document.getElementById('siteHeader');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('shrink', window.scrollY > 16);
+    });
+
+    // Form handling
+    const form = document.getElementById('answerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Get session ID
+    const sessionId = localStorage.getItem('examSessionId');
+    const candidateEmail = localStorage.getItem('candidateEmail');
+
+    // Auto-save draft
+    const fields = ['rootCause', 'incorrectValue', 'correctValue', 'fixCommands', 'verification', 'preventionSteps'];
+    
+    fields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        // Load saved draft
+        const saved = localStorage.getItem(`task7_${fieldId}`);
+        if (saved) field.value = saved;
+        
+        // Auto-save on change
+        field.addEventListener('input', () => {
+          localStorage.setItem(`task7_${fieldId}`, field.value);
+        });
+      }
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!sessionId || !candidateEmail) {
+        showStatus('error', 'No active session found. Please login first.');
+        return;
+      }
+
+      // Gather answers
+      const answers = {};
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        answers[fieldId] = field ? field.value.trim() : '';
+      });
+
+      // Validate required fields
+      if (!answers.rootCause || !answers.incorrectValue || !answers.correctValue || !answers.fixCommands) {
+        showStatus('error', 'Please complete at least the first 4 fields before submitting.');
+        return;
+      }
+
+      // Submit to server
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const response = await fetch(`/api/sessions/${sessionId}/answers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task: 'task7-waf',
+            answers: answers,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        if (response.ok) {
+          showStatus('success', '✓ Solution submitted successfully!');
+          // Clear drafts
+          fields.forEach(fieldId => {
+            localStorage.removeItem(`task7_${fieldId}`);
+          });
+          setTimeout(() => {
+            window.location.href = '/tasks.html';
+          }, 2000);
+        } else {
+          const error = await response.json();
+          showStatus('error', 'Submission failed: ' + (error.error || 'Unknown error'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Solution';
+        }
+      } catch (err) {
+        showStatus('error', 'Network error: ' + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Solution';
+      }
+    });
+
+    function showStatus(type, message) {
+      statusMessage.className = `status-message ${type}`;
+      statusMessage.textContent = message;
+      statusMessage.style.display = 'block';
+    }
+
+    // Copy button functionality (if needed in future)
+    document.querySelectorAll('.command-box').forEach(box => {
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const text = box.textContent.replace('$ ', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = '✓ Copied';
+          setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+        });
+      });
+      box.style.position = 'relative';
+      box.appendChild(copyBtn);
+    });
+  </script>
+  <script src="/header-timer.js" defer></script>
+</body>
+</html>

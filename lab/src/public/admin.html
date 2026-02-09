@@ -25,6 +25,22 @@ button.primary:hover{filter:brightness(1.06);}
 hr.div{border:none;height:1px;background:linear-gradient(90deg,transparent,#ffc7e3,transparent);margin:40px 0;}
 table thead tr{color:#c91863;}
 table tbody tr:nth-child(even){background:#fff7fb;}
+
+/* Loading Modal */
+.loading-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn 0.3s ease-out;}
+.loading-modal.show{display:flex;}
+.loading-content{background:linear-gradient(135deg,#fff,#fff7fb);border:2px solid #ff5ca8;border-radius:28px;padding:50px 60px;text-align:center;box-shadow:0 20px 60px -10px rgba(255,92,168,0.5);animation:slideUp 0.4s ease-out;}
+.loading-spinner{width:80px;height:80px;margin:0 auto 24px;border:6px solid #ffd3e8;border-top-color:#ff5ca8;border-radius:50%;animation:spin 1s linear infinite;}
+.loading-text{font-size:18px;font-weight:700;color:#c91863;margin-bottom:12px;letter-spacing:0.5px;}
+.loading-subtext{font-size:13px;color:#b2497a;line-height:1.6;max-width:380px;}
+.loading-steps{margin-top:20px;text-align:left;font-size:12px;color:#7b1f54;line-height:1.8;}
+.loading-step{padding:6px 0;opacity:0.5;transition:opacity 0.3s ease;}
+.loading-step.active{opacity:1;font-weight:600;color:#ff5ca8;}
+.loading-step.done{opacity:0.7;}
+.loading-step.done::before{content:'✓ ';color:#10b981;font-weight:700;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
 <body>
@@ -36,7 +52,6 @@ table tbody tr:nth-child(even){background:#fff7fb;}
 </header>
 <main class="admin-wrap fade-in container">
   <h1 class="page-title">Exam Administration <span class="spark">✨</span></h1>
-  <p class="muted" style="max-width:760px;">Protected controls for configuration and maintenance. Changes immediately affect active candidates. Keep distribution list updated. All actions require password verification (cached for session only).</p>
 
   <div class="panel card" id="sessionPanel" style="display:none;">
     <h2>Admin Session <span class="badge" id="authState">CHECK</span></h2>
@@ -59,7 +74,8 @@ table tbody tr:nth-child(even){background:#fff7fb;}
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Start</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Reset</th>
             <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Delete</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Extend Time</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Finish Exam</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Add Time</th>
           </tr>
         </thead>
         <tbody id="candRows"></tbody>
@@ -80,7 +96,7 @@ table tbody tr:nth-child(even){background:#fff7fb;}
       </div>
       <small id="createCandMsg" class="desc" style="margin-top:6px;"></small>
     </form>
-    <small class="desc">Starts are idempotent; if a candidate already began their 4h window it will not reset.</small>
+    <small class="desc">Starts are idempotent; if a candidate already began their 2h window it will not reset.</small>
   </div>
 
   <!-- Config panel trimmed: only on-call contact retained -->
@@ -98,61 +114,40 @@ table tbody tr:nth-child(even){background:#fff7fb;}
     <small class="desc">Managers are excluded from selection. Saved choice becomes the active on-call contact.</small>
   </div>
 
-  <div class="panel card" id="templatePanel" style="display:none;">
-    <h2>Exam Template (DOCX)</h2>
-    <p style="font-size:12px;line-height:1.5;margin-top:0;">Upload a single master DOCX that candidates will download from their Tasks page. Re-uploading replaces the previous version immediately.</p>
-    <form id="templateUploadForm" enctype="multipart/form-data" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
-      <label style="font-size:12px;color:#7b1f54;">Template DOCX<br>
-        <input type="file" id="templateFile" name="template" accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx" required style="margin-top:4px;" />
-      </label>
-      <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">Upload / Replace</button>
-      <button type="button" id="btnReloadTemplate" class="btn btn-ghost">Refresh</button>
-    </form>
-    <div id="templateMeta" style="margin-top:10px;font-size:12px;color:#7a1e52;">No template uploaded yet.</div>
-    <small class="desc">Max 10MB. Candidates fetch via secure link injected into their Tasks hub.</small>
+  <!-- Who's On Call Panel -->
+  <div class="panel card" id="onCallDisplayPanel" style="display:none;">
+    <h2>Who's On Call <span class="badge" id="onCallBadge" style="background:#f97e0b;border-color:#fbbf24;">⚠</span></h2>
+    <div id="onCallDisplay" style="padding:12px 0;font-size:14px;">Loading...</div>
+    <div class="actions-line" style="margin-top:10px;">
+      <button class="btn btn-ghost" id="btnRefreshOnCall">Refresh</button>
+    </div>
   </div>
 
-  <!-- Global maintenance panel removed per new per-candidate reset requirement -->
-  <button type="button" class="floating-refresh" id="floatingRefresh" title="Refresh Candidates">⟳ Refresh</button>
-
+  <!-- Final Work Submissions Panel (Last Hour) -->
   <div class="panel card" id="finalWorkPanel" style="display:none;">
-    <h2>Final Work Review <span class="badge" id="finalWorkCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
-    <p class="muted" style="font-size:12px;margin-top:0;margin-bottom:10px;">Only candidates who submitted (final submit) appear here. Click View to inspect immutable snapshot.</p>
-    <div style="overflow:auto;max-height:260px;border:1px solid #1e2533;border-radius:14px;">
+    <h2>Finished Exams (Last Hour) <span class="badge" id="finalWorkCount" style="background:#1e293b;border-color:#334155;">0</span></h2>
+    <div style="overflow:auto;max-height:300px;border:1px solid #1e2533;border-radius:14px;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead style="background:#132033;position:sticky;top:0;">
           <tr>
             <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Name</th>
             <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Email</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Submitted At</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Duration Used</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Files</th>
-            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">View</th>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Submitted</th>
+            <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #1f2d3d;">Time Used</th>
+            <th style="padding:8px 10px;border-bottom:1px solid #1f2d3d;">Actions</th>
           </tr>
         </thead>
         <tbody id="finalWorkRows"></tbody>
       </table>
     </div>
     <div class="actions-line" style="margin-top:14px;">
-      <button class="btn btn-ghost" id="btnReloadFinalWork" type="button">Refresh</button>
+      <button class="btn btn-ghost" id="btnReloadFinalWork">Refresh</button>
     </div>
   </div>
-  <!-- Realtime Session Monitor (SSE/WS) -->
-  <div class="panel card" id="realtimePanel" style="display:none;">
-    <h2>Realtime Monitor <span class="badge" id="rtStatus" style="background:#1e293b;border-color:#334155;">IDLE</span></h2>
-    <label for="rtSessionId">Session UUID</label>
-    <input type="text" id="rtSessionId" placeholder="e.g. 8b1d3e8d-..." />
-    <div class="actions-line">
-      <button class="btn btn-primary" id="btnRtConnect" type="button">Connect</button>
-      <button class="btn btn-ghost" id="btnRtDisconnect" type="button" style="display:none;">Disconnect</button>
-    </div>
-    <small class="desc">Streams <code>answer_updated</code> and <code>event_logged</code> via SSE (WS if enabled).</small>
-    <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;" id="rtSummary"></div>
-    <div style="margin-top:20px;">
-      <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Live Events</h3>
-      <div id="rtEvents" class="readout" style="max-height:200px;overflow:auto;"></div>
-    </div>
-  </div>
+
+  <!-- Global maintenance panel removed per new per-candidate reset requirement -->
+  <button type="button" class="floating-refresh" id="floatingRefresh" title="Refresh Candidates">⟳ Refresh</button>
+
 </main>
 <!-- Modal for viewing candidate final work (answers) -->
 <div id="answersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;align-items:flex-start;justify-content:center;padding:60px 20px;overflow:auto;">
@@ -163,6 +158,59 @@ table tbody tr:nth-child(even){background:#fff7fb;}
     <div id="answersModalBody" class="readout" style="max-height:500px;overflow:auto;background:#fff;border:1px solid #ffd3e8;">Loading…</div>
   </div>
 </div>
+
+<!-- Modal for viewing session details -->
+<div id="sessionModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto;">
+  <div style="background:#ffffff;border:2px solid #ffb6dc;box-shadow:0 10px 40px -10px rgba(0,0,0,.35);border-radius:28px;max-width:1000px;width:100%;padding:30px 34px;position:relative;">
+    <button id="closeSessionModal" style="position:absolute;top:12px;right:12px;background:#ffe3f1;border:1px solid #ffadd7;color:#a10d55;padding:4px 10px;font-size:12px;border-radius:20px;cursor:pointer;">Close</button>
+    <h2 style="margin:0 0 14px;font-size:22px;color:#c91863;">Session Details</h2>
+    <div id="sessionModalMeta" style="font-size:12px;color:#7a1e52;margin-bottom:14px;font-family:ui-monospace,monospace;"></div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+      <div>
+        <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Session Info</h3>
+        <div id="sessionInfo" style="background:#fff4fa;border:1px solid #ffd3e8;border-radius:14px;padding:12px;font-size:11px;font-family:ui-monospace,monospace;"></div>
+      </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Answers</h3>
+      <div id="sessionAnswers" class="readout" style="max-height:300px;overflow:auto;background:#fff;border:1px solid #ffd3e8;"></div>
+    </div>
+
+    <div>
+      <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Terminal Logs</h3>
+      <div id="sessionTerminals" class="readout" style="max-height:250px;overflow:auto;background:#fff;border:1px solid #ffd3e8;"></div>
+    </div>
+    
+    <div style="margin-top:20px;">
+      <h3 style="margin:0 0 8px;font-size:15px;color:#c91863;">Live Activity <span id="liveActivityIndicator" style="font-size:11px;color:#059669;font-weight:normal;">(monitoring)</span></h3>
+      <div id="liveActivityFeed" class="readout" style="max-height:200px;overflow:auto;background:#fff;border:1px solid #ffd3e8;font-size:11px;font-family:ui-monospace,monospace;">
+        Waiting for candidate activity...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal for Exam Initialization -->
+<div class="loading-modal" id="loadingModal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Initializing Exam Environment</div>
+    <div class="loading-subtext">Setting up isolated Docker containers with network configurations and troubleshooting scenarios...</div>
+    <div class="loading-steps">
+      <div class="loading-step active" id="step1">Cleaning up previous sessions</div>
+      <div class="loading-step" id="step2">Creating isolated network</div>
+      <div class="loading-step" id="step3">Spawning 13 containers</div>
+      <div class="loading-step" id="step4">Installing tools and packages</div>
+      <div class="loading-step" id="step5">Configuring WAF and upstream services</div>
+      <div class="loading-step" id="step6">Applying network delays and disk simulations</div>
+      <div class="loading-step" id="step7">Finalizing exam environment</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
 <script>
 // Admin page now expects cookie-based session established via /admin-login.html
 // Still supports header fallback if needed (not used when cookie present)
@@ -179,60 +227,76 @@ function showPanels(){
   document.getElementById('configPanel').style.display='block';
   document.getElementById('candidatesPanel').style.display='block';
   document.getElementById('finalWorkPanel').style.display='block';
-  const tp=document.getElementById('templatePanel'); if(tp) tp.style.display='block';
 }
 async function verifySession(){
+  console.log('[Admin] Verifying session...');
   // Try a cheap call that requires admin; use config endpoint
-  const r = await gateFetch('/api/admin/config');
-  const stateEl = document.getElementById('authState');
-  const msgEl = document.getElementById('sessionMsg');
-  const actions = document.getElementById('sessionActions');
-  const btnLogin = document.getElementById('btnGoLogin');
-  if(r.ok){
-    stateEl.textContent='ACTIVE';
-    stateEl.style.background='#065f46';
-    stateEl.style.border='1px solid #059669';
-    msgEl.textContent='Session authenticated via cookie.';
-    actions.style.display='flex';
-    btnLogin.style.display='none';
-  showPanels();
-  loadConfig();
-  loadCandidates();
-  // Enable realtime panel after auth
-  document.getElementById('realtimePanel').style.display='block';
-  } else {
-    stateEl.textContent='NONE';
-    stateEl.style.background='#7f1d1d';
-    stateEl.style.border='1px solid #b91c1c';
-    msgEl.innerHTML='No admin session. <strong>Use the Admin Login page.</strong>';
-    actions.style.display='flex';
-    document.getElementById('btnAdminLogout').style.display='none';
-    btnLogin.style.display='inline-block';
+  try {
+    const r = await gateFetch('/api/admin/config');
+    console.log('[Admin] Config API response:', r.status, r.ok);
+    const stateEl = document.getElementById('authState');
+    const msgEl = document.getElementById('sessionMsg');
+    const actions = document.getElementById('sessionActions');
+    const btnLogin = document.getElementById('btnGoLogin');
+    if(r.ok){
+      console.log('[Admin] Authentication SUCCESS - showing panels');
+      stateEl.textContent='ACTIVE';
+      stateEl.style.background='#065f46';
+      stateEl.style.border='1px solid #059669';
+      msgEl.textContent='Session authenticated via cookie.';
+      actions.style.display='flex';
+      showPanels();
+      loadConfig();
+      loadCandidates();
+      loadOnCallDisplay();
+    } else {
+      console.log('[Admin] Authentication FAILED - hiding panels');
+      stateEl.textContent='NONE';
+      stateEl.style.background='#7f1d1d';
+      stateEl.style.border='1px solid #b91c1c';
+      msgEl.innerHTML='No admin session. <strong>Use the Admin Login page.</strong>';
+      actions.style.display='flex';
+      document.getElementById('btnAdminLogout').style.display='none';
+      btnLogin.style.display='inline-block';
+    }
+    document.getElementById('sessionPanel').style.display='block';
+  } catch(e) {
+    console.error('[Admin] verifySession error:', e);
   }
-  document.getElementById('sessionPanel').style.display='block';
 }
 async function adminLogout(){
   await fetch('/api/auth/admin-logout',{method:'POST'});
   location.href='/admin-login.html';
 }
-document.getElementById('btnAdminLogout').addEventListener('click', adminLogout);
-document.getElementById('btnGoLogin').addEventListener('click', ()=> location.href='/admin-login.html');
+
+const btnAdminLogout = document.getElementById('btnAdminLogout');
+const btnGoLogin = document.getElementById('btnGoLogin');
+if (btnAdminLogout) btnAdminLogout.addEventListener('click', adminLogout);
+if (btnGoLogin) btnGoLogin.addEventListener('click', ()=> location.href='/admin-login.html');
 verifySession();
 
 // Config save
 const onCallSelect=document.getElementById('onCallSelect');
 const onCallDetails=document.getElementById('onCallDetails');
-onCallSelect && onCallSelect.addEventListener('change',()=> document.getElementById('configDirty').style.display='inline-block');
+onCallSelect && onCallSelect.addEventListener('change',()=> {
+  const configDirty = document.getElementById('configDirty');
+  if (configDirty) configDirty.style.display='inline-block';
+});
 
-document.getElementById('btnSaveConfig').addEventListener('click', async ()=>{
+const btnSaveConfig = document.getElementById('btnSaveConfig');
+if (btnSaveConfig) btnSaveConfig.addEventListener('click', async ()=>{
   const selected=onCallSelect.value;
   if(!selected){ alert('Select an on-call engineer'); return; }
   const body={recipients:'', onCall:selected};
   const r= await gateFetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(r.ok){ document.getElementById('configDirty').style.display='none'; }
+  if(r.ok){ 
+    const configDirty = document.getElementById('configDirty');
+    if (configDirty) configDirty.style.display='none';
+  }
 });
 
-document.getElementById('btnShowConfig').addEventListener('click', loadConfig);
+const btnShowConfig = document.getElementById('btnShowConfig');
+if (btnShowConfig) btnShowConfig.addEventListener('click', loadConfig);
 async function loadConfig(){
   const rStaff = await gateFetch('/api/admin/staff');
   if(rStaff.ok){
@@ -271,9 +335,10 @@ async function loadCandidates(){
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+escapeHtml(c.name||'')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(c.email)+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;" data-rem="'+c.email+'">'+formatRemaining(c)+'</td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-email="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+(c.startTime? '<span style="font-size:10px;color:#b2497a;">—</span>' : '<button data-start="'+c.email+'" class="startBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Start</button>')+'</td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-reset="'+c.email+'" class="resetBtn" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Reset</button></td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-delete="'+c.email+'" class="delBtn" title="Delete candidate" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">Del</button></td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;"><button data-finish="'+c.email+'" class="finishBtn" title="Force finish exam" style="background:linear-gradient(135deg,#eab308,#ca8a04);color:#fff;border:none;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">⏹️ Finish</button></td>'+
       '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;">'+
         '<div style="display:flex;gap:6px;align-items:center;justify-content:center;">'+
           '<input type="number" min="1" placeholder="+min" data-extend-input="'+c.email+'" style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #ffbadb;border-radius:8px;" />'+
@@ -283,9 +348,82 @@ async function loadCandidates(){
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('.startBtn').forEach(btn=> btn.addEventListener('click', async (e)=>{
-    const email=e.target.getAttribute('data-email');
-    const r2= await gateFetch('/api/candidate/'+encodeURIComponent(email)+'/start',{method:'POST'});
-    if(r2.ok){ loadCandidates(); }
+    const email=e.target.getAttribute('data-start');
+    if(!email){ alert('Email not found'); return; }
+    
+    // Show loading modal with step animation
+    const modal = document.getElementById('loadingModal');
+    modal.classList.add('show');
+    
+    // Animate through steps
+    const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7'];
+    let currentStep = 0;
+    
+    const stepInterval = setInterval(() => {
+      if (currentStep > 0) {
+        document.getElementById(steps[currentStep - 1]).classList.remove('active');
+        document.getElementById(steps[currentStep - 1]).classList.add('done');
+      }
+      if (currentStep < steps.length) {
+        document.getElementById(steps[currentStep]).classList.add('active');
+        currentStep++;
+      }
+    }, 5000); // Update every 5 seconds
+    
+    try {
+      const r2 = await gateFetch('/api/candidate/'+encodeURIComponent(email)+'/start',{method:'POST'});
+      
+      clearInterval(stepInterval);
+      
+      if(r2.ok){ 
+        // Mark all steps as done
+        steps.forEach(step => {
+          document.getElementById(step).classList.remove('active');
+          document.getElementById(step).classList.add('done');
+        });
+        
+        // Wait a moment to show completion
+        await new Promise(resolve => setTimeout(resolve, 800));
+        modal.classList.remove('show');
+        
+        // Reset steps for next time
+        setTimeout(() => {
+          steps.forEach((step, idx) => {
+            const el = document.getElementById(step);
+            el.classList.remove('done', 'active');
+            if (idx === 0) el.classList.add('active');
+          });
+        }, 500);
+        
+        alert('✅ Exam started successfully for '+email+'!\n\nAll 13 containers are running with troubleshooting scenarios.');
+        loadCandidates(); 
+      }
+      else { 
+        modal.classList.remove('show');
+        const errorData = await r2.json().catch(() => ({}));
+        if(r2.status === 409) {
+          alert('⚠️ Cannot start exam\\n\\nAnother candidate is currently taking the exam: ' + (errorData.runningCandidate || 'Unknown') + '\\n\\nOnly one candidate can take the exam at a time. Please wait for them to finish or manually end their exam.');
+        } else {
+          alert('Failed to start exam: ' + (errorData.error || 'Unknown error'));
+        }
+        // Reset steps
+        steps.forEach((step, idx) => {
+          const el = document.getElementById(step);
+          el.classList.remove('done', 'active');
+          if (idx === 0) el.classList.add('active');
+        });
+      }
+    } catch (error) {
+      clearInterval(stepInterval);
+      modal.classList.remove('show');
+      alert('Error starting exam: ' + error.message);
+      // Reset steps
+      steps.forEach((step, idx) => {
+        const el = document.getElementById(step);
+        el.classList.remove('done', 'active');
+        if (idx === 0) el.classList.add('active');
+      });
+    }
   }));
   tbody.querySelectorAll('.resetBtn').forEach(btn=> btn.addEventListener('click', async e=>{
     const email=e.target.getAttribute('data-reset');
@@ -299,6 +437,13 @@ async function loadCandidates(){
     if(!confirm('Delete candidate '+email+' and all their data?')) return;
     const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email),{method:'DELETE'});
     if(r.ok) loadCandidates();
+  }));
+  tbody.querySelectorAll('.finishBtn').forEach(btn=> btn.addEventListener('click', async e=>{
+    const email=e.target.getAttribute('data-finish');
+    if(!confirm('Force finish exam for '+email+'? This will end their session and redirect them to the finish page.')) return;
+    const r=await gateFetch('/api/admin/candidate/'+encodeURIComponent(email)+'/finish',{method:'POST'});
+    if(r.ok){ alert('Exam finished for '+email); loadCandidates(); }
+    else { alert('Failed to finish exam'); }
   }));
   tbody.querySelectorAll('[data-extend]').forEach(btn=> btn.addEventListener('click', async e=>{
     const email=e.target.getAttribute('data-extend');
@@ -427,11 +572,61 @@ async function openAnswersModal(email){
   }catch(e){ answersModalBody.textContent='Error: '+e.message; }
 }
 
+// ---- On Call Display Logic ----
+async function loadOnCallDisplay(){
+  const panel = document.getElementById('onCallDisplayPanel');
+  const display = document.getElementById('onCallDisplay');
+  const badge = document.getElementById('onCallBadge');
+  
+  try {
+    const r = await gateFetch('/api/admin/staff');
+    if(!r.ok) throw new Error('Failed to load');
+    const data = await r.json();
+    const staff = data.staff || [];
+    const onCallEmail = data.onCall || '';
+    
+    if(onCallEmail) {
+      const person = staff.find(s => s.email === onCallEmail);
+      display.innerHTML = '<div style="background:#eff6ff;padding:16px 20px;border-radius:16px;border:1px solid #3b82f6;">' +
+        '<strong style="font-size:18px;color:#1e40af;display:block;margin-bottom:8px;">📞 ' + (person ? person.name : onCallEmail) + '</strong>' +
+        (person ? '<span style="font-size:14px;color:#3b82f6;">Phone: ' + person.phone + '</span><br>' : '') +
+        '<span style="font-size:12px;color:#64748b;">' + onCallEmail + '</span>' +
+        '</div>';
+      badge.textContent = '✓';
+      badge.style.background = '#10b981';
+      badge.style.borderColor = '#34d399';
+    } else {
+      display.innerHTML = '<div style="background:#fef3c7;padding:16px 20px;border-radius:16px;border:1px solid #f59e0b;">' +
+        '<strong style="font-size:16px;color:#b45309;">⚠️ No one is currently on call</strong>' +
+        '</div>';
+      badge.textContent = '⚠';
+      badge.style.background = '#f97e0b';
+      badge.style.borderColor = '#fbbf24';
+    }
+    panel.style.display = 'block';
+  } catch(e) {
+    display.innerHTML = '<p style="color:#dc2626;">Failed to load on-call info</p>';
+    panel.style.display = 'block';
+  }
+}
+
+const btnRefreshOnCall = document.getElementById('btnRefreshOnCall');
+if(btnRefreshOnCall) btnRefreshOnCall.addEventListener('click', loadOnCallDisplay);
+
 // ---- Final Work Panel Logic ----
 function buildFinalWork(candidates){
-  const submitted = candidates.filter(c=> c.submittedAt);
+  // Filter to only show exams finished/submitted in the last hour
+  const oneHourAgo = Date.now() - (60 * 60 * 1000);
+  const submitted = candidates.filter(c => {
+    const finishTime = c.submittedAt || c.finishedAt || c.expiredAt;
+    return finishTime && finishTime >= oneHourAgo;
+  });
   const tbody = document.getElementById('finalWorkRows');
   const countEl = document.getElementById('finalWorkCount');
+  if (!tbody || !countEl) {
+    console.warn('[Admin] Final work elements not found in DOM');
+    return;
+  }
   countEl.textContent=submitted.length;
   tbody.innerHTML='';
   submitted.sort((a,b)=> a.submittedAt - b.submittedAt);
@@ -465,62 +660,102 @@ function buildFinalWork(candidates){
     if(file) window.open('/api/admin/uploads/'+encodeURIComponent(file),'_blank');
   }));
 }
-document.getElementById('btnReloadFinalWork').addEventListener('click', ()=> loadCandidates());
 
 // ---- Candidate Management Buttons ----
-document.getElementById('btnReloadCandidates').addEventListener('click', ()=> loadCandidates());
-document.getElementById('floatingRefresh').addEventListener('click', ()=> loadCandidates());
+const btnReloadFinalWork = document.getElementById('btnReloadFinalWork');
+const btnReloadCandidates = document.getElementById('btnReloadCandidates');
+const floatingRefresh = document.getElementById('floatingRefresh');
+const btnShowCreate = document.getElementById('btnShowCreate');
 
-document.getElementById('btnShowCreate').addEventListener('click', ()=>{
-  document.getElementById('createCandidateForm').style.display='block';
+if (btnReloadFinalWork) btnReloadFinalWork.addEventListener('click', ()=> loadCandidates());
+if (btnReloadCandidates) btnReloadCandidates.addEventListener('click', ()=> loadCandidates());
+if (floatingRefresh) floatingRefresh.addEventListener('click', ()=> loadCandidates());
+
+if (btnShowCreate) btnShowCreate.addEventListener('click', ()=>{
+  const form = document.getElementById('createCandidateForm');
+  if (form) form.style.display='block';
 });
 
-document.getElementById('btnCancelCreate').addEventListener('click', ()=>{
-  document.getElementById('createCandidateForm').style.display='none';
-  document.getElementById('newCandName').value='';
-  document.getElementById('newCandEmail').value='';
+const btnCancelCreate = document.getElementById('btnCancelCreate');
+if (btnCancelCreate) btnCancelCreate.addEventListener('click', ()=>{
+  const form = document.getElementById('createCandidateForm');
+  const nameInput = document.getElementById('newCandName');
+  const emailInput = document.getElementById('newCandEmail');
+  if (form) form.style.display='none';
+  if (nameInput) nameInput.value='';
+  if (emailInput) emailInput.value='';
 });
 
-document.getElementById('createCandidateForm').addEventListener('submit', async (e)=>{
+const createCandidateForm = document.getElementById('createCandidateForm');
+if (createCandidateForm) createCandidateForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const name=document.getElementById('newCandName').value.trim();
   const email=document.getElementById('newCandEmail').value.trim();
   if(!email){ alert('Email required'); return; }
-  const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
-  if(r.ok){
-    document.getElementById('createCandidateForm').style.display='none';
-    document.getElementById('newCandName').value='';
-    document.getElementById('newCandEmail').value='';
-    loadCandidates();
+  try {
+    const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+    if(r.ok){
+      alert('Candidate created successfully');
+      document.getElementById('createCandidateForm').style.display='none';
+      document.getElementById('newCandName').value='';
+      document.getElementById('newCandEmail').value='';
+      loadCandidates();
+    } else {
+      const err=await r.json().catch(()=>({error:'Unknown error'}));
+      alert('Failed to create candidate: '+(err.error||'Unknown error'));
+    }
+  } catch(e){
+    alert('Error creating candidate: '+e.message);
   }
 });
 
-document.getElementById('btnCreateAndOpen').addEventListener('click', async ()=>{
-  const name=document.getElementById('newCandName').value.trim();
-  const email=document.getElementById('newCandEmail').value.trim();
+const btnCreateAndOpen = document.getElementById('btnCreateAndOpen');
+if (btnCreateAndOpen) btnCreateAndOpen.addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('newCandName');
+  const emailInput = document.getElementById('newCandEmail');
+  if (!nameInput || !emailInput) return;
+  const name=nameInput.value.trim();
+  const email=emailInput.value.trim();
   if(!email){ alert('Email required'); return; }
-  const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
-  if(r.ok){
-    document.getElementById('createCandidateForm').style.display='none';
-    document.getElementById('newCandName').value='';
-    document.getElementById('newCandEmail').value='';
-    loadCandidates();
-    window.open('/login.html?email='+encodeURIComponent(email),'_blank');
+  try {
+    const r=await gateFetch('/api/admin/candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email})});
+    if(r.ok){
+      alert('Candidate created successfully');
+      document.getElementById('createCandidateForm').style.display='none';
+      document.getElementById('newCandName').value='';
+      document.getElementById('newCandEmail').value='';
+      loadCandidates();
+      window.open('/login.html?email='+encodeURIComponent(email)+'&name='+encodeURIComponent(name),'_blank');
+    } else {
+      const err=await r.json().catch(()=>({error:'Unknown error'}));
+      alert('Failed to create candidate: '+(err.error||'Unknown error'));
+    }
+  } catch(e){
+    alert('Error creating candidate: '+e.message);
   }
 });
 
-document.getElementById('btnDeleteAll').addEventListener('click', async ()=>{
+const btnDeleteAll = document.getElementById('btnDeleteAll');
+if (btnDeleteAll) btnDeleteAll.addEventListener('click', async ()=>{
   if(!confirm('Delete ALL candidates and their data? This cannot be undone!')) return;
-  const r=await gateFetch('/api/admin/candidates/all',{method:'DELETE'});
-  if(r.ok){
-    const j=await r.json();
-    alert('Deleted '+j.deleted+' candidate(s)');
-    loadCandidates();
+  try {
+    const r=await gateFetch('/api/admin/candidates/all',{method:'DELETE'});
+    if(r.ok){
+      const j=await r.json();
+      alert('Deleted '+j.deleted+' candidate(s)');
+      loadCandidates();
+    } else {
+      const err=await r.json().catch(()=>({error:'Unknown error'}));
+      alert('Failed to delete candidates: '+(err.error||'Unknown error'));
+    }
+  } catch(e){
+    alert('Error deleting candidates: '+e.message);
   }
 });
 
-// ---- Exam Template Panel Logic ----
-(function(){
+</script>
+</body>
+</html>
   const form=document.getElementById('templateUploadForm');
   const metaEl=document.getElementById('templateMeta');
   const reloadBtn=document.getElementById('btnReloadTemplate');
@@ -554,6 +789,285 @@ document.getElementById('btnDeleteAll').addEventListener('click', async ()=>{
   // Defer initial load until session verified triggers showPanels; poll for existence
   let tries=0; const int=setInterval(()=>{ if(metaEl.offsetParent!==null){ clearInterval(int); loadTemplate(); } if(++tries>40) clearInterval(int); },250);
 })();
+
+// ---- Session Browser Panel Logic ----
+async function loadSessions(){
+  try{
+    const r = await gateFetch('/api/admin/sessions');
+    if(!r.ok){ console.error('Failed to load sessions'); return; }
+    const data = await r.json();
+    const sessions = data.sessions || [];
+    
+    document.getElementById('sessionCount').textContent = sessions.length;
+    const tbody = document.getElementById('sessionRows');
+    tbody.innerHTML = '';
+    
+    if(sessions.length === 0){
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="7" style="padding:20px;text-align:center;color:#b2497a;">No sessions yet. Sessions are created when candidates start their exams.</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+    
+    // Sort by creation time, newest first
+    sessions.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    
+    sessions.forEach(session=>{
+      const tr = document.createElement('tr');
+      const sessionId = session.sessionId || 'unknown';
+      const email = session.candidateEmail || 'N/A';
+      const status = session.status || 'unknown';
+      const created = session.createdAt ? new Date(session.createdAt).toLocaleString() : 'N/A';
+      const completed = session.completedAt ? new Date(session.completedAt).toLocaleString() : '—';
+      const containerCount = (session.containers || []).length;
+      const isActive = status === 'active';
+      
+      // Status badge
+      let statusBadge = '';
+      if(status === 'active'){
+        statusBadge = '<span style="background:#065f46;border:1px solid #059669;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;">ACTIVE</span>';
+      } else if(status === 'completed'){
+        statusBadge = '<span style="background:#7c2d12;border:1px solid #c2410c;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;">COMPLETED</span>';
+      } else {
+        statusBadge = '<span style="background:#475569;border:1px solid #64748b;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;">'+escapeHtml(status.toUpperCase())+'</span>';
+      }
+      
+      tr.innerHTML = 
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:10px;" title="'+escapeHtml(sessionId)+'">'+escapeHtml(sessionId.substring(0,12))+'...</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-family:ui-monospace,monospace;font-size:11px;">'+escapeHtml(email)+'</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+statusBadge+'</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-size:10px;">'+created+'</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;font-size:10px;">'+completed+'</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+
+          (isActive ? '<span style="color:#059669;">'+containerCount+' running</span>' : '<span style="color:#b2497a;">—</span>')+
+        '</td>'+
+        '<td style="padding:6px 10px;border-bottom:1px solid #ffd3e8;text-align:center;">'+
+          '<button data-view-session="'+escapeHtml(sessionId)+'" style="background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;border:none;padding:4px 10px;border-radius:18px;font-size:11px;cursor:pointer;">View</button>'+
+          (isActive ? ' <button data-snapshot-session="'+escapeHtml(sessionId)+'" style="background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;border:none;padding:4px 8px;border-radius:18px;font-size:11px;cursor:pointer;" title="Create snapshot">📸</button>' : '')+
+        '</td>';
+      tbody.appendChild(tr);
+    });
+    
+    // Attach event listeners
+    tbody.querySelectorAll('[data-view-session]').forEach(btn=> btn.addEventListener('click', async e=>{
+      const sessionId = e.target.getAttribute('data-view-session');
+      await openSessionModal(sessionId);
+    }));
+    
+    tbody.querySelectorAll('[data-snapshot-session]').forEach(btn=> btn.addEventListener('click', async e=>{
+      const sessionId = e.target.getAttribute('data-snapshot-session');
+      if(!confirm('Create snapshot for session '+sessionId+'?\nThis will export all container states.')) return;
+      try{
+        const r = await gateFetch('/api/session/'+encodeURIComponent(sessionId)+'/snapshot', {method:'POST'});
+        if(r.ok){
+          alert('Snapshot created successfully!');
+          loadSessions();
+        } else {
+          alert('Snapshot failed: '+(await r.text()));
+        }
+      }catch(err){
+        alert('Network error: '+err.message);
+      }
+    }));
+    
+  }catch(e){
+    console.error('Error loading sessions:', e);
+  }
+}
+
+document.getElementById('btnReloadSessions').addEventListener('click', ()=> loadSessions());
+
+// ---- Session Details Modal ----
+const sessionModal = document.getElementById('sessionModal');
+const sessionModalMeta = document.getElementById('sessionModalMeta');
+const sessionInfo = document.getElementById('sessionInfo');
+const sessionContainers = document.getElementById('sessionContainers');
+const sessionAnswers = document.getElementById('sessionAnswers');
+const sessionTerminals = document.getElementById('sessionTerminals');
+const liveActivityFeed = document.getElementById('liveActivityFeed');
+const liveActivityIndicator = document.getElementById('liveActivityIndicator');
+
+let currentSocket = null;
+let currentSessionId = null;
+
+document.getElementById('closeSessionModal').addEventListener('click', ()=>{ 
+  sessionModal.style.display='none';
+  if(currentSocket){
+    currentSocket.disconnect();
+    currentSocket = null;
+  }
+});
+sessionModal.addEventListener('click', e=>{ 
+  if(e.target===sessionModal){
+    sessionModal.style.display='none';
+    if(currentSocket){
+      currentSocket.disconnect();
+      currentSocket = null;
+    }
+  }
+});
+
+function appendLiveActivity(message, type){
+  const timestamp = new Date().toLocaleTimeString();
+  const line = document.createElement('div');
+  line.style.padding = '4px 0';
+  line.style.borderBottom = '1px solid #ffd3e8';
+  
+  const colors = {
+    'answer-saved': '#059669',
+    'terminal-activity': '#0284c7',
+    'connected': '#7c3aed'
+  };
+  
+  line.innerHTML = `<span style="color:#94a3b8;">[${timestamp}]</span> <span style="color:${colors[type] || '#64748b'};font-weight:600;">${type}</span>: ${message}`;
+  liveActivityFeed.appendChild(line);
+  liveActivityFeed.scrollTop = liveActivityFeed.scrollHeight;
+}
+
+async function openSessionModal(sessionId){
+  currentSessionId = sessionId;
+  sessionModal.style.display='flex';
+  sessionModalMeta.textContent = 'Loading session: '+sessionId;
+  sessionInfo.textContent = 'Loading...';
+  sessionContainers.textContent = 'Loading...';
+  sessionAnswers.textContent = 'Loading...';
+  sessionTerminals.textContent = 'Loading...';
+  liveActivityFeed.innerHTML = '<span style="color:#94a3b8;">Connecting to live feed...</span>';
+  
+  // Connect to socket.io for live updates
+  if(currentSocket){
+    currentSocket.disconnect();
+  }
+  
+  try{
+    currentSocket = io({
+      path: '/ws',
+      query: { sessionId: sessionId }
+    });
+    
+    currentSocket.on('connected', (data)=>{
+      liveActivityIndicator.textContent = '(connected)';
+      liveActivityIndicator.style.color = '#059669';
+      liveActivityFeed.innerHTML = '<span style="color:#059669;">✓ Connected to session '+sessionId+'</span>';
+    });
+    
+    currentSocket.on('sessionUpdate', (update)=>{
+      const { eventType, data } = update;
+      
+      if(eventType === 'answer-saved'){
+        appendLiveActivity(`Task "${data.taskId}" saved (${data.fieldCount} fields)`, 'answer-saved');
+        // Refresh answers section
+        loadSessionAnswers(sessionId);
+      }
+      else if(eventType === 'terminal-activity'){
+        appendLiveActivity(`Terminal activity in ${data.container}`, 'terminal-activity');
+      }
+    });
+    
+    currentSocket.on('disconnect', ()=>{
+      liveActivityIndicator.textContent = '(disconnected)';
+      liveActivityIndicator.style.color = '#dc2626';
+    });
+  }catch(e){
+    console.error('Socket.io connection failed:', e);
+    liveActivityFeed.innerHTML = '<span style="color:#dc2626;">Failed to connect to live feed</span>';
+  }
+  
+  try{
+    const r = await gateFetch('/api/admin/session/'+encodeURIComponent(sessionId)+'/details');
+    if(!r.ok){
+      sessionInfo.textContent = 'Failed to load session details: '+r.status;
+      return;
+    }
+    
+    const details = await r.json();
+    
+    // Session info
+    sessionModalMeta.textContent = 'Session: '+sessionId;
+    const meta = details.metadata || {};
+    const infoLines = [];
+    infoLines.push('Candidate: '+(meta.candidateEmail || 'N/A'));
+    infoLines.push('Status: '+(meta.status || 'unknown'));
+    infoLines.push('Created: '+(meta.createdAt ? new Date(meta.createdAt).toLocaleString() : 'N/A'));
+    if(meta.completedAt) infoLines.push('Completed: '+new Date(meta.completedAt).toLocaleString());
+    if(meta.snapshotAt) infoLines.push('Snapshot: '+new Date(meta.snapshotAt).toLocaleString());
+    sessionInfo.textContent = infoLines.join('\n');
+    
+    // Containers
+    const containers = meta.containers || [];
+    if(containers.length > 0){
+      sessionContainers.textContent = containers.join('\n');
+    } else {
+      sessionContainers.textContent = 'No containers (session cleaned up)';
+    }
+    
+    // Answers
+    loadSessionAnswers(sessionId, details.answers);
+    
+    // Terminal logs
+    const terminalLogs = details.terminalLogs || {};
+    if(Object.keys(terminalLogs).length === 0){
+      sessionTerminals.textContent = 'No terminal logs saved.';
+    } else {
+      const termLines = [];
+      Object.entries(terminalLogs).forEach(([terminalId, history])=>{
+        termLines.push('═══ '+terminalId+' ═══');
+        if(Array.isArray(history) && history.length > 0){
+          history.forEach(entry=>{
+            termLines.push('['+new Date(entry.timestamp).toLocaleTimeString()+'] '+entry.command);
+          });
+        } else {
+          termLines.push('(no commands recorded)');
+        }
+        termLines.push('');
+      });
+      sessionTerminals.textContent = termLines.join('\n');
+    }
+    
+  }catch(e){
+    sessionInfo.textContent = 'Error: '+e.message;
+  }
+}
+
+async function loadSessionAnswers(sessionId, answersData){
+  try{
+    let answers = answersData;
+    if(!answers){
+      const r = await gateFetch('/api/admin/session/'+encodeURIComponent(sessionId)+'/details');
+      if(r.ok){
+        const details = await r.json();
+        answers = details.answers || {};
+      }
+    }
+    
+    const sessionAnswers = document.getElementById('sessionAnswers');
+    if(!answers || Object.keys(answers).length === 0){
+      sessionAnswers.textContent = 'No answers saved yet.';
+      return;
+    }
+    
+    const answerLines = [];
+    Object.entries(answers).forEach(([taskId, answerData])=>{
+      answerLines.push('═══ '+taskId+' ═══');
+      answerLines.push('Saved: '+(answerData.savedAt ? new Date(answerData.savedAt).toLocaleString() : 'unknown'));
+      if(answerData.answer && typeof answerData.answer === 'object'){
+        const fields = answerData.answer.fields || answerData.answer;
+        Object.entries(fields).forEach(([key, value])=>{
+          answerLines.push('');
+          answerLines.push(key+':');
+          let val = typeof value === 'string' ? value : JSON.stringify(value);
+          val = val.replace(/<[^>]+>/g, ''); // Strip HTML
+          answerLines.push(val.trim() || '  (empty)');
+        });
+      }
+      answerLines.push('');
+    });
+    sessionAnswers.textContent = answerLines.join('\n');
+  }catch(e){
+    console.error('Failed to load session answers:', e);
+  }
+}
+
 </script>
 <script>
 // Admin realtime logic (SSE only unless USE_WS server flag set)

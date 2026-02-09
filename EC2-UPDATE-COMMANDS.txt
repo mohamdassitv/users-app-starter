@@ -1,0 +1,93 @@
+========================================
+EC2 UPDATE COMMANDS
+========================================
+
+Instructions:
+1. Go to AWS Console → EC2 → Instances
+2. Select instance i-0fc5a91af937f1212 (34.244.246.180)
+3. Click "Connect" → "EC2 Instance Connect" → "Connect"
+4. Copy and paste the commands below into the terminal
+
+========================================
+COMMANDS TO RUN:
+========================================
+
+# Get the container ID
+CONTAINER_ID=$(docker ps --filter "name=lab-app" --format "{{.ID}}" | head -n 1)
+
+# Backup current file
+docker exec $CONTAINER_ID cp /app/lab/src/public/simple-autosave.js /app/lab/src/public/simple-autosave.js.backup
+
+# Update the critical section (lines 27-68)
+docker exec $CONTAINER_ID bash -c "sed -i '27,68d' /app/lab/src/public/simple-autosave.js"
+
+docker exec $CONTAINER_ID bash -c 'cat > /tmp/new_section.js << '\''EOF'\''
+  // If admin/manager viewing, ALWAYS get the candidate'\''s email from slug (ignore localStorage)
+  if (isAdmin || isManager) {
+    if (slug) {
+      console.log('\''[SimpleAutoSave] Admin/Manager - fetching candidate email for slug:'\'', slug);
+      const xhr = new XMLHttpRequest();
+      xhr.open('\''GET'\'', '\''/public/slug/'\'' + encodeURIComponent(slug) + '\''/info'\'', false);
+      try {
+        xhr.send();
+        if (xhr.status === 200) {
+          const info = JSON.parse(xhr.responseText);
+          candidateEmailForViewing = info.email;
+          viewingOnly = true;
+          console.log('\''[SimpleAutoSave] Admin/Manager viewing candidate:'\'', candidateEmailForViewing);
+        } else {
+          console.error('\''[SimpleAutoSave] Failed to get candidate info, status:'\'', xhr.status);
+        }
+      } catch (e) {
+        console.error('\''[SimpleAutoSave] Failed to get candidate info:'\'', e);
+      }
+    }
+  } else {
+    // For candidates: If we have a slug cookie, ALWAYS use that (it'\''s authoritative)
+    // This fixes issues where localStorage has stale/wrong email
+    if (slug) {
+      console.log('\''[SimpleAutoSave] Candidate - fetching authoritative email for slug:'\'', slug);
+      const xhr = new XMLHttpRequest();
+      xhr.open('\''GET'\'', '\''/public/slug/'\'' + encodeURIComponent(slug) + '\''/info'\'', false);
+      try {
+        xhr.send();
+        if (xhr.status === 200) {
+          const info = JSON.parse(xhr.responseText);
+          email = info.email;
+          // Update localStorage to keep it in sync
+          const storedEmail = localStorage.getItem('\''candidateEmail'\'');
+          if (storedEmail !== email) {
+            console.log('\''[SimpleAutoSave] Updating localStorage from'\'', storedEmail, '\''to'\'', email);
+            localStorage.setItem('\''candidateEmail'\'', email);
+          }
+          console.log('\''[SimpleAutoSave] Got authoritative email from API:'\'', email);
+        }
+      } catch (e) {
+        console.error('\''[SimpleAutoSave] Failed to get email:'\'', e);
+      }
+    }
+    
+    // Fallback to localStorage only if no slug cookie (legacy support)
+    if (!email) {
+      email = localStorage.getItem('\''candidateEmail'\'');
+      console.log('\''[SimpleAutoSave] Email from localStorage (fallback):'\'', email);
+    }
+  }
+EOF'
+
+docker exec $CONTAINER_ID bash -c "head -n 26 /app/lab/src/public/simple-autosave.js > /tmp/part1.js && cat /tmp/part1.js /tmp/new_section.js > /tmp/merged.js && tail -n +69 /app/lab/src/public/simple-autosave.js >> /tmp/merged.js && mv /tmp/merged.js /app/lab/src/public/simple-autosave.js"
+
+# Verify the fix
+docker exec $CONTAINER_ID grep -c "Got authoritative email from API" /app/lab/src/public/simple-autosave.js
+
+echo "✅ Update complete! Refresh your browser to see the fix."
+
+========================================
+ALTERNATIVE: Use wget to download updated file
+========================================
+
+# If the above is too complex, you can use this simpler method:
+# (Assuming you've pushed the updated file to GitHub)
+
+docker exec $CONTAINER_ID wget -O /app/lab/src/public/simple-autosave.js https://raw.githubusercontent.com/YOUR_REPO/main/lab/src/public/simple-autosave.js
+

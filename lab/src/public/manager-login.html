@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Manager Login</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/styles.css"><style>
+.manager-login-wrap{min-height:100vh;display:flex;flex-direction:column;}
+.manager-login-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+.manager-card{background:#0d1422;border:1px solid #1f2735;padding:46px 54px;max-width:520px;width:100%;border-radius:30px;box-shadow:0 16px 50px -18px rgba(0,0,0,.6),0 0 0 1px rgba(59,130,246,.25);}
+.manager-card h1{margin:0 0 24px;font-size:40px;letter-spacing:.05em;color:#fff;font-family:'JetBrains Mono','Courier New',monospace;text-shadow:0 0 10px rgba(59,130,246,.8);} 
+.manager-card label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;margin:0 0 6px;color:#bfdbfe;text-transform:uppercase;}
+.manager-card input{width:100%;background:#131b2a;border:1px solid #263245;color:#fff;padding:14px 16px;font-size:15px;border-radius:14px;}
+.manager-card button{margin-top:14px;width:100%;background:linear-gradient(135deg,#3b82f6,#60a5fa);border:none;color:#fff;font-size:15px;font-weight:700;padding:16px 24px;border-radius:18px;cursor:pointer;box-shadow:0 0 0 2px rgba(59,130,246,.4),0 12px 40px -12px rgba(59,130,246,.6);} 
+.manager-card button:hover{filter:brightness(1.08);} 
+.status{margin-top:16px;font-size:13px;font-weight:600;min-height:18px;color:#dbeafe;}
+.back-link{margin-top:20px;text-align:center;font-size:13px;}
+</style></head><body>
+<header class="site-header"><div class="brand" onclick="location.href='/'"><img src="/logo.svg" alt="logo" class="logo-img"><span class="brand-hacker">CHECK POINT</span></div></header>
+<div class="manager-login-wrap"><div class="manager-login-body"><div class="manager-card fade-in"><h1>Manager Access</h1>
+<form id="managerLoginForm">
+  <label for="managerUser">Username</label>
+  <input id="managerUser" type="text" required autofocus placeholder="e.g. nastasyan">
+  <label for="managerPwd">Password</label>
+  <input id="managerPwd" type="password" required placeholder="Enter manager password">
+  <button type="submit">Login →</button>
+  <div class="status" id="managerStatus"></div>
+</form>
+<div class="back-link"><a href="/login.html">Back to candidate login</a></div>
+</div></div></div>
+<script>
+(function(){
+  const form=document.getElementById('managerLoginForm');
+  const status=document.getElementById('managerStatus');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    status.textContent='Authenticating…';
+    const pwd=document.getElementById('managerPwd').value.trim();
+    const username=document.getElementById('managerUser').value.trim();
+    try {
+      const r=await fetch('/api/auth/manager-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,username})});
+      if(r.ok){ status.textContent='Success. Redirecting…'; setTimeout(()=>location.href='/manager.html?v=' + Date.now(),400); }
+      else { 
+        const errorData = await r.json().catch(() => ({}));
+        status.textContent = errorData.error || 'Login failed'; 
+      }
+    } catch(err){ status.textContent='Network error'; }
+  });
+})();
+</script>
+</body></html>

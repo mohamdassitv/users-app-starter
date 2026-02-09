@@ -388,6 +388,21 @@
 
     .ck-editor__editable {
       min-height: 180px;
+      color: #000000 !important;
+    }
+    
+    .ck-editor__editable *,
+    .ck-editor__editable p,
+    .ck-editor__editable span,
+    .ck-editor__editable div,
+    .ck-editor__editable h1,
+    .ck-editor__editable h2,
+    .ck-editor__editable h3,
+    .ck-editor__editable li,
+    .ck-content *,
+    .ck-content p,
+    .ck-content span {
+      color: #000000 !important;
     }
 
     .question-block code {
@@ -406,6 +421,13 @@
       <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
       <span class="brand-hacker">CHECK POINT</span>
     </div>
+    <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,78,59,0.9);color:#86efac;text-decoration:none;border-radius:6px;font-size:13px;font-weight:500;border:1px solid #86efac;transition:all 0.2s;"
+       onmouseover="this.style.background='#047857';this.style.color='#fff'" onmouseout="this.style.background='rgba(6,78,59,0.9)';this.style.color='#86efac'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Main Tasks</span>
+    </a>
     <div class="header-actions">
       <button class="reset-btn" id="resetBtn" onclick="resetLab()">Reset Lab</button>
     </div>
@@ -555,45 +577,73 @@
 
     <!-- BOTTOM: Questions Section -->
     <div class="questions-section">
-      <h2 style="color: #4ec9b0; margin-bottom: 30px;">📝 Lab Questions</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 style="color: #4ec9b0; margin: 0;">📝 Lab Questions</h2>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="flex:1;min-width:200px;">
+            <div style="height:10px;background:#2d2d2d;border-radius:5px;overflow:hidden;border:1px solid #4ec9b0;">
+              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ec9b0,#2a9d8f);transition:width 0.5s ease;"></div>
+            </div>
+            <div id="progressText" style="font-size:12px;color:#94a3b8;margin-top:4px;text-align:right;">0/6 Questions Saved</div>
+          </div>
+        </div>
+      </div>
 
       <div class="question-block">
-        <h3>Question 1 – Test External Connectivity (Before Any Changes)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 1 – Test External Connectivity (Before Any Changes)</h3>
+          <button class="save-progress-btn" data-question="1" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>From <strong>leaf-01</strong>, try to reach a public IP address (for example: Google's IP <code>8.8.8.8</code>).</p>
         <p><strong>Provide a screenshot of the result and explain what you observed.</strong></p>
         <div class="editor-container" id="editor-q1"></div>
       </div>
 
       <div class="question-block">
-        <h3>Question 2 – Test Connectivity From leaf-01 to leaf-02 (Before Any Changes)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 2 – Test Connectivity From leaf-01 to leaf-02 (Before Any Changes)</h3>
+          <button class="save-progress-btn" data-question="2" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>Attempt to reach <strong>leaf-02</strong> from <strong>leaf-01</strong>.</p>
         <p><strong>Provide a screenshot and explain what happened.</strong></p>
         <div class="editor-container" id="editor-q2"></div>
       </div>
 
       <div class="question-block">
-        <h3>Question 3 – Test Connectivity From leaf-02 to leaf-01 (Before Any Changes)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 3 – Test Connectivity From leaf-02 to leaf-01 (Before Any Changes)</h3>
+          <button class="save-progress-btn" data-question="3" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>Attempt to reach <strong>leaf-01</strong> from <strong>leaf-02</strong>.</p>
         <p><strong>Provide a screenshot and explain what happened.</strong></p>
         <div class="editor-container" id="editor-q3"></div>
       </div>
 
       <div class="question-block">
-        <h3>Question 4 – Apply the Necessary Routing Fixes</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 4 – Apply the Necessary Routing Fixes</h3>
+          <button class="save-progress-btn" data-question="4" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>Make the changes required to allow communication between both leaves through the router.</p>
         <p><strong>Provide screenshots showing the changes you made and explain the reasoning behind them.</strong></p>
         <div class="editor-container" id="editor-q4"></div>
       </div>
 
       <div class="question-block">
-        <h3>Question 5 – Test Connectivity After Fix (leaf-01 → leaf-02)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 5 – Test Connectivity After Fix (leaf-01 → leaf-02)</h3>
+          <button class="save-progress-btn" data-question="5" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>After applying the fixes, try reaching <strong>leaf-02</strong> from <strong>leaf-01</strong>.</p>
         <p><strong>Provide a screenshot and explain whether it works and why.</strong></p>
         <div class="editor-container" id="editor-q5"></div>
       </div>
 
       <div class="question-block">
-        <h3>Question 6 – Test Connectivity After Fix (leaf-02 → leaf-01)</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h3 style="margin:0;">Question 6 – Test Connectivity After Fix (leaf-02 → leaf-01)</h3>
+          <button class="save-progress-btn" data-question="6" style="background:#4ec9b0;color:#1e1e1e;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Save Progress</button>
+        </div>
         <p>After applying the fixes, try reaching <strong>leaf-01</strong> from <strong>leaf-02</strong>.</p>
         <p><strong>Provide a screenshot and explain whether it works and why.</strong></p>
         <div class="editor-container" id="editor-q6"></div>
@@ -603,15 +653,41 @@
 
   <script src="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js"></script>
   <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css" />
+  <style>
+    /* Override CKEditor's default text color - must be after CKEditor CSS */
+    .ck.ck-editor__editable:not(.ck-editor__nested-editable) {
+      color: #000000 !important;
+    }
+    
+    .ck.ck-editor__editable p,
+    .ck.ck-editor__editable span,
+    .ck.ck-editor__editable div,
+    .ck.ck-editor__editable h1,
+    .ck.ck-editor__editable h2,
+    .ck.ck-editor__editable h3,
+    .ck.ck-editor__editable li,
+    .ck.ck-editor__editable td,
+    .ck.ck-editor__editable strong,
+    .ck.ck-editor__editable em,
+    .ck.ck-editor__editable u {
+      color: #000000 !important;
+    }
+    
+    .ck-content,
+    .ck-content * {
+      color: #000000 !important;
+    }
+  </style>
   
   <script>
     // Initialize CKEditor for all 6 questions
     const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, MediaEmbed } = window.CKEDITOR;
 
     const editorIds = ['editor-q1', 'editor-q2', 'editor-q3', 'editor-q4', 'editor-q5', 'editor-q6'];
+    const editorPromises = [];
     
     editorIds.forEach(id => {
-      ClassicEditor
+      const promise = ClassicEditor
         .create(document.getElementById(id), {
           plugins: [
             Essentials, Paragraph, Bold, Italic, Underline, Link, List, 
@@ -637,11 +713,76 @@
           }
         })
         .then(editor => {
+          // Store editor instance for autosave script
+          window[`editor_${id}`] = editor;
+          
+          // Force black text color in editor
+          const editableElement = editor.ui.view.editable.element;
+          if (editableElement) {
+            editableElement.style.color = '#000000';
+            // Add stylesheet rule that overrides CKEditor styles
+            const style = document.createElement('style');
+            style.textContent = `
+              #${id} .ck-editor__editable,
+              #${id} .ck-editor__editable *,
+              #${id} .ck-content,
+              #${id} .ck-content * {
+                color: #000000 !important;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+          
           console.log('Editor initialized:', id);
+          return editor;
         })
         .catch(error => {
           console.error('Editor initialization error for', id, error);
         });
+      
+      editorPromises.push(promise);
+    });
+    
+    // Wait for all editors to initialize, then notify autosave
+    Promise.all(editorPromises).then(() => {
+      console.log('All editors ready - triggering autosave initialization');
+      
+      // Force black text on all CKEditor content
+      const forceBlackText = () => {
+        document.querySelectorAll('.ck-editor__editable').forEach(editable => {
+          editable.style.setProperty('color', '#000000', 'important');
+          editable.querySelectorAll('*').forEach(el => {
+            if (el.style) {
+              el.style.setProperty('color', '#000000', 'important');
+            }
+          });
+        });
+      };
+      
+      // Apply immediately
+      forceBlackText();
+      
+      // Apply again after a short delay
+      setTimeout(forceBlackText, 100);
+      setTimeout(forceBlackText, 500);
+      
+      // Watch for changes and re-apply
+      const observer = new MutationObserver(forceBlackText);
+      document.querySelectorAll('.ck-editor__editable').forEach(editable => {
+        observer.observe(editable, { 
+          childList: true, 
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style']
+        });
+      });
+      
+      // Trigger autosave to re-scan for editors
+      if (window.attachAutoSaveListeners) {
+        window.attachAutoSaveListeners();
+      }
+      // Dispatch custom event for autosave
+      window.dispatchEvent(new Event('editorsReady'));
     });
 
     // Reset lab function
@@ -710,6 +851,93 @@
     // Load first terminal on page load
     document.getElementById('frame-leaf01').src = '/api/terminal/nbr-leaf01';
   </script>
+
+  <script>
+    // Progress tracking for Task 5
+    const savedQuestions = new Set();
+
+    function updateProgressBar() {
+      const total = 6;
+      const saved = savedQuestions.size;
+      const percentage = (saved / total) * 100;
+      
+      document.getElementById('progressBar').style.width = percentage + '%';
+      document.getElementById('progressText').textContent = saved + '/' + total + ' Questions Saved';
+      
+      // Update task progress when all questions are completed
+      if (saved === total) {
+        updateMainTaskProgress('routing', 100);
+        markTaskComplete('task5');
+      }
+    }
+
+    function updateMainTaskProgress(taskId, progressPercentage) {
+      try {
+        const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+        taskProgress[taskId] = progressPercentage;
+        localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+        console.log('Task progress updated:', taskId, progressPercentage + '%');
+      } catch (e) {
+        console.error('Error updating task progress:', e);
+      }
+    }
+
+    function markTaskComplete(taskId) {
+      try {
+        let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+        if (!completedTasks.includes(taskId)) {
+          completedTasks.push(taskId);
+          localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+          console.log('Task marked complete:', taskId);
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'examTasksCompleted',
+            newValue: JSON.stringify(completedTasks)
+          }));
+        }
+      } catch (e) {
+        console.error('Error marking task complete:', e);
+      }
+    }
+
+    // Save progress button handlers
+    document.querySelectorAll('.save-progress-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const questionNum = this.getAttribute('data-question');
+        savedQuestions.add(questionNum);
+        updateProgressBar();
+        
+        // Visual feedback
+        this.textContent = '✓ Saved';
+        this.style.background = '#2a9d8f';
+        setTimeout(() => {
+          this.textContent = 'Save Progress';
+          this.style.background = '#4ec9b0';
+        }, 2000);
+      });
+    });
+
+    // Load saved progress from localStorage
+    const storedProgress = localStorage.getItem('task5Progress');
+    if (storedProgress) {
+      try {
+        const progress = JSON.parse(storedProgress);
+        progress.forEach(q => savedQuestions.add(q));
+        updateProgressBar();
+      } catch (e) {
+        console.error('Error loading progress:', e);
+      }
+    }
+
+    // Save progress to localStorage on change
+    window.addEventListener('beforeunload', function() {
+      localStorage.setItem('task5Progress', JSON.stringify([...savedQuestions]));
+    });
+  </script>
+  <a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
+    <img src="/help-contact.svg" alt="Contact" width="38" height="38">
+    <span class="help-label">Questions? Contact on-call.</span>
+  </a>
   <script src="/header-timer.js" defer></script>
+  <script src="/simple-autosave.js" data-task-id="routing"></script>
 </body>
 </html>

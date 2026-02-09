@@ -70,6 +70,10 @@ Three focused operational tasks (renumbered with new Case Study as Task 1):
 2. HTTP Gateway Evidence Collection (Alert ALRT-24117)
 3. High-Volume User Cleanup (Emergency Duplicate Purge)
 
+Plus additional hands-on infrastructure tasks:
+- Task 5: Configure Basic Routing (Networking)
+- Task 7: WAF Reverse-Proxy Troubleshooting (Infrastructure/Debugging)
+
 ---
 
 ## Task 1 – Branch Performance Degradation (Case Study)
@@ -141,7 +145,49 @@ Endpoints:
 4. 3–6 hardening bullets (audit log, RBAC, concurrency control, bulk batching, soft delete, rate limiting).
 
 ---
+## Task 7 – WAF Reverse-Proxy Troubleshooting
+A customer (Bayer QuantHealth) reports their website is inaccessible through the WAF gateway. The environment consists of a Docker-based setup with an NGINX reverse proxy (WAF) and an upstream Node.js application. The upstream is multi-tenant and validates the Host header to route requests to the correct deployment.
 
+The site returns a `DEPLOYMENT_NOT_FOUND` error because the NGINX configuration contains a typo in the `proxy_set_header Host` directive (`bayer.quanthealh.ai` instead of `bayer.quanthealth.ai`).
+
+You must:
+1. Access the WAF container using terminal commands.
+2. Inspect the NGINX configuration file (`/etc/nginx/conf.d/default.conf`).
+3. Identify the incorrect Host header value.
+4. Fix the typo in the configuration.
+5. Reload or restart NGINX to apply changes.
+6. Verify the website becomes accessible (HTTP 200 with welcome page).
+
+### Lab Environment
+Location: `/waf-lab/`
+
+Components:
+- `waf-nginx` container (NGINX reverse proxy on port 8090)
+- `upstream-app` container (Node.js application)
+- Pre-configured with intentional misconfiguration
+
+Start the lab:
+```powershell
+cd waf-lab
+docker-compose up -d
+```
+
+Access WAF container:
+```powershell
+docker exec -it waf-nginx /bin/sh
+```
+
+### What You Produce (Task 7)
+1. Root cause description (what was misconfigured).
+2. Incorrect configuration value (the typo).
+3. Corrected configuration value.
+4. Commands used to fix (edit config + reload NGINX).
+5. Verification steps (how you confirmed it works).
+6. Prevention recommendations (3-5 measures: config validation, IaC, automated testing, peer review, etc.).
+
+**Instructor Notes:** See `TASK7_INSTRUCTOR_NOTES.md` for solution, grading rubric, and troubleshooting guide.
+
+---
 ## Admin Workflow (Updated)
 Login Flow:
 1. Visit `/admin-login.html` and enter password `2025`.

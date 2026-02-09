@@ -16,8 +16,7 @@
       '<div class="neon-mini-box" id="boxMinutes"><div class="digit" id="digitMinutes">00</div><div class="digit-label">MIN</div></div>'+
       '<div class="neon-mini-box" id="boxSeconds"><div class="digit" id="digitSeconds">00</div><div class="digit-label">SEC</div></div>'+
       '<div class="neon-finale-text" id="finaleMsg" style="display:none;margin-left:8px;">BREACH COMPLETE</div>'+
-  '</div>'+
-  '<button type="button" id="htAdmin">Admin</button>';
+  '</div>';
   header.appendChild(wrap);
 
   function getCandidateEmail(){ return localStorage.getItem('candidateEmail') || null; }
@@ -125,6 +124,5 @@
   }
   // Kick off auto-start early
   autoStartIfNeeded();
-  el('#htAdmin').addEventListener('click', ()=>{ window.location='/admin-login.html'; });
   setInterval(()=>refresh(false),1000); refresh(true);
 })();

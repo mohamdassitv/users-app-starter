@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Task 4 — High-Volume User Cleanup & On-Shift Automation</title>
+<title>Task 6 — High-Volume User Cleanup & On-Shift Automation</title>
 <link rel="stylesheet" href="/styles.css">
 <style>
 .page{max-width:1280px;margin:0 auto;padding:24px 40px 120px;}
@@ -20,6 +20,11 @@ th,td{border:1px solid #fbcfe8;padding:8px 10px;text-align:left;}
 th{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#831843;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;}
 tbody tr:nth-child(even){background:#fff5fa;}
 tbody tr:hover{background:#fff0f7;}
+.role-expired{background:#fee2e2;color:#991b1b;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.role-admin{background:#dbeafe;color:#1e40af;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.role-user{background:#d1fae5;color:#065f46;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.role-guest{background:#e5e7eb;color:#374151;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.role-support{background:#fef3c7;color:#92400e;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;}
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;}
 .muted{color:#64748b;font-size:14px;}
 .danger{color:#dc2626;}
@@ -37,59 +42,279 @@ button:hover{transform:translateY(-2px);box-shadow:0 12px 30px -12px rgba(236,72
       <img src="/logo.svg" alt="Ops101 Logo" class="logo-img">
       <span class="brand-hacker">CHECK POINT</span>
     </div>
+    <a href="/tasks.html" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,78,59,0.9);color:#86efac;text-decoration:none;border-radius:6px;font-size:13px;font-weight:500;border:1px solid #86efac;transition:all 0.2s;"
+       onmouseover="this.style.background='#047857';this.style.color='#fff'" onmouseout="this.style.background='rgba(6,78,59,0.9)';this.style.color='#86efac'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Main Tasks</span>
+    </a>
+    <div class="user-info" id="userInfo">
+      <span id="candidateName" style="font-weight:600;"></span>
+      <span id="timer" style="font-family:ui-monospace,monospace;font-size:15px;color:#dc2626;font-weight:700;"></span>
+    </div>
   </header>
   <main class="page fade-in">
-    <!-- exam bar removed; header timer globally -->
+    <!-- Save status indicator -->
+    <div style="position:fixed;top:80px;right:20px;z-index:1000;background:rgba(255,255,255,0.95);border:1px solid #e2e8f0;border-radius:12px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:none;" id="saveStatus">
+      <span style="font-size:12px;color:#64748b;font-weight:600;">
+        <span id="saveStatusText">Saving...</span>
+      </span>
+    </div>
   <div class="card" id="story">
-  <h2>Task 4 — High-Volume User Cleanup (Shift Escalation)</h2>
-    <p><strong>Scenario.</strong> 02:10 UTC — A SaaS customer (enterprise plan) opens a P1 chat: they accidentally bulk‑provisioned thousands of duplicate placeholder accounts during a failed HR import. Their compliance team insists the extras must be purged before 03:00 UTC to avoid license overage penalties. Engineering’s bulk tooling is offline (maintenance window overran) and you are the only on‑call operations engineer with console access.</p>
-    <p><strong>Your Mission.</strong> Provide a rapid, manual-but-efficient remediation path: list the 5,000 user entries, surgically delete selected rows (simulating the cleanup decisions), and optionally add corrected user records. This UI emulates a thin emergency console you might spin up to unblock a customer while awaiting a permanent batch job fix.</p>
-    <p><strong>Objectives.</strong></p>
+  <h2>Task 6 — High-Volume User Cleanup (Shift Escalation)</h2>
+    <p><strong>Scenario.</strong> During a botched HR integration, 10,000 accounts were imported into production. Compliance requires all inactive accounts (500 total) must be removed before the audit deadline. The automated cleanup pipeline is broken.</p>
+    
+    <p style="background:#fee;border-left:4px solid #dc2626;padding:12px;margin:16px 0;"><strong style="color:#dc2626;">⚠️ WARNING: DO NOT DELETE MANUALLY ONE BY ONE!</strong><br>With 500 accounts to remove, manual deletion will take hours and is error-prone. See the hint below for the proper approach.</p>
+    
+    <p><strong>Your Mission.</strong> Remove all 500 inactive user accounts. Final state should show exactly 9,500 active users with valid roles.</p>
+    
+    <p><strong>Hint:</strong> Check what the Delete button does (open browser DevTools → Network tab). Can you write a script to automate deleting all inactive users?</p>
+    
+    <p><strong>Objectives:</strong></p>
     <ul>
-      <li>Page through the full 5,000-user dataset (confirm totals).</li>
-      <li>Delete at least a handful of sample users (UI updates immediately).</li>
-      <li>Add one new corrected user (first + last name) and verify it appears.</li>
-      <li>Record an approach note: how you'd harden this stop‑gap (rate limiting, audit log, role gating).</li>
-    </ul>
-    <p class="muted">Surprise Twist: After each deletion the total count decreases and pagination shifts—ensure your paging logic remains consistent (no skipped or duplicated rows across page boundaries).</p>
-    <h3>Deliverable (Shift Note Extract)</h3>
-    <ul>
-      <li>Initial total vs final total after deletions.</li>
-      <li>Example deleted IDs (3–5) + rationale grouping (e.g., obvious pattern duplicates).</li>
-      <li>One added user (ID + names).</li>
-      <li>Hardening recommendations (3–6 bullets).</li>
+      <li>Identify all 500 inactive accounts</li>
+      <li>Delete all inactive users efficiently (write a script!)</li>
+      <li>Verify final count: exactly 9,500 active users remain</li>
+      <li>Document your approach and script</li>
     </ul>
   </div>
   <div class="card">
-    <h3>User Dataset (5000 entries loaded locally)</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="margin:0;">📝 Your Solution & Documentation</h3>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="flex:1;min-width:200px;">
+          <div style="height:10px;background:#f0f0f0;border-radius:5px;overflow:hidden;border:1px solid #f472b6;">
+            <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#f472b6,#ec4899);transition:width 0.5s ease;"></div>
+          </div>
+          <div id="progressText" style="font-size:12px;color:#94a3b8;margin-top:4px;text-align:right;">0/1 Saved</div>
+        </div>
+        <button class="save-progress-btn" data-question="1" style="background:#f472b6;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px -4px rgba(236,72,153,.5);">Save Progress</button>
+      </div>
+    </div>
+    <p class="muted">Document your approach here. Include screenshots, commands used, and verification steps.</p>
+    <div id="editor-solution" style="margin: 20px 0;"></div>
+  </div>
+  <div class="card">
+    <h3>User Dataset (10,000 users - 500 inactive, 9,500 active roles)</h3>
     <div class="controls">
       <span id="meta" class="muted"></span>
       <button onclick="promptAdd()">Add User</button>
       <button onclick="resetUsers()" style="margin-left:auto;background:var(--bg-accent);color:#fff;border:none;">Reset Users</button>
     </div>
-    <table id="tbl"><thead><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Action</th></tr></thead><tbody></tbody></table>
+    <table id="tbl"><thead><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Role</th><th>Action</th></tr></thead><tbody></tbody></table>
     <div id="pager" class="muted"></div>
   </div>
 </div>
   </main>
-  <!-- Right rail removed per simplification request -->
 <a href="/contact.html" class="help-fab" id="helpFab" title="Questions? Reach the on-call engineer.">
   <img src="/help-contact.svg" alt="Contact" width="38" height="38">
   <span class="help-label">Questions? Contact on-call.</span>
 </a>
 <script>
-// Local-only dataset of 5000 random users (no API calls)
+// API-based user management with persistent per-candidate storage
 const header=document.getElementById('siteHeader');window.addEventListener('scroll',()=>{header.classList.toggle('shrink',window.scrollY>16);});
-const firstNames=['Liam','Emma','Noah','Olivia','Elijah','Ava','Sophia','Mason','Isabella','Logan','Mia','Lucas','Charlotte','Amelia','Ethan','Harper','James','Evelyn','Benjamin','Abigail','Henry','Ella','Sebastian','Avery','Jackson','Scarlett','Alexander','Emily','Owen','Aria','Daniel','Layla','Matthew','Chloe','Wyatt','Mila','Carter','Nora','Julian','Lily','Grayson','Zoey','Leo','Riley','Isaac','Victoria','Lincoln','Aurora','Ezra','Penelope'];
-const lastNames=['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter'];
-let users=[]; let nextId=1;
-function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function seedUsers(){users=[]; for(let i=0;i<5000;i++){users.push({id:nextId++,firstName:rand(firstNames),lastName:rand(lastNames)});} }
-function render(){const tbody=document.querySelector('#tbl tbody'); tbody.innerHTML=users.map(u=>`<tr data-id="${u.id}"><td>${u.id}</td><td>${u.firstName}</td><td>${u.lastName}</td><td><button class="btn-sm" onclick="delUser(${u.id})">Delete</button></td></tr>`).join(''); document.getElementById('meta').textContent=`Showing all ${users.length} users`; }
-function delUser(id){const idx=users.findIndex(u=>u.id===id); if(idx>-1){users.splice(idx,1); render();}}
-function promptAdd(){const fn=prompt('First Name?'); if(!fn) return; const ln=prompt('Last Name?'); if(!ln) return; users.push({id:nextId++,firstName:fn,lastName:ln}); render(); const row=document.querySelector(`tr[data-id='${nextId-1}']`); if(row) row.style.background='#d1fae5';}
-function resetUsers(){if(!confirm('Reset to fresh random 5000 users?')) return; nextId=1; seedUsers(); render();}
-seedUsers(); render();
+let users=[];
+
+// Load users from API
+async function loadUsers(){
+  try {
+    const response = await fetch('/api/users');
+    if (!response.ok) throw new Error('Failed to load users');
+    const data = await response.json();
+    users = data.users;
+    render();
+  } catch (error) {
+    console.error('Error loading users:', error);
+    document.getElementById('meta').textContent = 'Error loading users. Please refresh the page.';
+  }
+}
+
+function render(){
+  const tbody=document.querySelector('#tbl tbody');
+  tbody.innerHTML=users.map(u=>{
+    const roleClass='role-'+u.role;
+    return `<tr data-id="${u.id}"><td>${u.id}</td><td>${u.firstName}</td><td>${u.lastName}</td><td><span class="${roleClass}">${u.role}</span></td><td><button class="btn-sm" onclick="delUser(${u.id})">Delete</button></td></tr>`;
+  }).join('');
+  const inactiveCount=users.filter(u=>u.role==='inactive').length;
+  const activeCount=users.length-inactiveCount;
+  document.getElementById('meta').textContent=`Showing ${users.length} users (${inactiveCount} inactive, ${activeCount} active roles)`;
+}
+
+async function delUser(id){
+  try {
+    const response = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete user');
+    const idx=users.findIndex(u=>u.id===id);
+    if(idx>-1){
+      users.splice(idx,1);
+      render();
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    alert('Failed to delete user');
+  }
+}
+
+async function promptAdd(){
+  const fn=prompt('First Name?');
+  if(!fn) return;
+  const ln=prompt('Last Name?');
+  if(!ln) return;
+  const role=prompt('Role (admin/user/guest/support)?','user')||'user';
+  
+  try {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName: fn, lastName: ln, role: role })
+    });
+    if (!response.ok) throw new Error('Failed to add user');
+    const data = await response.json();
+    users.push(data.user);
+    render();
+    const row=document.querySelector(`tr[data-id='${data.user.id}']`);
+    if(row) row.style.background='#d1fae5';
+  } catch (error) {
+    console.error('Error adding user:', error);
+    alert('Failed to add user');
+  }
+}
+
+async function resetUsers(){
+  if(!confirm('Reset to fresh 10,000 users (500 inactive + 9,500 valid roles)?')) return;
+  try {
+    const response = await fetch('/api/users/reset', { method: 'POST' });
+    if (!response.ok) throw new Error('Failed to reset users');
+    const data = await response.json();
+    users = data.users;
+    render();
+  } catch (error) {
+    console.error('Error resetting users:', error);
+    alert('Failed to reset users');
+  }
+}
+
+// Load users on page load
+loadUsers();
+
+// Initialize CKEditor for solution documentation
+(function(){
+  const script = document.createElement('script');
+  script.src = 'https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.umd.js';
+  script.onload = function() {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.ckeditor.com/ckeditor5/43.3.1/ckeditor5.css';
+    document.head.appendChild(link);
+    
+    const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, Code, CodeBlock } = window.CKEDITOR;
+    
+    ClassicEditor.create(document.getElementById('editor-solution'), {
+      plugins: [Essentials, Paragraph, Bold, Italic, Underline, Link, List, Image, ImageUpload, Base64UploadAdapter, Heading, BlockQuote, Table, Code, CodeBlock],
+      toolbar: ['heading', '|', 'bold', 'italic', 'underline', '|', 'link', 'bulletedList', 'numberedList', '|', 'imageUpload', 'blockQuote', 'insertTable', 'codeBlock', '|', 'undo', 'redo'],
+      heading: { options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+      ]},
+      image: { toolbar: ['imageTextAlternative'] },
+      placeholder: 'Document your solution here. Include: 1) Initial state (10,000 users, 500 inactive), 2) Your script/commands to delete inactive users, 3) Execution output, 4) Final state (9,500 users remaining), 5) Verification that no valid users were deleted'
+    }).then(editor => {
+      console.log('CKEditor initialized for solution');
+      window['editor-solution'] = editor;
+    }).catch(error => {
+      console.error('CKEditor error:', error);
+    });
+  };
+  document.head.appendChild(script);
+})();
 </script>
+
+<script>
+  // Progress tracking for Task 6
+  const savedQuestions = new Set();
+
+  function updateProgressBar() {
+    const total = 1;
+    const saved = savedQuestions.size;
+    const percentage = (saved / total) * 100;
+    
+    document.getElementById('progressBar').style.width = percentage + '%';
+    document.getElementById('progressText').textContent = saved + '/' + total + ' Saved';
+    
+    // Update task progress when completed
+    if (saved === total) {
+      updateMainTaskProgress('users', 100);
+      markTaskComplete('task6');
+    }
+  }
+
+  function updateMainTaskProgress(taskId, progressPercentage) {
+    try {
+      const taskProgress = JSON.parse(localStorage.getItem('taskProgress') || '{}');
+      taskProgress[taskId] = progressPercentage;
+      localStorage.setItem('taskProgress', JSON.stringify(taskProgress));
+      console.log('Task progress updated:', taskId, progressPercentage + '%');
+    } catch (e) {
+      console.error('Error updating task progress:', e);
+    }
+  }
+
+  function markTaskComplete(taskId) {
+    try {
+      let completedTasks = JSON.parse(localStorage.getItem('examTasksCompleted') || '[]');
+      if (!completedTasks.includes(taskId)) {
+        completedTasks.push(taskId);
+        localStorage.setItem('examTasksCompleted', JSON.stringify(completedTasks));
+        console.log('Task marked complete:', taskId);
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'examTasksCompleted',
+          newValue: JSON.stringify(completedTasks)
+        }));
+      }
+    } catch (e) {
+      console.error('Error marking task complete:', e);
+    }
+  }
+
+  // Save progress button handlers
+  document.querySelectorAll('.save-progress-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const questionNum = this.getAttribute('data-question');
+      savedQuestions.add(questionNum);
+      updateProgressBar();
+      
+      // Visual feedback
+      this.textContent = '✓ Saved';
+      this.style.background = '#db2777';
+      setTimeout(() => {
+        this.textContent = 'Save Progress';
+        this.style.background = '#f472b6';
+      }, 2000);
+    });
+  });
+
+  // Load saved progress from localStorage
+  const storedProgress = localStorage.getItem('task6Progress');
+  if (storedProgress) {
+    try {
+      const progress = JSON.parse(storedProgress);
+      progress.forEach(q => savedQuestions.add(q));
+      updateProgressBar();
+    } catch (e) {
+      console.error('Error loading progress:', e);
+    }
+  }
+
+  // Save progress to localStorage on change
+  window.addEventListener('beforeunload', function() {
+    localStorage.setItem('task6Progress', JSON.stringify([...savedQuestions]));
+  });
+</script>
+
+<script src="/header-timer.js" defer></script>
+<script src="/simple-autosave.js" data-task-id="users"></script>
 </body>
 </html>
