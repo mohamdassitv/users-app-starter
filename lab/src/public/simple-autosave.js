@@ -532,13 +532,8 @@
     badge.timer = setTimeout(() => { badge.style.opacity = '0'; }, 2000);
   }
   
-  // Save on input with debounce
-  let saveTimer = null;
-  function onInput() {
-    showBadge('Typing...', '#6b7280');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNow, 1000); // Save 1 second after typing stops
-  }
+  // Manual save only - no auto-save on input
+  // Save buttons will call saveNow() directly
   
   // Attach listeners
   function attachListeners() {
@@ -657,46 +652,8 @@
       });
     }
     
-    document.querySelectorAll('textarea, input[type="text"]').forEach(el => {
-      el.removeEventListener('input', onInput);
-      el.addEventListener('input', onInput);
-    });
-    
-    // CKEditor 5 support - attach to ALL CKEditor instances
-    for (const key in window) {
-      const obj = window[key];
-      if (obj && typeof obj === 'object' && obj.model && obj.model.document && !obj._autoSaveAttached) {
-        try {
-          obj.model.document.on('change:data', onInput);
-          obj._autoSaveAttached = true;
-          const sourceElement = obj.sourceElement;
-          const editorName = sourceElement && sourceElement.id ? sourceElement.id : key;
-          console.log('[SimpleAutoSave] Attached listener to CKEditor5:', editorName);
-        } catch (e) {
-          // Not a CKEditor instance, skip
-        }
-      }
-    }
-    
-    // FALLBACK: Attach to contenteditable elements directly (in case CKEditor events don't fire)
-    document.querySelectorAll('.ck-editor__editable, [contenteditable="true"]').forEach(el => {
-      if (!el._autoSaveInputAttached) {
-        el.addEventListener('input', onInput);
-        el.addEventListener('keyup', onInput);
-        el._autoSaveInputAttached = true;
-        console.log('[SimpleAutoSave] Attached fallback input listener to contenteditable');
-      }
-    });
-    
-    // Legacy CKEditor 4 support
-    if (window.CKEDITOR && window.CKEDITOR.instances) {
-      for (const name in window.CKEDITOR.instances) {
-        if (!window.CKEDITOR.instances[name]._autoSaveAttached) {
-          window.CKEDITOR.instances[name].on('change', onInput);
-          window.CKEDITOR.instances[name]._autoSaveAttached = true;
-        }
-      }
-    }
+    // No auto-save listeners - save only on button click
+    console.log('[SimpleAutoSave] Manual save mode - no auto-save on typing');
   }
   
   // Setup real-time viewing for admins
@@ -846,42 +803,45 @@
   // Expose attachListeners for manual triggering
   window.attachAutoSaveListeners = attachListeners;
   
-  // Save on page unload - ALWAYS
-  window.addEventListener('beforeunload', () => {
-    const fields = collectFields();
-    const hasContent = Object.values(fields).some(v => v && String(v).trim());
-    
-    if (hasContent && email) {
-      console.log('[SimpleAutoSave] Saving on page unload...');
-      
-      // Try beacon
-      try {
-        navigator.sendBeacon('/api/candidate/answers', new Blob([JSON.stringify({email, taskId, fields})], {type: 'application/json'}));
-        console.log('[SimpleAutoSave] ✓ Sent via beacon');
-      } catch (e) {
-        // Fallback to sync XHR
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/candidate/answers', false);
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.send(JSON.stringify({email, taskId, fields}));
-          console.log('[SimpleAutoSave] ✓ Sent via XHR');
-        } catch (err) {
-          console.error('[SimpleAutoSave] ✗ Failed to save on unload:', err);
-        }
-      }
-    }
-  });
+  // Expose saveNow for manual save buttons
+  window.manualSave = saveNow;
   
-  // Initial save after 2 seconds (in case there's already content)
-  setTimeout(() => {
-    const fields = collectFields();
-    const hasContent = Object.values(fields).some(v => v && String(v).trim());
-    if (hasContent) {
-      console.log('[SimpleAutoSave] Initial save of existing content...');
-      saveNow();
-    }
-  }, 2000);
+  // NO auto-save on page unload - only manual save via button
+  // window.addEventListener('beforeunload', () => {
+  //   const fields = collectFields();
+  //   const hasContent = Object.values(fields).some(v => v && String(v).trim());
+  //   
+  //   if (hasContent && email) {
+  //     console.log('[SimpleAutoSave] Saving on page unload...');
+  //     
+  //     // Try beacon
+  //     try {
+  //       navigator.sendBeacon('/api/candidate/answers', new Blob([JSON.stringify({email, taskId, fields})], {type: 'application/json'}));
+  //       console.log('[SimpleAutoSave] ✓ Sent via beacon');
+  //     } catch (e) {
+  //       // Fallback to sync XHR
+  //       try {
+  //         const xhr = new XMLHttpRequest();
+  //         xhr.open('POST', '/api/candidate/answers', false);
+  //         xhr.setRequestHeader('Content-Type', 'application/json');
+  //         xhr.send(JSON.stringify({email, taskId, fields}));
+  //         console.log('[SimpleAutoSave] ✓ Sent via XHR');
+  //       } catch (err) {
+  //         console.error('[SimpleAutoSave] ✗ Failed to save on unload:', err);
+  //       }
+  //     }
+  //   }
+  // });
   
-  console.log('[SimpleAutoSave] ✓ Initialized successfully');
+  // NO initial auto-save - only manual save via button
+  // setTimeout(() => {
+  //   const fields = collectFields();
+  //   const hasContent = Object.values(fields).some(v => v && String(v).trim());
+  //   if (hasContent) {
+  //     console.log('[SimpleAutoSave] Initial save of existing content...');
+  //     saveNow();
+  //   }
+  // }, 2000);
+  
+  console.log('[SimpleAutoSave] ✓ Initialized - Manual save mode only');
 })();
